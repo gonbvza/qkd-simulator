@@ -1,0 +1,11 @@
+#[derive(Debug, Clone)]
+pub enum Side {
+    Right,
+    Left,
+}
+
+#[derive(Debug, Clone)]
+pub struct QubitRef {
+    pub entangled_pair_id: usize,
+    pub side: Side,
+}
