@@ -4,6 +4,7 @@ use crate::models::{args::EventArgs, event::EventLoop};
 
 mod models;
 mod registry;
+mod tests;
 mod utility;
 
 fn test_func(args: &HashMap<String, EventArgs>) {
