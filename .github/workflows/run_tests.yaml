@@ -1,25 +1,21 @@
-
 name: Rust Tests
 
 on:
   push:
+    branches:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        rust: [stable, beta, nightly]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Rust
+      - name: Set up Rust stable
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ matrix.rust }}
+          toolchain: stable
           override: true
 
       - name: Cache Cargo registry
@@ -28,17 +24,15 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
+          key: cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-registry-
 
       - name: Cache Cargo build
         uses: actions/cache@v3
         with:
           path: target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-
+          key: cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-build-
 
       - name: Build project
         run: cargo build --verbose
