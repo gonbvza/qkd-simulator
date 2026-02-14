@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 
 #[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::node)]
+#[diesel(table_name = crate::schema::nodes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct EprNode {
     pub id: i32,

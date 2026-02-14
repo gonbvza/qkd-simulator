@@ -3,7 +3,7 @@ use diesel::{insert_into, prelude::*};
 use crate::{establish_connection, schema};
 
 #[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::node)]
+#[diesel(table_name = crate::schema::nodes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ClientNode {
     pub id: i32,
@@ -18,8 +18,8 @@ impl ClientNode {
         // TODO: Remove this call, create db pool
         let mut conn = establish_connection();
 
-        let new_node: ClientNode = insert_into(schema::node::table)
-            .values(schema::node::name.eq(_name))
+        let new_node: ClientNode = insert_into(schema::nodes::table)
+            .values(schema::nodes::name.eq(_name))
             .get_result(&mut conn)
             .unwrap();
 

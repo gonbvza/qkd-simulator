@@ -11,6 +11,7 @@ use crate::models::args::EventArgs;
 mod api;
 mod cli;
 mod event_loop;
+mod links;
 mod models;
 mod nodes;
 mod registry;
