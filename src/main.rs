@@ -1,9 +1,22 @@
 use std::collections::HashMap;
+use std::{env, future, thread};
 
-use crate::models::{args::EventArgs, event::EventLoop};
+use diesel::{Connection, PgConnection};
+use dotenv::dotenv;
 
+use crate::cli::run_cli;
+use crate::event_loop::EventLoop;
+use crate::models::args::EventArgs;
+
+mod api;
+mod cli;
+mod event_loop;
+mod links;
 mod models;
+mod nodes;
 mod registry;
+mod schema;
+mod settings;
 mod tests;
 mod utility;
 
@@ -18,11 +31,24 @@ fn test_func(args: &HashMap<String, EventArgs>) {
     }
 }
 
-fn main() {
-    // 1. Start priority heap event loop and store function instances
+pub fn establish_connection() -> PgConnection {
+    dotenv().ok();
+
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    PgConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+}
+
+#[tokio::main]
+async fn main() {
     let mut event_loop = EventLoop::new();
     event_loop.instantiate_functions();
 
-    // 2.  Start event loop
+    // Spawn CLI (async)
+    tokio::spawn(async {
+        run_cli().await;
+    });
+
+    // Spawn your blocking event loop
     event_loop.run_loop();
 }
