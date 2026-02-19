@@ -2,55 +2,55 @@ name: Rust Tests
 
 on:
   push:
-    branches:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     services:
-        postgres:
-          image: postgres
-          env:
-            POSTGRES_PASSWORD: test
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
-      - name: Set up Rust stable
+    env:
+      DATABASE_URL: postgres://postgres:test@localhost:5432/test_db
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
 
-      - name: Cache Cargo registry
+      - name: Cache cargo
         uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: cargo-registry-
+            target
+          key: cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Cache Cargo build
-        uses: actions/cache@v3
-        with:
-          path: target
-          key: cargo-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: cargo-build-
-
-      - name: Install diesel
+      - name: Install diesel CLI
         run: cargo install diesel_cli --no-default-features --features postgres
 
-      - name: Create database
-        run: diesel setup
-        env:
-          DATABASE_URL: postgres://postgress:test@localhost/test_db
-
-      - name: Build project
-        run: cargo build --verbose
+      - name: Run migrations
+        run: diesel migration run
 
       - name: Run tests
-        run: cargo test --verbose --all-features
-        env:
-          DATABASE_URL: postgres://postgress:test@localhost/test_db
+        run: cargo test --all-features --verbose
