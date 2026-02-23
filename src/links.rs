@@ -1,6 +1,5 @@
-use diesel::{dsl, insert_into, prelude::*, select};
-
 use crate::{error::LinkError, establish_connection, schema};
+use diesel::{dsl, insert_into, prelude::*, select};
 
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::links)]
@@ -9,52 +8,47 @@ pub struct Link {
     pub id: i32,
     pub length: i64,
     pub attenuation: f32,
-    pub error: f32,
-    pub nodea: i32,
-    pub nodeb: i32,
+    pub error_rate: f32,
+    pub node_a: i32,
+    pub node_b: i32,
     pub next_available_time: i64,
 }
 
 impl Link {
     pub fn new(
-        _length: i64,
-        _attenuation: f32,
-        _error: f32,
-        _nodea: i32,
-        _nodeb: i32,
+        length: i64,
+        attenuation: f32,
+        error_rate: f32,
+        node_a: i32,
+        node_b: i32,
     ) -> Result<Link, LinkError> {
-        // TODO: Remove this call, create db pool
         let mut conn = establish_connection();
 
-        // Verify nodes exist
-        let nodea_exists = select(dsl::exists(
-            schema::nodes::table.filter(schema::nodes::id.eq(_nodea)),
+        let node_a_exists = select(dsl::exists(
+            schema::nodes::table.filter(schema::nodes::id.eq(node_a)),
         ))
-        .get_result::<bool>(&mut conn)
-        .unwrap();
-        let nodeb_exists = select(dsl::exists(
-            schema::nodes::table.filter(schema::nodes::id.eq(_nodeb)),
-        ))
-        .get_result::<bool>(&mut conn)
-        .unwrap();
+        .get_result::<bool>(&mut conn)?;
 
-        if !nodea_exists || !nodeb_exists {
-            // One of the nodes does not exist
-            return Err(LinkError::NonExistingNodes);
+        let node_b_exists = select(dsl::exists(
+            schema::nodes::table.filter(schema::nodes::id.eq(node_b)),
+        ))
+        .get_result::<bool>(&mut conn)?;
+
+        if !node_a_exists || !node_b_exists {
+            return Err(LinkError::NonExistingNodes(node_a, node_b));
         }
 
-        let link: Link = insert_into(schema::links::table)
+        let link = insert_into(schema::links::table)
             .values((
-                schema::links::length.eq(_length),
-                schema::links::attenuation.eq(_attenuation),
-                schema::links::error.eq(_error),
-                schema::links::nodea.eq(_nodea),
-                schema::links::nodeb.eq(_nodeb),
+                schema::links::length.eq(length),
+                schema::links::attenuation.eq(attenuation),
+                schema::links::error_rate.eq(error_rate),
+                schema::links::node_a.eq(node_a),
+                schema::links::node_b.eq(node_b),
                 schema::links::next_available_time.eq(0),
             ))
-            .get_result(&mut conn)
-            .unwrap();
+            .get_result(&mut conn)?;
 
-        return Ok(link);
+        Ok(link)
     }
 }

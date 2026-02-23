@@ -18,7 +18,7 @@ pub async fn run_cli() -> Result<(), Error> {
                 io::stdin()
                     .read_line(&mut name)
                     .expect("Failed to read name");
-                create_node_cli(name.trim().to_string()).await;
+                create_node_cli(name.trim().to_string()).await?;
             }
             "Link" => {
                 println!("Enter nodea id:");
