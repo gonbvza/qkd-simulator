@@ -1,7 +1,9 @@
 use crate::api::{create_link_cli, create_node_cli};
+use crate::error::Error;
 use std::io;
 
-pub async fn run_cli() {
+// TODO: Create cli error
+pub async fn run_cli() -> Result<(), Error> {
     loop {
         println!("What do you want to do?");
         let mut buffer = String::new();
@@ -32,11 +34,13 @@ pub async fn run_cli() {
                 let a = nodea.trim().parse::<i32>().unwrap();
                 let b = nodeb.trim().parse::<i32>().unwrap();
 
-                create_link_cli(a, b).await;
+                create_link_cli(a, b).await?;
             }
 
             "Exit" => break,
             _ => println!("Unknown command"),
         }
     }
+
+    Ok(())
 }

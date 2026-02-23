@@ -1,6 +1,6 @@
 use diesel::{dsl, insert_into, prelude::*, select};
 
-use crate::{establish_connection, schema};
+use crate::{error::LinkError, establish_connection, schema};
 
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::links)]
@@ -22,7 +22,7 @@ impl Link {
         _error: f32,
         _nodea: i32,
         _nodeb: i32,
-    ) -> Option<Link> {
+    ) -> Result<Link, LinkError> {
         // TODO: Remove this call, create db pool
         let mut conn = establish_connection();
 
@@ -40,8 +40,7 @@ impl Link {
 
         if !nodea_exists || !nodeb_exists {
             // One of the nodes does not exist
-            println!("Sorry one of the nodes does not exist");
-            return None;
+            return Err(LinkError::NonExistingNodes);
         }
 
         let link: Link = insert_into(schema::links::table)
@@ -56,6 +55,6 @@ impl Link {
             .get_result(&mut conn)
             .unwrap();
 
-        return Some(link);
+        return Ok(link);
     }
 }

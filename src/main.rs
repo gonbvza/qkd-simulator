@@ -10,6 +10,7 @@ use crate::models::args::EventArgs;
 
 mod api;
 mod cli;
+mod error;
 mod event_loop;
 mod links;
 mod models;
@@ -46,7 +47,10 @@ async fn main() {
 
     // Spawn CLI (async)
     tokio::spawn(async {
-        run_cli().await;
+        match run_cli().await {
+            Ok(_) => println!("Loop closed succesfully"),
+            Err(e) => println!("{}", e),
+        }
     });
 
     // Spawn your blocking event loop
