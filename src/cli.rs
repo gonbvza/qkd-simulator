@@ -1,5 +1,6 @@
 use crate::api::{create_link_cli, create_node_cli};
 use crate::error::Error;
+use crate::nodes::{NodeKind, NodeType};
 use std::io;
 
 // TODO: Create cli error
@@ -18,7 +19,14 @@ pub async fn run_cli() -> Result<(), Error> {
                 io::stdin()
                     .read_line(&mut name)
                     .expect("Failed to read name");
-                create_node_cli(name.trim().to_string()).await?;
+                println!("Enter node type:");
+                let mut name = String::new();
+                io::stdin()
+                    .read_line(&mut name)
+                    .expect("Failed to read name");
+
+                let node_type: NodeKind = NodeKind::from_str(&name)?;
+                create_node_cli(name.trim().to_string(), node_type).await?;
             }
             "Link" => {
                 println!("Enter nodea id:");

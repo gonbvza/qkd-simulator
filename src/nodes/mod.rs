@@ -1,2 +1,2 @@
-pub mod client;
-pub mod epr;
+pub mod nodes;
+pub mod repository;

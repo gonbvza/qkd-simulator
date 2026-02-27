@@ -22,6 +22,13 @@ pub enum NodeError {
     Database(#[from] diesel::result::Error),
 }
 
+// errors/cli.rs
+#[derive(Error, Debug)]
+pub enum CliError {
+    #[error("Input by the user was not valid")]
+    NotValidInput(String),
+}
+
 // TODO: Change this to macro
 pub fn map_db_error(node_id: String, e: diesel::result::Error) -> NodeError {
     match e {
@@ -41,4 +48,7 @@ pub enum Error {
     // Node errors
     #[error("{0}")]
     Node(#[from] NodeError),
+    // Cli errors
+    #[error("{0}")]
+    Cli(#[from] CliError),
 }

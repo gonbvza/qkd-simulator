@@ -11,6 +11,7 @@ CREATE TABLE nodes (
 CREATE TABLE measurements (
   id SERIAL PRIMARY KEY,
   node_id INT NOT NULL REFERENCES nodes(id),
+  basis INT NOT NULL,
   measurement_id BIGINT NOT NULL,
   value SMALLINT NOT NULL,
   consumed BOOLEAN NOT NULL
@@ -20,6 +21,7 @@ CREATE TABLE measurements (
 CREATE TABLE pending_measurements (
   id SERIAL PRIMARY KEY,
   node_id INT NOT NULL REFERENCES nodes(id),
+  basis INT NOT NULL,
   measurement_id BIGINT NOT NULL,
   value SMALLINT NOT NULL,
   consumed BOOLEAN NOT NULL
