@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::{env, future, thread};
+use std::env;
 
 use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
@@ -10,10 +10,10 @@ use crate::models::args::EventArgs;
 
 mod api;
 mod cli;
+mod database;
 mod error;
 mod event_loop;
 mod events;
-mod links;
 mod models;
 mod nodes;
 mod registry;

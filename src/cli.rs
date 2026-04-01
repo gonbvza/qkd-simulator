@@ -61,7 +61,6 @@ pub async fn run_cli() -> Result<(), Error> {
                 start_qkd(
                     sender_id.parse::<i32>().map_err(CliError::from)?,
                     receiver_id.parse::<i32>().map_err(CliError::from)?,
-                    epr_id.parse::<i32>().map_err(CliError::from)?,
                 );
             }
 

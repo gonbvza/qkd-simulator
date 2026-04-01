@@ -1,18 +1,14 @@
+use crate::database::nodes::get_node_by_id;
 use crate::error::Error;
 use crate::establish_connection;
-use crate::events::qkd::handle_qkd_init;
-use crate::links::Link;
-use crate::nodes::common::{client_get_by_id, epr_get_by_id};
-use crate::nodes::nodes::{ClientNode, EprNode, NodeKind, NodeType};
+use crate::models::links::Link;
+use crate::nodes::nodes::{Node, NodeKind};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub async fn create_node_cli(name: String, node_type: NodeKind) -> Result<NodeType> {
+pub async fn create_node_cli(name: String, node_type: NodeKind) -> Result<Node> {
     let mut conn = establish_connection();
-    let node: NodeType = match node_type {
-        NodeKind::ClientNode => NodeType::ClientNode(ClientNode::new(&mut conn, name)?),
-        NodeKind::EprNode => NodeType::EprNode(EprNode::new(&mut conn, name)?),
-    };
+    let node: Node = Node::new(&mut conn, name, node_type.to_string())?;
     Ok(node)
 }
 
@@ -37,21 +33,12 @@ pub async fn create_link_cli(node_a: i32, node_b: i32) -> Result<Link> {
 pub async fn start_qkd(sender_id: i32, receiver_id: i32) -> Result<()> {
     // Get the nodes
     let mut conn = establish_connection();
-    let mut sender_node: ClientNode = client_get_by_id(&mut conn, sender_id)?;
-    let mut receiver_node: ClientNode = client_get_by_id(&mut conn, receiver_id)?;
+    let mut sender_node: Node = get_node_by_id(&mut conn, sender_id)?;
+    let mut receiver_node: Node = get_node_by_id(&mut conn, receiver_id)?;
 
     // TODO: Get epr node that connects them
-
-    // Get links
-    let link_a: Link = epr_node.get_link(&sender_node)?;
-    let link_b: Link = epr_node.get_link(&receiver_node)?;
-    handle_qkd_init(
-        &mut sender_node,
-        &mut receiver_node,
-        &mut epr_node,
-        link_a,
-        link_b,
-    );
+    // TODO: GET LINKS
+    // TODO: CALL HANDLE QKD INIT
 
     Ok(())
 }
