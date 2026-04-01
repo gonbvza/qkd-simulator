@@ -1,8 +1,9 @@
 use crate::{
+    database::nodes::create_node,
     error::NodeError,
     establish_connection,
     models::measurement::Measurement,
-    nodes::{common::create_node, nodes::Node},
+    nodes::nodes::Node,
     schema::{self},
 };
 use diesel::prelude::*;

@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
 use crate::{
+    database::nodes::set_node_usage,
     error::{NodeError, SimError},
     establish_connection,
-    links::Link,
     models::args::EventArgs,
-    nodes::{common::set_node_usage, nodes::Node},
+    models::links::Link,
+    nodes::nodes::Node,
 };
 
 /// Executes the QKD session initialization after the classical latency delay.

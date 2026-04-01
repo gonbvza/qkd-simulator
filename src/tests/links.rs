@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 
-use crate::{establish_connection, links::Link, schema};
+use crate::{establish_connection, models::links::Link, schema};
 
 #[test]
 fn link_creation_fails_if_node_missing() {

@@ -1,7 +1,7 @@
+use crate::database::nodes::get_node_by_id;
 use crate::error::Error;
 use crate::establish_connection;
-use crate::links::Link;
-use crate::nodes::common::get_node_by_id;
+use crate::models::links::Link;
 use crate::nodes::nodes::{Node, NodeKind};
 
 pub type Result<T> = std::result::Result<T, Error>;
