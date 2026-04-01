@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::error::CliError;
+use crate::error::{CliError, NodeError};
 use diesel::prelude::*;
 
 #[derive(Queryable, Selectable, Clone, Debug)]
@@ -14,7 +14,7 @@ pub struct Node {
     pub node_type: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NodeKind {
     ClientNode = 0,
     EprNode = 1,
@@ -28,6 +28,17 @@ impl std::str::FromStr for NodeKind {
             "0" => Ok(NodeKind::ClientNode),
             "1" => Ok(NodeKind::EprNode),
             _ => Err(CliError::NotValidInput(s.to_string())),
+        }
+    }
+}
+
+impl TryFrom<&String> for NodeKind {
+    type Error = NodeError;
+    fn try_from(s: &String) -> Result<Self, Self::Error> {
+        match s.trim() {
+            "0" => Ok(NodeKind::ClientNode),
+            "1" => Ok(NodeKind::EprNode),
+            _ => Err(NodeError::NotValidKind(s.to_string())),
         }
     }
 }

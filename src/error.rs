@@ -2,13 +2,24 @@ use thiserror::Error;
 
 // graph.rs
 #[derive(Error, Debug)]
-pub enum GraphError {}
+pub enum GraphError {
+    // Node errors
+    #[error("{0}")]
+    Node(#[from] NodeError),
+    // Link errors
+    #[error("{0}")]
+    Link(#[from] LinkError),
+    #[error("No common epr between {0} and {1}")]
+    NoCommonEpr(i32, i32),
+}
 
 // link.rs
 #[derive(Error, Debug)]
 pub enum LinkError {
     #[error("Nodes {0} and {1} do not exist")]
     NonExistingNodes(i32, i32),
+    #[error("Nodes {0} is missing")]
+    MissingNode(i32),
     #[error("Link between nodes already exists")]
     DuplicateLink,
     #[error("Link capacity exceeded")]
@@ -28,6 +39,8 @@ pub enum NodeError {
     Database(#[from] diesel::result::Error),
     #[error("Node with id {0} is already in use")]
     NodeInUse(i32),
+    #[error("Not valid node kind: {0}")]
+    NotValidKind(String),
 }
 
 // cli.rs
