@@ -9,6 +9,8 @@ pub enum LinkError {
     DuplicateLink,
     #[error("Link capacity exceeded")]
     CapacityExceeded,
+    #[error("Link does not exist between {0} and {1}")]
+    NotExistingLink(i32, i32),
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
 }
@@ -20,11 +22,22 @@ pub enum NodeError {
     AlreadyExists(String),
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
+    #[error("Node with id {0} is already in use")]
+    NodeInUse(i32),
 }
 
 // errors/cli.rs
 #[derive(Error, Debug)]
 pub enum CliError {
+    #[error("Input by the user was not valid")]
+    NotValidInput(String),
+    #[error("Not valid integer: {0}")]
+    NoValidInteger(#[from] std::num::ParseIntError),
+}
+
+// errors/cli.rs
+#[derive(Error, Debug)]
+pub enum SimError {
     #[error("Input by the user was not valid")]
     NotValidInput(String),
 }

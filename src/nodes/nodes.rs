@@ -1,13 +1,7 @@
-use crate::{
-    error::{CliError, NodeError},
-    establish_connection,
-    models::measurement::Measurement,
-    nodes::repository::{create_client_node, create_epr_node},
-    schema::{self},
-};
+use crate::error::CliError;
 use diesel::prelude::*;
 
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = crate::schema::nodes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct EprNode {
@@ -16,7 +10,7 @@ pub struct EprNode {
     pub in_use: bool,
 }
 
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = crate::schema::nodes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ClientNode {
@@ -32,6 +26,7 @@ pub enum NodeKind {
     EprNode = 1,
 }
 
+#[derive(Clone, Debug)]
 pub enum NodeType {
     ClientNode(ClientNode),
     EprNode(EprNode),
@@ -49,25 +44,7 @@ impl std::str::FromStr for NodeKind {
     }
 }
 
-impl ClientNode {
-    pub fn new(conn: &mut PgConnection, name: String) -> Result<ClientNode, NodeError> {
-        create_client_node(conn, &name)
-    }
-
-    pub fn get_measurements(&self) -> Result<Vec<Measurement>, NodeError> {
-        let mut conn = establish_connection();
-
-        let measurements: Vec<Measurement> = schema::measurements::table
-            .select(Measurement::as_select())
-            .filter(schema::measurements::node_id.eq(self.id))
-            .load(&mut conn)?;
-
-        Ok(measurements)
-    }
-}
-
-impl EprNode {
-    pub fn new(conn: &mut PgConnection, name: String) -> Result<EprNode, NodeError> {
-        create_epr_node(conn, &name)
-    }
+pub trait NodeUsage {
+    fn get_id(&self) -> i32;
+    fn set_in_use(&mut self, value: bool);
 }

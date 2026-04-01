@@ -12,6 +12,7 @@ mod api;
 mod cli;
 mod error;
 mod event_loop;
+mod events;
 mod links;
 mod models;
 mod nodes;
@@ -42,7 +43,9 @@ pub fn establish_connection() -> PgConnection {
 
 #[tokio::main]
 async fn main() {
-    let mut event_loop = EventLoop::new();
+    let mut event_loop = EventLoop::instance()
+        .lock()
+        .unwrap_or_else(|e| e.into_inner());
     event_loop.instantiate_functions();
 
     // Spawn CLI (async)
