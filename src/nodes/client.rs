@@ -1,34 +1,38 @@
-use diesel::{insert_into, prelude::*, result::Error};
-
 use crate::{
-    error::{map_db_error, NodeError},
+    error::NodeError,
     establish_connection,
+    models::measurement::Measurement,
+    nodes::{
+        common::create_client_node,
+        nodes::{ClientNode, NodeUsage},
+    },
     schema::{self},
 };
-
-#[derive(Queryable, Selectable)]
-#[diesel(table_name = crate::schema::nodes)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct ClientNode {
-    pub id: i32,
-    pub name: String,
-    pub in_use: bool,
-    pub measurements: i64,
-    pub node_type: String,
-}
+use diesel::prelude::*;
 
 impl ClientNode {
-    pub fn new(_name: String) -> Result<ClientNode, NodeError> {
-        // TODO: Remove this call, create db pool
+    pub fn new(conn: &mut PgConnection, name: String) -> Result<ClientNode, NodeError> {
+        create_client_node(conn, &name)
+    }
+
+    pub fn get_measurements(&self) -> Result<Vec<Measurement>, NodeError> {
         let mut conn = establish_connection();
 
-        let new_node: Result<ClientNode, Error> = insert_into(schema::nodes::table)
-            .values(schema::nodes::name.eq(_name.clone()))
-            .get_result(&mut conn);
+        let measurements: Vec<Measurement> = schema::measurements::table
+            .select(Measurement::as_select())
+            .filter(schema::measurements::node_id.eq(self.id))
+            .load(&mut conn)?;
 
-        match new_node {
-            Ok(node) => Ok(node),
-            Err(e) => Err(map_db_error(_name.clone(), e)),
-        }
+        Ok(measurements)
+    }
+}
+
+impl NodeUsage for ClientNode {
+    fn get_id(&self) -> i32 {
+        return self.id;
+    }
+
+    fn set_in_use(&mut self, value: bool) {
+        self.in_use = value;
     }
 }

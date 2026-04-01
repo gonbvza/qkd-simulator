@@ -16,6 +16,7 @@ diesel::table! {
     measurements (id) {
         id -> Int4,
         node_id -> Int4,
+        basis -> Int4,
         measurement_id -> Int8,
         value -> Int2,
         consumed -> Bool,
@@ -38,6 +39,7 @@ diesel::table! {
     pending_measurements (id) {
         id -> Int4,
         node_id -> Int4,
+        basis -> Int4,
         measurement_id -> Int8,
         value -> Int2,
         consumed -> Bool,

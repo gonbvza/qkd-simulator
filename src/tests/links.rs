@@ -32,7 +32,7 @@ fn link_creation_fails_if_node_missing() {
         missing_node,
     );
 
-    assert!(link.is_none());
+    assert!(!link.is_ok());
 }
 
 #[test]
@@ -70,8 +70,8 @@ fn link_creation_succeeds_with_valid_nodes() {
     // Validate fields
     assert_eq!(link.length, length);
     assert_eq!(link.attenuation, attenuation);
-    assert_eq!(link.error, error);
-    assert_eq!(link.nodea, node_a);
-    assert_eq!(link.nodeb, node_b);
+    assert_eq!(link.error_rate, error);
+    assert_eq!(link.node_a, node_a);
+    assert_eq!(link.node_b, node_b);
     assert_eq!(link.next_available_time, 0);
 }
