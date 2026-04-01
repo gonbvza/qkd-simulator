@@ -1,19 +1,12 @@
+use std::fmt;
+
 use crate::error::CliError;
 use diesel::prelude::*;
 
 #[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = crate::schema::nodes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct EprNode {
-    pub id: i32,
-    pub name: String,
-    pub in_use: bool,
-}
-
-#[derive(Queryable, Selectable, Clone, Debug)]
-#[diesel(table_name = crate::schema::nodes)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct ClientNode {
+pub struct Node {
     pub id: i32,
     pub name: String,
     pub in_use: bool,
@@ -21,15 +14,10 @@ pub struct ClientNode {
     pub node_type: String,
 }
 
+#[derive(Debug)]
 pub enum NodeKind {
     ClientNode = 0,
     EprNode = 1,
-}
-
-#[derive(Clone, Debug)]
-pub enum NodeType {
-    ClientNode(ClientNode),
-    EprNode(EprNode),
 }
 
 impl std::str::FromStr for NodeKind {
@@ -44,7 +32,11 @@ impl std::str::FromStr for NodeKind {
     }
 }
 
-pub trait NodeUsage {
-    fn get_id(&self) -> i32;
-    fn set_in_use(&mut self, value: bool);
+impl fmt::Display for NodeKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            NodeKind::ClientNode => write!(f, "0"),
+            NodeKind::EprNode => write!(f, "1"),
+        }
+    }
 }

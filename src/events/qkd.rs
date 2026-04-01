@@ -5,10 +5,7 @@ use crate::{
     establish_connection,
     links::Link,
     models::args::EventArgs,
-    nodes::{
-        common::set_node_usage,
-        nodes::{ClientNode, EprNode, NodeType},
-    },
+    nodes::{common::set_node_usage, nodes::Node},
 };
 
 /// Executes the QKD session initialization after the classical latency delay.
@@ -32,9 +29,9 @@ use crate::{
 /// * `receiver_id` - The [`NodeId`] of the destination client node
 /// * `epr_id`      - The [`NodeId`] of the EPR node for this session
 pub fn handle_qkd_init(
-    left_node: &mut ClientNode,
-    right_node: &mut ClientNode,
-    epr: &mut EprNode,
+    left_node: &mut Node,
+    right_node: &mut Node,
+    epr: &mut Node,
     link_a: Link,
     link_b: Link,
 ) -> Result<(), NodeError> {
@@ -69,31 +66,14 @@ pub fn handle_qkd_init(
 /// * `sender_id`   - The [`NodeId`] of the client node receiving the left qubit
 /// * `receiver_id` - The [`NodeId`] of the client node receiving the right qubit
 pub fn emit_pair(
-    left_node: &mut ClientNode,
-    right_node: &mut ClientNode,
-    epr: &mut EprNode,
+    left_node: &mut Node,
+    right_node: &mut Node,
+    epr: &mut Node,
     link_a: Link,
     link_b: Link,
 ) {
-    let mut args: HashMap<String, EventArgs> = HashMap::new();
-    args.insert(
-        "left".to_string(),
-        EventArgs::Node(NodeType::ClientNode(right_node.clone())),
-    );
-    args.insert(
-        "left".to_string(),
-        EventArgs::Node(NodeType::ClientNode(left_node.clone())),
-    );
-    args.insert(
-        "right".to_string(),
-        EventArgs::Node(NodeType::ClientNode(right_node.clone())),
-    );
-    args.insert(
-        "epr".to_string(),
-        EventArgs::Node(NodeType::EprNode(epr.clone())),
-    );
-
     // Generate entangled pair
+    todo!();
 }
 
 /// Simulates the receival of a qubit ref by a detector.

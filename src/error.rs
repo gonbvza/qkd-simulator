@@ -1,6 +1,10 @@
 use thiserror::Error;
 
-// errors/link.rs
+// graph.rs
+#[derive(Error, Debug)]
+pub enum GraphError {}
+
+// link.rs
 #[derive(Error, Debug)]
 pub enum LinkError {
     #[error("Nodes {0} and {1} do not exist")]
@@ -15,7 +19,7 @@ pub enum LinkError {
     Database(#[from] diesel::result::Error),
 }
 
-// errors/link.rs
+// link.rs
 #[derive(Error, Debug)]
 pub enum NodeError {
     #[error("Node with id {0} already exists")]
@@ -26,7 +30,7 @@ pub enum NodeError {
     NodeInUse(i32),
 }
 
-// errors/cli.rs
+// cli.rs
 #[derive(Error, Debug)]
 pub enum CliError {
     #[error("Input by the user was not valid")]
@@ -35,7 +39,7 @@ pub enum CliError {
     NoValidInteger(#[from] std::num::ParseIntError),
 }
 
-// errors/cli.rs
+// cli.rs
 #[derive(Error, Debug)]
 pub enum SimError {
     #[error("Input by the user was not valid")]
@@ -64,4 +68,7 @@ pub enum Error {
     // Cli errors
     #[error("{0}")]
     Cli(#[from] CliError),
+    // Graph errors
+    #[error("{0}")]
+    Graph(#[from] GraphError),
 }

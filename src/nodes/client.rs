@@ -2,19 +2,22 @@ use crate::{
     error::NodeError,
     establish_connection,
     models::measurement::Measurement,
-    nodes::{
-        common::create_client_node,
-        nodes::{ClientNode, NodeUsage},
-    },
+    nodes::{common::create_node, nodes::Node},
     schema::{self},
 };
 use diesel::prelude::*;
 
-impl ClientNode {
-    pub fn new(conn: &mut PgConnection, name: String) -> Result<ClientNode, NodeError> {
-        create_client_node(conn, &name)
+impl Node {
+    pub fn new(
+        conn: &mut PgConnection,
+        name: String,
+        node_type: String,
+    ) -> Result<Node, NodeError> {
+        let mut conn = establish_connection();
+        create_node(&mut conn, &name, &node_type)
     }
 
+    // TODO: MOVE THIS TO DB FILE
     pub fn get_measurements(&self) -> Result<Vec<Measurement>, NodeError> {
         let mut conn = establish_connection();
 
@@ -25,14 +28,12 @@ impl ClientNode {
 
         Ok(measurements)
     }
-}
 
-impl NodeUsage for ClientNode {
-    fn get_id(&self) -> i32 {
+    pub fn get_id(&self) -> i32 {
         return self.id;
     }
 
-    fn set_in_use(&mut self, value: bool) {
+    pub fn set_in_use(&mut self, value: bool) {
         self.in_use = value;
     }
 }

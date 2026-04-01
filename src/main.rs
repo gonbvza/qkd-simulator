@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::{env, future, thread};
+use std::env;
 
 use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
@@ -13,6 +13,7 @@ mod cli;
 mod error;
 mod event_loop;
 mod events;
+mod graph;
 mod links;
 mod models;
 mod nodes;
