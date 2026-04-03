@@ -92,15 +92,15 @@ impl Graph {
     ///
     /// Returns
     /// * Node   - Instance of the epr node,
-    pub fn get_node_epr(&self, node_a: i32, node_b: i32) -> Result<i32, GraphError> {
+    pub fn get_node_epr(&self, src_id: i32, dst_id: i32) -> Result<i32, GraphError> {
         let a_neighbors: &HashSet<GraphNode> = self
             .connections
-            .get(&node_a)
-            .ok_or(LinkError::MissingNode(node_a))?;
+            .get(&src_id)
+            .ok_or(LinkError::MissingNode(src_id))?;
         let b_neighbors: &HashSet<GraphNode> = self
             .connections
-            .get(&node_b)
-            .ok_or(LinkError::MissingNode(node_b))?;
+            .get(&dst_id)
+            .ok_or(LinkError::MissingNode(dst_id))?;
 
         let common_epr = b_neighbors
             .iter()
@@ -110,7 +110,7 @@ impl Graph {
 
         match common_epr {
             Some(epr) => Ok(epr.get_id()),
-            None => Err(GraphError::NoCommonEpr(node_a, node_b)),
+            None => Err(GraphError::NoCommonEpr(src_id, dst_id)),
         }
     }
 }

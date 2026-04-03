@@ -1,4 +1,5 @@
 use crate::{
+    error::Error,
     models::{args::EventArgs, bin_heap::BinHeap, event::Event},
     registry::get_event_functions,
 };
@@ -7,7 +8,10 @@ use std::sync::{Mutex, OnceLock};
 
 pub struct EventLoop {
     pub bin_heap: BinHeap,
-    pub funcs: HashMap<String, Box<dyn Fn(&HashMap<String, EventArgs>) + Send + Sync>>,
+    pub funcs: HashMap<
+        String,
+        Box<dyn Fn(&HashMap<String, EventArgs>) -> Result<(), Error> + Send + Sync>,
+    >,
 }
 
 // The global singleton instance
@@ -29,7 +33,7 @@ impl EventLoop {
 
     pub fn push_func<F>(&mut self, name: String, func: F)
     where
-        F: Fn(&HashMap<String, EventArgs>) + Send + Sync + 'static,
+        F: Fn(&HashMap<String, EventArgs>) -> Result<(), Error> + Send + Sync + 'static,
     {
         self.funcs.insert(name, Box::new(func));
     }
@@ -37,17 +41,17 @@ impl EventLoop {
     pub fn instantiate_functions(&mut self) {
         let funcs: Vec<(
             &'static str,
-            Box<dyn Fn(&HashMap<String, EventArgs>) + Send + Sync>,
+            Box<dyn Fn(&HashMap<String, EventArgs>) -> Result<(), Error> + Send + Sync>,
         )> = get_event_functions();
         for key in funcs {
             self.push_func(key.0.to_string(), key.1);
         }
     }
 
-    pub fn exec_event(&mut self, event: Event) {
+    pub fn exec_event(&mut self, event: Event) -> Result<(), Error> {
         match self.funcs.get(&event.function) {
             Some(function) => function(&event.args),
-            None => println!("Function does not exist"),
+            None => Err(Error::NonExistantFunction(event.function)),
         }
     }
 

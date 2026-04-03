@@ -84,4 +84,8 @@ pub enum Error {
     // Graph errors
     #[error("{0}")]
     Graph(#[from] GraphError),
+
+    // Event loop error
+    #[error("Function {0} does not exist")]
+    NonExistantFunction(String),
 }

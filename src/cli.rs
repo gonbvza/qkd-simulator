@@ -1,9 +1,13 @@
 use crate::api::{create_link_cli, create_node_cli, start_qkd};
+use crate::database::nodes::get_node_by_id;
 use crate::error::{CliError, Error};
+use crate::establish_connection;
+use crate::nodes::nodes::Node;
 use std::io;
 
 // TODO: Create cli error
 pub async fn run_cli() -> Result<(), Error> {
+    let mut conn = establish_connection();
     loop {
         println!("What do you want to do?");
         let mut buffer = String::new();
@@ -44,24 +48,20 @@ pub async fn run_cli() -> Result<(), Error> {
             }
             "Start" => {
                 println!("Enter sender id:");
-                let mut sender_id = String::new();
+                let mut src_id = String::new();
                 io::stdin()
-                    .read_line(&mut sender_id)
+                    .read_line(&mut src_id)
                     .expect("Failed to read name");
+                let src_node: Node =
+                    get_node_by_id(&mut conn, src_id.parse::<i32>().map_err(CliError::from)?)?;
                 println!("Enter receier id:");
-                let mut receiver_id = String::new();
+                let mut dst_id = String::new();
                 io::stdin()
-                    .read_line(&mut receiver_id)
+                    .read_line(&mut dst_id)
                     .expect("Failed to read name");
-                println!("Enter epr id:");
-                let mut epr_id = String::new();
-                io::stdin()
-                    .read_line(&mut epr_id)
-                    .expect("Failed to read name");
-                start_qkd(
-                    sender_id.parse::<i32>().map_err(CliError::from)?,
-                    receiver_id.parse::<i32>().map_err(CliError::from)?,
-                );
+                let dst_node: Node =
+                    get_node_by_id(&mut conn, dst_id.parse::<i32>().map_err(CliError::from)?)?;
+                start_qkd(src_node, dst_node).await;
             }
 
             "Exit" => break,

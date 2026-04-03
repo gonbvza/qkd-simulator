@@ -2,10 +2,9 @@ use std::collections::HashMap;
 
 use crate::{
     database::nodes::set_node_usage,
-    error::{NodeError, SimError},
+    error::{Error, NodeError, SimError},
     establish_connection,
-    models::args::EventArgs,
-    models::links::Link,
+    models::{args::EventArgs, links::Link},
     nodes::nodes::Node,
 };
 
@@ -29,14 +28,8 @@ use crate::{
 /// * `sender_id`   - The [`NodeId`] of the initiating client node
 /// * `receiver_id` - The [`NodeId`] of the destination client node
 /// * `epr_id`      - The [`NodeId`] of the EPR node for this session
-pub fn handle_qkd_init(
-    left_node: &mut Node,
-    right_node: &mut Node,
-    epr: &mut Node,
-    link_a: Link,
-    link_b: Link,
-) -> Result<(), NodeError> {
-    todo!();
+pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
+    Ok(())
 }
 
 /// Creates one entangled pair and schedules its transmission to both client nodes.

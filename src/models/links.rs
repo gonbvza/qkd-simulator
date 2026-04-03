@@ -51,16 +51,4 @@ impl Link {
 
         Ok(link)
     }
-
-    pub fn get_link(node_a_id: i32, node_b_id: i32) -> Result<Link, LinkError> {
-        let mut conn = establish_connection();
-        let link: Link = schema::links::table
-            .filter(
-                schema::links::node_a
-                    .eq(node_a_id)
-                    .and(schema::links::node_b.eq(node_b_id)),
-            )
-            .first(&mut conn)?;
-        Ok(link)
-    }
 }
