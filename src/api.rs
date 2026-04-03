@@ -38,7 +38,7 @@ pub async fn start_qkd(sender_id: i32, receiver_id: i32) -> Result<()> {
 
     // TODO: Get epr node that connects them
     // TODO: GET LINKS
-    // TODO: CALL HANDLE QKD INIT
+    // TODO: CALL HANDLE QKD INIT in the event loop
 
     Ok(())
 }
