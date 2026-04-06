@@ -48,6 +48,8 @@ pub enum NodeError {
 pub enum CliError {
     #[error("Input by the user was not valid")]
     NotValidInput(String),
+    #[error("Command {0} is not valid")]
+    NotValidCommand(String),
     #[error("Not valid integer: {0}")]
     NoValidInteger(#[from] std::num::ParseIntError),
 }

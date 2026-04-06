@@ -48,13 +48,13 @@ fn link_creation_succeeds_with_valid_nodes() {
         .unwrap();
 
     // Insert two nodes
-    let node_a: i32 = diesel::insert_into(schema::nodes::table)
+    let src_id: i32 = diesel::insert_into(schema::nodes::table)
         .values(schema::nodes::name.eq("node-a"))
         .returning(schema::nodes::id)
         .get_result(&mut conn)
         .unwrap();
 
-    let node_b: i32 = diesel::insert_into(schema::nodes::table)
+    let dst_id: i32 = diesel::insert_into(schema::nodes::table)
         .values(schema::nodes::name.eq("node-b"))
         .returning(schema::nodes::id)
         .get_result(&mut conn)
@@ -65,13 +65,13 @@ fn link_creation_succeeds_with_valid_nodes() {
     let error = 0.001;
 
     let link =
-        Link::new(length, attenuation, error, node_a, node_b).expect("Link should be created");
+        Link::new(length, attenuation, error, src_id, dst_id).expect("Link should be created");
 
     // Validate fields
     assert_eq!(link.length, length);
     assert_eq!(link.attenuation, attenuation);
     assert_eq!(link.error_rate, error);
-    assert_eq!(link.node_a, node_a);
-    assert_eq!(link.node_b, node_b);
+    assert_eq!(link.src_id, src_id);
+    assert_eq!(link.dst_id, dst_id);
     assert_eq!(link.next_available_time, 0);
 }

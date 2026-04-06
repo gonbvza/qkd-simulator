@@ -51,3 +51,21 @@ impl fmt::Display for NodeKind {
         }
     }
 }
+
+impl fmt::Display for Node {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let kind = NodeKind::try_from(&self.node_type)
+            .map(|k| k.to_string())
+            .unwrap_or_else(|_| format!("Unknown ({})", self.node_type));
+
+        write!(
+            f,
+            "[{}] {} | Type: {} | In Use: {} | Measurements: {}",
+            self.id,
+            self.name,
+            kind,
+            if self.in_use { "Yes" } else { "No" },
+            self.measurements
+        )
+    }
+}

@@ -4,7 +4,7 @@ use std::env;
 use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
 
-use crate::cli::run_cli;
+use crate::cli::cli::run_cli;
 use crate::event_loop::EventLoop;
 use crate::models::args::EventArgs;
 
