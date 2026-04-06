@@ -60,24 +60,24 @@ impl Graph {
         }
         //Instantiate connections
         for link in curr_links.iter() {
-            let node_a: &GraphNode = graph
+            let src_id: &GraphNode = graph
                 .nodes
-                .get(&link.node_a)
-                .ok_or(LinkError::MissingNode(link.node_a))?;
-            let node_b: &GraphNode = graph
+                .get(&link.src_id)
+                .ok_or(LinkError::MissingNode(link.src_id))?;
+            let dst_id: &GraphNode = graph
                 .nodes
-                .get(&link.node_b)
-                .ok_or(LinkError::MissingNode(link.node_b))?;
+                .get(&link.dst_id)
+                .ok_or(LinkError::MissingNode(link.dst_id))?;
             graph
                 .connections
-                .get_mut(&link.node_a)
-                .ok_or(LinkError::MissingNode(link.node_a))?
-                .insert(node_b.clone());
+                .get_mut(&link.src_id)
+                .ok_or(LinkError::MissingNode(link.src_id))?
+                .insert(dst_id.clone());
             graph
                 .connections
-                .get_mut(&link.node_b)
-                .ok_or(LinkError::MissingNode(link.node_b))?
-                .insert(node_a.clone());
+                .get_mut(&link.dst_id)
+                .ok_or(LinkError::MissingNode(link.dst_id))?
+                .insert(src_id.clone());
         }
         Ok(graph)
     }
@@ -87,20 +87,20 @@ impl Graph {
     /// The epr node with the lowest id is chosen if they share any
     ///
     /// Arguments
-    /// * node_a - The node id of the first node
-    /// * node_b - The node id of the second node
+    /// * src_id - The node id of the first node
+    /// * dst_id - The node id of the second node
     ///
     /// Returns
     /// * Node   - Instance of the epr node,
-    pub fn get_node_epr(&self, node_a: i32, node_b: i32) -> Result<i32, GraphError> {
+    pub fn get_node_epr(&self, src_id: i32, dst_id: i32) -> Result<i32, GraphError> {
         let a_neighbors: &HashSet<GraphNode> = self
             .connections
-            .get(&node_a)
-            .ok_or(LinkError::MissingNode(node_a))?;
+            .get(&src_id)
+            .ok_or(LinkError::MissingNode(src_id))?;
         let b_neighbors: &HashSet<GraphNode> = self
             .connections
-            .get(&node_b)
-            .ok_or(LinkError::MissingNode(node_b))?;
+            .get(&dst_id)
+            .ok_or(LinkError::MissingNode(dst_id))?;
 
         let common_epr = b_neighbors
             .iter()
@@ -110,7 +110,7 @@ impl Graph {
 
         match common_epr {
             Some(epr) => Ok(epr.get_id()),
-            None => Err(GraphError::NoCommonEpr(node_a, node_b)),
+            None => Err(GraphError::NoCommonEpr(src_id, dst_id)),
         }
     }
 }

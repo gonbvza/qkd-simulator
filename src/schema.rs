@@ -6,8 +6,8 @@ diesel::table! {
         length -> Int8,
         attenuation -> Float4,
         error_rate -> Float4,
-        node_a -> Int4,
-        node_b -> Int4,
+        src_id -> Int4,
+        dst_id -> Int4,
         next_available_time -> Int8,
     }
 }

@@ -26,14 +26,14 @@ mod tests {
         }
     }
 
-    fn make_link(id: i32, node_a: i32, node_b: i32) -> Link {
+    fn make_link(id: i32, src_id: i32, dst_id: i32) -> Link {
         Link {
             id,
             length: 100,
             error_rate: 0.2,
             attenuation: 0.2,
-            node_a,
-            node_b,
+            src_id,
+            dst_id,
             next_available_time: 2,
         }
     }

@@ -33,7 +33,7 @@ CREATE TABLE links (
   length BIGINT NOT NULL,
   attenuation REAL NOT NULL,
   error_rate REAL NOT NULL,
-  node_a INT NOT NULL REFERENCES nodes(id),
-  node_b INT NOT NULL REFERENCES nodes(id),
+  src_id INT NOT NULL REFERENCES nodes(id),
+  dst_id INT NOT NULL REFERENCES nodes(id),
   next_available_time BIGINT NOT NULL
 );

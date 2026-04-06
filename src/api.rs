@@ -6,14 +6,14 @@ use crate::nodes::nodes::{Node, NodeKind};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub async fn create_node_cli(name: String, node_type: NodeKind) -> Result<Node> {
+pub async fn create_node_api(name: String, node_type: NodeKind) -> Result<Node> {
     let mut conn = establish_connection();
     let node: Node = Node::new(&mut conn, name, node_type.to_string())?;
     Ok(node)
 }
 
-pub async fn create_link_cli(node_a: i32, node_b: i32) -> Result<Link> {
-    let link = Link::new(100, 0.4, 0.1, node_a, node_b)?;
+pub async fn create_link_api(src_id: i32, dst_id: i32) -> Result<Link> {
+    let link = Link::new(100, 0.4, 0.1, src_id, dst_id)?;
     Ok(link)
 }
 
@@ -30,7 +30,7 @@ pub async fn create_link_cli(node_a: i32, node_b: i32) -> Result<Link> {
 ///
 /// # Errors
 /// Returns an error if any of the three node IDs are not found in the repository
-pub async fn start_qkd(sender_id: i32, receiver_id: i32) -> Result<()> {
+pub async fn start_qkd_api(sender_id: i32, receiver_id: i32) -> Result<()> {
     // Get the nodes
     let mut conn = establish_connection();
     let mut sender_node: Node = get_node_by_id(&mut conn, sender_id)?;
