@@ -29,6 +29,7 @@ use crate::{
 /// * `receiver_id` - The [`NodeId`] of the destination client node
 /// * `epr_id`      - The [`NodeId`] of the EPR node for this session
 pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
+    dbg!(args);
     Ok(())
 }
 

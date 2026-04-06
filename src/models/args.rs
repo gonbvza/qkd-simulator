@@ -1,4 +1,7 @@
-use crate::{models::qubit::QubitRef, nodes::nodes::Node};
+use crate::{
+    models::{links::Link, qubit::QubitRef},
+    nodes::nodes::Node,
+};
 
 #[derive(Debug, Clone)]
 pub enum EventArgs {
@@ -6,4 +9,5 @@ pub enum EventArgs {
     ArgInt(u32),
     QubitRef(QubitRef),
     Node(Node),
+    Link(Link),
 }

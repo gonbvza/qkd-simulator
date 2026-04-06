@@ -1,7 +1,11 @@
+use std::collections::HashMap;
+
 use crate::database::link::get_link;
 use crate::database::nodes::get_node_by_id;
 use crate::error::Error;
 use crate::establish_connection;
+use crate::models::args::EventArgs;
+use crate::models::event::Event;
 use crate::models::graph::Graph;
 use crate::models::links::Link;
 use crate::nodes::nodes::{Node, NodeKind};
@@ -37,12 +41,26 @@ pub async fn start_qkd(src_node: Node, dst_node: Node) -> Result<()> {
     let mut conn = establish_connection();
 
     let graph: Graph = Graph::new()?;
-    let epr: Node = get_node_by_id(&mut conn, graph.get_node_epr(src_node.id, dst_node.id)?)?;
+    let epr_node: Node = get_node_by_id(&mut conn, graph.get_node_epr(src_node.id, dst_node.id)?)?;
 
-    let src_epr_link: Link = get_link(&mut conn, src_node.id, epr.id)?;
-    let dst_epr_link: Link = get_link(&mut conn, dst_node.id, epr.id)?;
+    let src_epr_link: Link = get_link(&mut conn, src_node.id, epr_node.id)?;
+    let dst_epr_link: Link = get_link(&mut conn, dst_node.id, epr_node.id)?;
 
-    // TODO: CALL HANDLE QKD INIT in the event loop
+    let args: HashMap<String, EventArgs> = HashMap::from([
+        (String::from("src_node"), EventArgs::Node(src_node)),
+        (String::from("dst_node"), EventArgs::Node(dst_node)),
+        (String::from("epr_node"), EventArgs::Node(epr_node)),
+        (String::from("src_epr_link"), EventArgs::Link(src_epr_link)),
+        (String::from("dst_epr_link"), EventArgs::Link(dst_epr_link)),
+    ]);
+
+    // TODO: Calculate timestamp
+    Event::new_and_push(
+        String::from("handle_qkd_event"),
+        String::from("handle_qkd_init"),
+        args,
+        12,
+    );
 
     Ok(())
 }

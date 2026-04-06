@@ -1,7 +1,7 @@
 use crate::{error::LinkError, establish_connection, schema};
 use diesel::{dsl, insert_into, prelude::*, select};
 
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, Debug, Clone)]
 #[diesel(table_name = crate::schema::links)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Link {
@@ -22,6 +22,7 @@ impl Link {
         node_a: i32,
         node_b: i32,
     ) -> Result<Link, LinkError> {
+        // TODO: FIX SRP!!!
         let mut conn = establish_connection();
 
         let node_a_exists = select(dsl::exists(
