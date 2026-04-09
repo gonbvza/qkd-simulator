@@ -1,8 +1,11 @@
+use std::sync::{Arc, Condvar, Mutex};
+
 use crate::cli::command::Command;
 use crate::cli::methods::{
     create_link_cli, create_node_cli, get_links_cli, get_nodes_cli, start_qkd_cli,
 };
 use crate::error::Error;
+use crate::event_loop::EventLoop;
 use crate::utility::read_line;
 
 // TODO: Create cli error
@@ -13,7 +16,7 @@ pub async fn run_cli() -> Result<(), Error> {
             Ok(cmd) => cmd,
             Err(e) => {
                 println!("Error: {}", e);
-                continue; // ✅ stay in the loop
+                continue;
             }
         };
         match command {

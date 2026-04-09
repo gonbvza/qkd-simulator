@@ -3,8 +3,8 @@ use crate::{
     models::{args::EventArgs, bin_heap::BinHeap, event::Event},
     registry::get_event_functions,
 };
-use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
+use std::{collections::HashMap, sync::Condvar};
 
 pub struct EventLoop {
     pub bin_heap: BinHeap,
@@ -14,11 +14,9 @@ pub struct EventLoop {
     >,
 }
 
-// The global singleton instance
-static INSTANCE: OnceLock<Mutex<EventLoop>> = OnceLock::new();
+static INSTANCE: OnceLock<Arc<(Mutex<EventLoop>, Condvar)>> = OnceLock::new();
 
 impl EventLoop {
-    /// Private constructor — only called once internally
     fn new() -> EventLoop {
         EventLoop {
             bin_heap: BinHeap::new(),
@@ -26,9 +24,8 @@ impl EventLoop {
         }
     }
 
-    /// Returns a reference to the global singleton's Mutex
-    pub fn instance() -> &'static Mutex<EventLoop> {
-        INSTANCE.get_or_init(|| Mutex::new(EventLoop::new()))
+    pub fn instance() -> &'static Arc<(Mutex<EventLoop>, Condvar)> {
+        INSTANCE.get_or_init(|| Arc::new((Mutex::new(EventLoop::new()), Condvar::new())))
     }
 
     pub fn push_func<F>(&mut self, name: String, func: F)
@@ -57,15 +54,9 @@ impl EventLoop {
 
     pub fn push_event(&mut self, event: Event) {
         self.bin_heap.insert(event);
-    }
 
-    pub fn run_loop(&mut self) {
-        loop {
-            let curr_event: Option<Event> = self.bin_heap.extract_min();
-            if let Some(event) = curr_event {
-                self.exec_event(event);
-                break;
-            }
-        }
+        let pair = EventLoop::instance().clone();
+        let (_, cvar) = &*pair;
+        cvar.notify_one();
     }
 }

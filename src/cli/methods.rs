@@ -1,5 +1,5 @@
 use crate::{
-    api::{create_link_api, create_node_api},
+    api::{create_link_api, create_node_api, start_qkd},
     database::{
         link::get_all_links,
         nodes::{get_all_nodes, get_node_by_id},
@@ -39,19 +39,22 @@ pub async fn start_qkd_cli() -> Result<(), Error> {
         &mut conn,
         read_line().trim().parse::<i32>().map_err(CliError::from)?,
     )?;
-
     println!("Enter destination id:");
     let dst_node: Node = get_node_by_id(
         &mut conn,
         read_line().trim().parse::<i32>().map_err(CliError::from)?,
     )?;
-    // start_qkd(src_node, dst_node).await;
+    start_qkd(src_node, dst_node).await?;
     Ok(())
 }
 
 pub async fn get_nodes_cli() -> Result<(), Error> {
     let mut conn = establish_connection();
     let nodes: Vec<Node> = get_all_nodes(&mut conn)?;
+    if nodes.len() == 0 {
+        println!("No nodes were found");
+        return Ok(());
+    }
     for node in nodes {
         println!("{}", node);
     }
@@ -60,7 +63,11 @@ pub async fn get_nodes_cli() -> Result<(), Error> {
 
 pub async fn get_links_cli() -> Result<(), Error> {
     let mut conn = establish_connection();
-    let mut links: Vec<Link> = get_all_links(&mut conn)?;
+    let links: Vec<Link> = get_all_links(&mut conn)?;
+    if links.len() == 0 {
+        println!("No links were found");
+        return Ok(());
+    }
     for link in links {
         println!("{}", link);
     }

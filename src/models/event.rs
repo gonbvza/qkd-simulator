@@ -1,5 +1,5 @@
 use crate::{event_loop::EventLoop, models::args::EventArgs};
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 // Represents a scheduled event in the simulation with a timestamp (ps),
 // a name for logging, a target function, and its arguments.
@@ -39,9 +39,12 @@ impl Event {
             timestamp,
         };
 
-        let mut event_loop = EventLoop::instance()
+        let loop_pair = Arc::clone(&*EventLoop::instance());
+        let (event_loop, _) = &*loop_pair;
+
+        event_loop
             .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        event_loop.push_event(event);
+            .unwrap_or_else(|e| e.into_inner())
+            .push_event(event);
     }
 }
