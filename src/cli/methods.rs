@@ -7,7 +7,7 @@ use crate::{
     error::{CliError, Error},
     establish_connection,
     models::links::Link,
-    nodes::nodes::Node,
+    nodes::node::Node,
     utility::read_line,
 };
 

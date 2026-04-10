@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::graph::{Graph, GraphNode};
     use crate::error::{GraphError, LinkError};
-    use crate::models::graph::{Graph, GraphNode};
     use crate::models::links::Link;
-    use crate::nodes::nodes::{Node, NodeKind};
+    use crate::nodes::node::{Node, NodeKind};
 
     fn make_client(id: i32) -> Node {
         Node {

@@ -5,7 +5,7 @@ use crate::{
     error::{GraphError, LinkError},
     establish_connection,
     models::links::Link,
-    nodes::nodes::{Node, NodeKind},
+    nodes::node::{Node, NodeKind},
 };
 
 // Local NodeKind enum that servers as wrapper for nodes ids

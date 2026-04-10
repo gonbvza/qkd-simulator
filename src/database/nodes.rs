@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use crate::{
     error::{map_db_error, NodeError},
-    nodes::nodes::Node,
+    nodes::node::Node,
     schema,
 };
 

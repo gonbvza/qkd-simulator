@@ -1,2 +1,2 @@
 pub mod client;
-pub mod nodes;
+pub mod node;

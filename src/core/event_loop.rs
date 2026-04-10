@@ -1,7 +1,9 @@
+use crate::core::bin_heap::BinHeap;
+use crate::core::event_loop;
 use crate::{
+    core::registry::get_event_functions,
     error::Error,
-    models::{args::EventArgs, bin_heap::BinHeap, event::Event},
-    registry::get_event_functions,
+    models::{args::EventArgs, event::Event},
 };
 use std::sync::{Arc, Mutex, OnceLock};
 use std::{collections::HashMap, sync::Condvar};
@@ -57,6 +59,25 @@ impl EventLoop {
 
         let pair = EventLoop::instance().clone();
         let (_, cvar) = &*pair;
+        cvar.notify_one();
+    }
+
+    pub fn new_and_push(
+        name: String,
+        function: String,
+        args: HashMap<String, EventArgs>,
+        timestamp: i32,
+    ) {
+        let event = Event::new(name, function, args, timestamp);
+        let pair = Arc::clone(EventLoop::instance());
+        let (event_loop, cvar) = &*pair;
+        {
+            event_loop
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .bin_heap
+                .insert(event);
+        }
         cvar.notify_one();
     }
 }

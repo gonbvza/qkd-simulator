@@ -3,7 +3,7 @@ use crate::{
     error::NodeError,
     establish_connection,
     models::measurement::Measurement,
-    nodes::nodes::Node,
+    nodes::node::Node,
     schema::{self},
 };
 use diesel::prelude::*;

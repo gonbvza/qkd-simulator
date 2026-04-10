@@ -5,7 +5,7 @@ use crate::{
     error::{Error, NodeError, SimError},
     establish_connection,
     models::{args::EventArgs, links::Link},
-    nodes::nodes::Node,
+    nodes::node::Node,
 };
 
 /// Executes the QKD session initialization after the classical latency delay.

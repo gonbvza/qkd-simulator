@@ -1,6 +1,6 @@
 use crate::{
     models::{links::Link, qubit::QubitRef},
-    nodes::nodes::Node,
+    nodes::node::Node,
 };
 
 #[derive(Debug, Clone)]

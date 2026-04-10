@@ -5,19 +5,17 @@ use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
 
 use crate::cli::cli::run_cli;
-use crate::event_loop::EventLoop;
+use crate::core::event_loop::EventLoop;
 
 mod api;
 mod cli;
+mod core;
 mod database;
 mod error;
-mod event_loop;
 mod events;
 mod models;
 mod nodes;
-mod registry;
 mod schema;
-mod settings;
 mod tests;
 mod utility;
 
