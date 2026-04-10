@@ -70,6 +70,7 @@ async fn test_create_link_api_succeeds_with_valid_nodes() {
 
     let result = create_link_api(src.id, dst.id).await;
 
+    dbg!(&result);
     assert!(result.is_ok());
     let link = result.unwrap();
     assert_eq!(link.src_id, src.id);
@@ -134,6 +135,7 @@ async fn test_start_qkd_succeeds_with_valid_topology() {
         .expect("dst-epr link should be created");
 
     let result = start_qkd(src, dst).await;
+    dbg!(&result);
 
     assert!(result.is_ok());
 }

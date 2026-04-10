@@ -53,4 +53,4 @@ jobs:
         run: diesel migration run
 
       - name: Run tests
-        run: cargo test --all-features --verbose
+        run: cargo test -- --test-threads=1
