@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
+use crate::core::event_loop::EventLoop;
+use crate::core::graph::Graph;
 use crate::database::link::get_link;
 use crate::database::nodes::get_node_by_id;
 use crate::error::Error;
 use crate::establish_connection;
 use crate::models::args::EventArgs;
-use crate::models::event::Event;
-use crate::models::graph::Graph;
 use crate::models::links::Link;
-use crate::nodes::nodes::{Node, NodeKind};
+use crate::nodes::node::{Node, NodeKind};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -40,6 +40,7 @@ pub async fn start_qkd(src_node: Node, dst_node: Node) -> Result<()> {
     // Get the nodes
     let mut conn = establish_connection();
 
+    println!("here");
     let graph: Graph = Graph::new()?;
     let epr_node: Node = get_node_by_id(&mut conn, graph.get_node_epr(src_node.id, dst_node.id)?)?;
 
@@ -55,7 +56,7 @@ pub async fn start_qkd(src_node: Node, dst_node: Node) -> Result<()> {
     ]);
 
     // TODO: Calculate timestamp
-    Event::new_and_push(
+    EventLoop::new_and_push(
         String::from("handle_qkd_event"),
         String::from("handle_qkd_init"),
         args,

@@ -37,7 +37,9 @@ impl TryFrom<&String> for NodeKind {
     fn try_from(s: &String) -> Result<Self, Self::Error> {
         match s.trim() {
             "0" => Ok(NodeKind::ClientNode),
+            "client" => Ok(NodeKind::ClientNode),
             "1" => Ok(NodeKind::EprNode),
+            "epr" => Ok(NodeKind::ClientNode),
             _ => Err(NodeError::NotValidKind(s.to_string())),
         }
     }

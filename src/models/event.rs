@@ -1,4 +1,4 @@
-use crate::{event_loop::EventLoop, models::args::EventArgs};
+use crate::models::args::EventArgs;
 use std::collections::HashMap;
 
 // Represents a scheduled event in the simulation with a timestamp (ps),
@@ -24,24 +24,5 @@ impl Event {
             args,
             timestamp,
         }
-    }
-
-    pub fn new_and_push(
-        name: String,
-        function: String,
-        args: HashMap<String, EventArgs>,
-        timestamp: i32,
-    ) {
-        let event = Event {
-            name,
-            function,
-            args,
-            timestamp,
-        };
-
-        let mut event_loop = EventLoop::instance()
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        event_loop.push_event(event);
     }
 }

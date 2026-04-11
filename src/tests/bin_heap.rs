@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::models::{bin_heap::BinHeap, event::Event};
+    use crate::core::bin_heap::BinHeap;
+    use crate::models::event::Event;
 
     use super::*;
     use std::collections::HashMap;

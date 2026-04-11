@@ -74,11 +74,9 @@ impl BinHeap {
 
         let root = self.arr[0].clone();
 
-        // Move last to root
         let last = self.arr.pop().unwrap();
         self.arr[0] = last;
 
-        // Heapify down
         self.min_heapify(0);
 
         Some(root)
