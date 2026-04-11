@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
+    core::event_loop::EventLoop,
     database::nodes::set_node_usage,
     error::{Error, NodeError, SimError},
     establish_connection,
@@ -30,6 +31,13 @@ use crate::{
 /// * `epr_id`      - The [`NodeId`] of the EPR node for this session
 pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
     dbg!(args);
+    EventLoop::new_and_push(
+        String::from("handle_qkd_event"),
+        String::from("handle_qkd_init"),
+        args.clone(),
+        12,
+    );
+
     Ok(())
 }
 

@@ -6,6 +6,7 @@ use dotenv::dotenv;
 
 use crate::cli::cli::run_cli;
 use crate::core::event_loop::EventLoop;
+use crate::core::registry::Registry;
 
 mod api;
 mod cli;
@@ -27,22 +28,19 @@ pub fn establish_connection() -> PgConnection {
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-pub fn run_loop() {
+pub fn run_loop(mut registry: Registry) {
     loop {
-        let loop_pair = Arc::clone(&*EventLoop::instance());
-        let (event_loop, _) = &*loop_pair;
-        let event = &event_loop
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .bin_heap
-            .extract_min();
+        let event = {
+            let loop_pair = Arc::clone(&*EventLoop::instance());
+            let (event_loop, _) = &*loop_pair;
+
+            let mut guard = event_loop.lock().unwrap();
+            guard.bin_heap.extract_min()
+        };
 
         match event {
             Some(event) => {
-                let _ = &event_loop
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner())
-                    .exec_event(event.clone());
+                let _ = &registry.exec_event(event.to_owned());
             }
             None => {
                 let pair = EventLoop::instance().clone();
@@ -58,12 +56,8 @@ pub fn run_loop() {
 
 #[tokio::main]
 async fn main() {
-    let loop_pair = Arc::clone(&*EventLoop::instance());
-    let (event_loop, _) = &*loop_pair;
-    &event_loop
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .instantiate_functions();
+    let mut registry = Registry::new();
+    registry.instantiate_functions();
 
     // Spawn CLI (async)
     tokio::spawn(async move {
@@ -73,5 +67,5 @@ async fn main() {
         }
     });
 
-    run_loop();
+    run_loop(registry);
 }
