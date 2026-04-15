@@ -86,7 +86,7 @@ impl BinHeap {
     pub fn delete_key(&mut self, i: usize) {
         // Create a "minus infinity" event
         let mut min_event = self.arr[i].clone();
-        min_event.timestamp = i32::MIN;
+        min_event.timestamp = i64::MIN;
 
         self.decrease_key(i, min_event);
         self.extract_min();

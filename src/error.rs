@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-// graph.rs
+// graph errors
 #[derive(Error, Debug)]
 pub enum GraphError {
     // Node errors
@@ -13,7 +13,7 @@ pub enum GraphError {
     NoCommonEpr(i32, i32),
 }
 
-// link.rs
+// link errors
 #[derive(Error, Debug)]
 pub enum LinkError {
     #[error("Nodes {0} and {1} do not exist")]
@@ -30,20 +30,20 @@ pub enum LinkError {
     Database(#[from] diesel::result::Error),
 }
 
-// link.rs
+// link errors
 #[derive(Error, Debug)]
 pub enum NodeError {
     #[error("Node with id {0} already exists")]
     AlreadyExists(String),
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
-    #[error("Node with id {0} is already in use")]
-    NodeInUse(i32),
+    #[error("Node is already in use")]
+    NodeInUse(),
     #[error("Not valid node kind: {0}")]
     NotValidKind(String),
 }
 
-// cli.rs
+// cli errors
 #[derive(Error, Debug)]
 pub enum CliError {
     #[error("Input by the user was not valid")]
@@ -54,11 +54,20 @@ pub enum CliError {
     NoValidInteger(#[from] std::num::ParseIntError),
 }
 
-// cli.rs
+// simulation errors
 #[derive(Error, Debug)]
 pub enum SimError {
     #[error("Input by the user was not valid")]
     NotValidInput(String),
+    #[error("Missing arg argument: {0}")]
+    MissingArgument(String),
+}
+
+// entangled_pair errors
+#[derive(Error, Debug)]
+pub enum PairError {
+    #[error("Database error: {0}")]
+    Database(#[from] diesel::result::Error),
 }
 
 // TODO: Change this to macro
@@ -86,6 +95,12 @@ pub enum Error {
     // Graph errors
     #[error("{0}")]
     Graph(#[from] GraphError),
+    // Simulation errors
+    #[error("{0}")]
+    Sim(#[from] SimError),
+    // Pair errors
+    #[error("{0}")]
+    Pair(#[from] PairError),
 
     // Event loop error
     #[error("Function {0} does not exist")]

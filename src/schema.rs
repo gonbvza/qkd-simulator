@@ -1,6 +1,19 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    entangled_pair (id) {
+        id -> Int4,
+        src_id -> Int4,
+        dst_id -> Int4,
+        fidelity -> Float4,
+        created_at -> Int8,
+        src_measured -> Nullable<Int2>,
+        dst_measured -> Nullable<Int2>,
+        timeout_timestamp -> Int8,
+    }
+}
+
+diesel::table! {
     links (id) {
         id -> Int4,
         length -> Int8,
@@ -49,4 +62,10 @@ diesel::table! {
 diesel::joinable!(measurements -> nodes (node_id));
 diesel::joinable!(pending_measurements -> nodes (node_id));
 
-diesel::allow_tables_to_appear_in_same_query!(links, measurements, nodes, pending_measurements,);
+diesel::allow_tables_to_appear_in_same_query!(
+    entangled_pair,
+    links,
+    measurements,
+    nodes,
+    pending_measurements,
+);

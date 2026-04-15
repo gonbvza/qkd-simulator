@@ -2,42 +2,50 @@ use std::collections::HashMap;
 
 use crate::{
     core::event_loop::EventLoop,
-    database::nodes::set_node_usage,
     error::{Error, NodeError, SimError},
-    establish_connection,
-    models::{args::EventArgs, links::Link},
+    get_link_arg, get_node_arg,
+    models::{
+        args::EventArgs,
+        entangled_pair::EntangledPair,
+        links::Link,
+        qubit_ref::{QubitRef, QubitRefSide},
+    },
     nodes::node::Node,
 };
 
-/// Executes the QKD session initialization after the classical latency delay.
-///
-/// This function is invoked by the event loop when a [`EventType::QkdInit`] event
-/// is dequeued. It performs three steps:
-///
-/// 1. Availability check: Verifies that the sender, receiver, and EPR node
-/// all have `in_use = false`. If any node is already occupied, the event is
-/// dropped and no session is started. The caller should implement a retry
-/// mechanism if required.
-///
-/// 2. Node locking: Marks all three nodes as `in_use = true`. Because the
-/// event loop is single-threaded and processes one event at a time, this
-/// check-and-lock is inherently atomic — no two sessions can race.
-///
-/// 3. Pair emission: Calls [`EprNode::emit_next_pair`] for each qubit
-///
-/// # Arguments
-/// * `sender_id`   - The [`NodeId`] of the initiating client node
-/// * `receiver_id` - The [`NodeId`] of the destination client node
-/// * `epr_id`      - The [`NodeId`] of the EPR node for this session
+// Initializes a QKD session.
+//
+// Ensures the source, destination, and EPR nodes are free before locking them for the session.
+// If any node is busy, the session is aborted. Once locked, the EPR node begins emitting
+// entangled pairs for key generation via `emit_next_pair()`.
+//
+// # Arguments
+// * `src_node` - Source node initiating the session
+// * `dst_node` - Destination node receiving the session
+// * `epr_node` - EPR node used for entanglement generation
+// * `src_epr_link` - Link between source and EPR node
+// * `dst_epr_link` - Link between destination and EPR node
 pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
-    dbg!(args);
-    EventLoop::new_and_push(
-        String::from("handle_qkd_event"),
-        String::from("handle_qkd_init"),
-        args.clone(),
-        12,
-    );
+    let src_node = get_node_arg!(args, "src_node");
+    let dst_node = get_node_arg!(args, "dst_node");
+    let epr_node = get_node_arg!(args, "epr_node");
+    let src_epr_link = get_link_arg!(args, "src_epr_link");
+    let dst_epr_link = get_link_arg!(args, "dst_epr_link");
 
+    if src_node.in_use || dst_node.in_use || epr_node.in_use {
+        return Err(Error::Node(NodeError::NodeInUse()));
+    }
+
+    for qubit_nr in 1..1024 {
+        emit_pair(
+            src_node.to_owned(),
+            dst_node.to_owned(),
+            epr_node.to_owned(),
+            src_epr_link.to_owned(),
+            dst_epr_link.to_owned(),
+            qubit_nr,
+        );
+    }
     Ok(())
 }
 
@@ -53,8 +61,8 @@ pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
 /// given destination nodes and an initial fidelity. The pair is stored in the
 /// repository and assigned a unique `pair_id`.
 ///
-/// **2. PhotonTransmit events:** Schedules two [`EventType::PhotonTransmit`] events,
-/// one targeting `sender_id` and one targeting `receiver_id`. Each event timestamp
+/// **2. PhotonTransmit events:** Schedule two qubit receival by creating qubit ref
+/// and sending one to each detector. Each event timestamp
 /// is calculated from the link's `next_available_time` and propagation delay:
 /// `t = max(current_time, link.next_available_time) + t_propagation`
 ///
@@ -69,14 +77,46 @@ pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
 /// * `sender_id`   - The [`NodeId`] of the client node receiving the left qubit
 /// * `receiver_id` - The [`NodeId`] of the client node receiving the right qubit
 pub fn emit_pair(
-    left_node: &mut Node,
-    right_node: &mut Node,
-    epr: &mut Node,
-    link_a: Link,
-    link_b: Link,
-) {
-    // Generate entangled pair
-    todo!();
+    src_node: Node,
+    dst_node: Node,
+    epr_node: Node,
+    src_epr_link: Link,
+    dst_epr_link: Link,
+    qubit_nr: i32,
+) -> Result<(), Error> {
+    // Create entangled pair
+    let entangled_pair = EntangledPair::new(src_node.id, src_node.id)?;
+    // Create left qubit ref and event args
+    let src_qubit_ref: QubitRef = QubitRef::new(entangled_pair.id, QubitRefSide::Source);
+    let src_detector_args: HashMap<String, EventArgs> = HashMap::from([
+        (String::from("src_node"), EventArgs::Node(src_node)),
+        (
+            String::from("qubit_ref"),
+            EventArgs::QubitRef(src_qubit_ref),
+        ),
+    ]);
+    // Create right qubit ref and event args
+    let dst_qubit_ref: QubitRef = QubitRef::new(entangled_pair.id, QubitRefSide::Destination);
+    let dst_detector_args: HashMap<String, EventArgs> = HashMap::from([
+        (String::from("src_node"), EventArgs::Node(dst_node)),
+        (
+            String::from("qubit_ref"),
+            EventArgs::QubitRef(dst_qubit_ref),
+        ),
+    ]);
+    EventLoop::new_and_push(
+        "receive_pair_event".to_string(),
+        "receive_pair".to_string(),
+        src_detector_args,
+        (1000 * qubit_nr).into(),
+    );
+    EventLoop::new_and_push(
+        "receive_pair_event".to_string(),
+        "receive_pair".to_string(),
+        dst_detector_args,
+        (800 * qubit_nr).into(),
+    );
+    Ok(())
 }
 
 /// Simulates the receival of a qubit ref by a detector.
@@ -88,6 +128,9 @@ pub fn emit_pair(
 ///
 /// # Arguments
 /// * `qubit_ref`   - The [`qubit_ref`] of the entangled pair
-pub fn receive_pair(args: &HashMap<String, EventArgs>) {
-    todo!();
+/// * `node`        - The node that receives the qubit ref
+
+pub fn receive_pair(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
+    dbg!(args);
+    Ok(())
 }

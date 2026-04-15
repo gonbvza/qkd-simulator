@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     error::Error,
-    events::qkd::handle_qkd_init,
+    events::qkd::{handle_qkd_init, receive_pair},
     models::{args::EventArgs, event::Event},
 };
 
@@ -27,7 +27,10 @@ impl Registry {
         &'static str,
         Box<dyn Fn(&HashMap<String, EventArgs>) -> Result<(), Error> + Send + Sync>,
     )> {
-        vec![("handle_qkd_init", Box::new(handle_qkd_init))]
+        vec![
+            ("handle_qkd_init", Box::new(handle_qkd_init)),
+            ("receive_pair", Box::new(receive_pair)),
+        ]
     }
 
     pub fn push_func<F>(&mut self, name: String, func: F)

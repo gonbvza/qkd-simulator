@@ -37,3 +37,15 @@ CREATE TABLE links (
   dst_id INT NOT NULL REFERENCES nodes(id),
   next_available_time BIGINT NOT NULL
 );
+
+-- Table for the entangled pair
+CREATE TABLE entangled_pair (
+  id SERIAL PRIMARY KEY,
+  src_id INT NOT NULL REFERENCES nodes(id),
+  dst_id INT NOT NULL REFERENCES nodes(id),
+  fidelity REAL NOT NULL DEFAULT 1,
+  created_at BIGINT NOT NULL, 
+  src_measured SMALLINT DEFAULT NULL,
+  dst_measured SMALLINT DEFAULT NULL,
+  timeout_timestamp BIGINT NOT NULL
+);

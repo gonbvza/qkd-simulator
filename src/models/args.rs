@@ -1,5 +1,5 @@
 use crate::{
-    models::{links::Link, qubit::QubitRef},
+    models::{links::Link, qubit_ref::QubitRef},
     nodes::node::Node,
 };
 

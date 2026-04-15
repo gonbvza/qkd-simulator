@@ -5,6 +5,7 @@ use std::{collections::HashMap, sync::Condvar};
 
 pub struct EventLoop {
     pub bin_heap: BinHeap,
+    pub current_time: i64,
 }
 
 static INSTANCE: OnceLock<Arc<(Mutex<EventLoop>, Condvar)>> = OnceLock::new();
@@ -13,6 +14,7 @@ impl EventLoop {
     fn new() -> EventLoop {
         EventLoop {
             bin_heap: BinHeap::new(),
+            current_time: 0,
         }
     }
 
@@ -28,11 +30,20 @@ impl EventLoop {
         cvar.notify_one();
     }
 
+    pub fn set_new_timestamp(&mut self, delta: &i64) -> i64 {
+        self.current_time = self.current_time + delta;
+        return self.current_time;
+    }
+
+    pub fn get_current_time(&mut self) -> i64 {
+        return self.current_time;
+    }
+
     pub fn new_and_push(
         name: String,
         function: String,
         args: HashMap<String, EventArgs>,
-        timestamp: i32,
+        timestamp: i64,
     ) {
         let event = Event::new(name, function, args, timestamp);
         let pair = Arc::clone(EventLoop::instance());
