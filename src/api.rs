@@ -40,7 +40,6 @@ pub async fn start_qkd(src_node: Node, dst_node: Node) -> Result<()> {
     // Get the nodes
     let mut conn = establish_connection();
 
-    println!("here");
     let graph: Graph = Graph::new()?;
     let epr_node: Node = get_node_by_id(&mut conn, graph.get_node_epr(src_node.id, dst_node.id)?)?;
 

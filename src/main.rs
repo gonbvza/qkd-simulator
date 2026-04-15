@@ -1,5 +1,5 @@
 use std::env;
-use std::sync::Arc;
+use std::sync::{Arc, MutexGuard};
 
 use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
@@ -35,7 +35,11 @@ pub fn run_loop(mut registry: Registry) {
             let (event_loop, _) = &*loop_pair;
 
             let mut guard = event_loop.lock().unwrap();
-            guard.bin_heap.extract_min()
+            let event = guard.bin_heap.extract_min();
+            if let Some(event) = event.clone() {
+                guard.set_new_timestamp(&event.timestamp);
+            }
+            event
         };
 
         match event {
