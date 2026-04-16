@@ -1,10 +1,20 @@
+-- Table for the detector
+CREATE TABLE detector (
+  id SERIAL PRIMARY KEY, 
+  resolution_ps BIGINT NOT NULL, 
+  cooldown_ps BIGINT NOT NULL, 
+  dark_count_rate INT NOT NULL, 
+  last_detection_time BIGINT NOT NULL
+);
+
 -- Table for the nodes
 CREATE TABLE nodes (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) UNIQUE NOT NULL DEFAULT 'Unnamed Node',
   in_use BOOLEAN NOT NULL DEFAULT FALSE,
   measurements BIGINT NOT NULL DEFAULT 0,
-  node_type VARCHAR(255) NOT NULL DEFAULT 'client'
+  node_type VARCHAR(255) NOT NULL DEFAULT 'client',
+  detector_id INT NOT NULL REFERENCES detector(id)
 );
 
 -- Table for the measurements

@@ -13,6 +13,7 @@ mod tests {
             in_use: false,
             measurements: 0,
             node_type: NodeKind::ClientNode.to_string(),
+            detector_id: 0,
         }
     }
 
@@ -23,6 +24,7 @@ mod tests {
             in_use: false,
             measurements: 0,
             node_type: NodeKind::EprNode.to_string(),
+            detector_id: 0,
         }
     }
 

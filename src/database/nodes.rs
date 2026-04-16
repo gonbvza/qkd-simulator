@@ -10,11 +10,13 @@ pub fn create_node(
     conn: &mut PgConnection,
     name: &str,
     node_type: &str,
+    detector_id: i32,
 ) -> Result<Node, NodeError> {
     diesel::insert_into(schema::nodes::table)
         .values((
             schema::nodes::name.eq(name.clone()),
             schema::nodes::node_type.eq(node_type),
+            schema::nodes::detector_id.eq(detector_id),
         ))
         .get_result(conn)
         .map_err(|e| map_db_error(name.to_string(), e))

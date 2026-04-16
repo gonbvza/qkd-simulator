@@ -12,6 +12,7 @@ pub struct Node {
     pub in_use: bool,
     pub measurements: i64,
     pub node_type: String,
+    pub detector_id: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

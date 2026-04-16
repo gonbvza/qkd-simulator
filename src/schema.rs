@@ -1,6 +1,16 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    detector (id) {
+        id -> Int4,
+        resolution_ps -> Int8,
+        cooldown_ps -> Int8,
+        dark_count_rate -> Int4,
+        last_detection_time -> Int8,
+    }
+}
+
+diesel::table! {
     entangled_pair (id) {
         id -> Int4,
         src_id -> Int4,
@@ -45,6 +55,7 @@ diesel::table! {
         measurements -> Int8,
         #[max_length = 255]
         node_type -> Varchar,
+        detector_id -> Int4,
     }
 }
 
@@ -60,9 +71,11 @@ diesel::table! {
 }
 
 diesel::joinable!(measurements -> nodes (node_id));
+diesel::joinable!(nodes -> detector (detector_id));
 diesel::joinable!(pending_measurements -> nodes (node_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    detector,
     entangled_pair,
     links,
     measurements,

@@ -14,9 +14,23 @@ fn link_creation_fails_if_node_missing() {
         .execute(&mut conn)
         .unwrap();
 
+    let detector_id: i32 = diesel::insert_into(schema::detector::table)
+        .values((
+            schema::detector::resolution_ps.eq(0),
+            schema::detector::cooldown_ps.eq(0),
+            schema::detector::dark_count_rate.eq(0),
+            schema::detector::last_detection_time.eq(0),
+        ))
+        .returning(schema::detector::id)
+        .get_result(&mut conn)
+        .unwrap();
+
     // Insert ONLY one node
     let node_id: i32 = diesel::insert_into(schema::nodes::table)
-        .values(schema::nodes::name.eq("test-node"))
+        .values((
+            schema::nodes::name.eq("test-node"),
+            schema::nodes::detector_id.eq(detector_id),
+        ))
         .returning(schema::nodes::id)
         .get_result(&mut conn)
         .unwrap();
@@ -47,15 +61,32 @@ fn link_creation_succeeds_with_valid_nodes() {
         .execute(&mut conn)
         .unwrap();
 
+    let detector_id: i32 = diesel::insert_into(schema::detector::table)
+        .values((
+            schema::detector::resolution_ps.eq(0),
+            schema::detector::cooldown_ps.eq(0),
+            schema::detector::dark_count_rate.eq(0),
+            schema::detector::last_detection_time.eq(0),
+        ))
+        .returning(schema::detector::id)
+        .get_result(&mut conn)
+        .unwrap();
+
     // Insert two nodes
     let src_id: i32 = diesel::insert_into(schema::nodes::table)
-        .values(schema::nodes::name.eq("node-a"))
+        .values((
+            schema::nodes::name.eq("node-a"),
+            schema::nodes::detector_id.eq(detector_id),
+        ))
         .returning(schema::nodes::id)
         .get_result(&mut conn)
         .unwrap();
 
     let dst_id: i32 = diesel::insert_into(schema::nodes::table)
-        .values(schema::nodes::name.eq("node-b"))
+        .values((
+            schema::nodes::name.eq("node-b"),
+            schema::nodes::detector_id.eq(detector_id),
+        ))
         .returning(schema::nodes::id)
         .get_result(&mut conn)
         .unwrap();

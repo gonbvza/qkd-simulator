@@ -2,10 +2,12 @@ use std::collections::HashMap;
 
 use crate::{
     core::event_loop::EventLoop,
+    database::detector::get_detector_by_id,
     error::{Error, NodeError, SimError},
-    get_link_arg, get_node_arg,
+    establish_connection, get_link_arg, get_node_arg, get_qubit_ref_arg,
     models::{
         args::EventArgs,
+        detector::Detector,
         entangled_pair::EntangledPair,
         links::Link,
         qubit_ref::{QubitRef, QubitRefSide},
@@ -37,6 +39,7 @@ pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
     }
 
     for qubit_nr in 1..1024 {
+        println!("Sending pair {}", &qubit_nr);
         emit_pair(
             src_node.to_owned(),
             dst_node.to_owned(),
@@ -89,7 +92,7 @@ pub fn emit_pair(
     // Create left qubit ref and event args
     let src_qubit_ref: QubitRef = QubitRef::new(entangled_pair.id, QubitRefSide::Source);
     let src_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("src_node"), EventArgs::Node(src_node)),
+        (String::from("node"), EventArgs::Node(src_node)),
         (
             String::from("qubit_ref"),
             EventArgs::QubitRef(src_qubit_ref),
@@ -98,7 +101,7 @@ pub fn emit_pair(
     // Create right qubit ref and event args
     let dst_qubit_ref: QubitRef = QubitRef::new(entangled_pair.id, QubitRefSide::Destination);
     let dst_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("src_node"), EventArgs::Node(dst_node)),
+        (String::from("node"), EventArgs::Node(dst_node)),
         (
             String::from("qubit_ref"),
             EventArgs::QubitRef(dst_qubit_ref),
@@ -129,8 +132,10 @@ pub fn emit_pair(
 /// # Arguments
 /// * `qubit_ref`   - The [`qubit_ref`] of the entangled pair
 /// * `node`        - The node that receives the qubit ref
-
 pub fn receive_pair(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
-    dbg!(args);
+    let mut conn = establish_connection();
+    let node: &Node = get_node_arg!(args, "node");
+    let detector: Detector = get_detector_by_id(&mut conn, node.detector_id)?;
+    dbg!(detector);
     Ok(())
 }

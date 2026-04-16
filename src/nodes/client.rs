@@ -2,7 +2,7 @@ use crate::{
     database::nodes::create_node,
     error::NodeError,
     establish_connection,
-    models::measurement::Measurement,
+    models::{detector::Detector, measurement::Measurement},
     nodes::node::Node,
     schema::{self},
 };
@@ -14,8 +14,8 @@ impl Node {
         name: String,
         node_type: String,
     ) -> Result<Node, NodeError> {
-        let mut conn = establish_connection();
-        create_node(&mut conn, &name, &node_type)
+        let detector = Detector::new()?;
+        create_node(conn, &name, &node_type, detector.id)
     }
 
     // TODO: MOVE THIS TO DB FILE

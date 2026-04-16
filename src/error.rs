@@ -41,6 +41,8 @@ pub enum NodeError {
     NodeInUse(),
     #[error("Not valid node kind: {0}")]
     NotValidKind(String),
+    #[error("Error while creating the detector")]
+    DetectorErro(#[from] DetectorError),
 }
 
 // cli errors
@@ -66,6 +68,13 @@ pub enum SimError {
 // entangled_pair errors
 #[derive(Error, Debug)]
 pub enum PairError {
+    #[error("Database error: {0}")]
+    Database(#[from] diesel::result::Error),
+}
+
+// detector errors
+#[derive(Error, Debug)]
+pub enum DetectorError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
 }
@@ -101,6 +110,9 @@ pub enum Error {
     // Pair errors
     #[error("{0}")]
     Pair(#[from] PairError),
+    //Detector error
+    #[error("{0}")]
+    Detector(#[from] DetectorError),
 
     // Event loop error
     #[error("Function {0} does not exist")]

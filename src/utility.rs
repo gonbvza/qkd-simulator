@@ -35,3 +35,15 @@ macro_rules! get_link_arg {
         }
     }};
 }
+
+#[macro_export]
+macro_rules! get_qubit_ref_arg {
+    ($args:expr, $key:expr) => {{
+        match $args.get($key) {
+            Some(EventArgs::QubitRef(qubit_ref)) => qubit_ref,
+            _ => {
+                return Err(Error::Sim(SimError::MissingArgument($key.to_string())));
+            }
+        }
+    }};
+}
