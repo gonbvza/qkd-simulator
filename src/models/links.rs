@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{error::LinkError, establish_connection, schema};
+use crate::{core::settings::LIGHT_SPEED_FIBER, error::LinkError, establish_connection, schema};
 use diesel::{dsl, insert_into, prelude::*, select};
 
 #[derive(Queryable, Selectable, Debug, Clone)]
@@ -65,6 +65,11 @@ impl Link {
             )
             .first(&mut conn)?;
         Ok(link)
+    }
+
+    pub fn propagation_delay_us(&self) -> i64 {
+        let seconds = self.length as f64 / LIGHT_SPEED_FIBER.clone();
+        (seconds * 1e6) as i64 // Convert from m/s to m/us
     }
 }
 

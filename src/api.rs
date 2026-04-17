@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::core::event_loop::EventLoop;
 use crate::core::graph::Graph;
@@ -18,8 +19,8 @@ pub async fn create_node_api(name: String, node_type: NodeKind) -> Result<Node> 
     Ok(node)
 }
 
-pub async fn create_link_api(src_id: i32, dst_id: i32) -> Result<Link> {
-    let link = Link::new(100, 0.4, 0.1, src_id, dst_id)?;
+pub async fn create_link_api(src_id: i32, dst_id: i32, distance: i64) -> Result<Link> {
+    let link = Link::new(distance, 0.4, 0.1, src_id, dst_id)?;
     Ok(link)
 }
 
@@ -45,11 +46,19 @@ pub async fn start_qkd(src_node: Node, dst_node: Node) -> Result<()> {
 
     let src_epr_link: Link = get_link(&mut conn, src_node.id, epr_node.id)?;
     let dst_epr_link: Link = get_link(&mut conn, dst_node.id, epr_node.id)?;
+    let current_time = {
+        let loop_pair = Arc::clone(&*EventLoop::instance());
+        let (event_loop, _) = &*loop_pair;
+
+        let mut guard = event_loop.lock().unwrap();
+        guard.get_current_time()
+    };
+    let delay: i64 = src_epr_link.propagation_delay_us();
 
     let args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("src_node"), EventArgs::Node(src_node)),
-        (String::from("dst_node"), EventArgs::Node(dst_node)),
-        (String::from("epr_node"), EventArgs::Node(epr_node)),
+        (String::from("src_node"), EventArgs::Node(src_node.id)),
+        (String::from("dst_node"), EventArgs::Node(dst_node.id)),
+        (String::from("epr_node"), EventArgs::Node(epr_node.id)),
         (String::from("src_epr_link"), EventArgs::Link(src_epr_link)),
         (String::from("dst_epr_link"), EventArgs::Link(dst_epr_link)),
     ]);
@@ -59,7 +68,7 @@ pub async fn start_qkd(src_node: Node, dst_node: Node) -> Result<()> {
         String::from("handle_qkd_event"),
         String::from("handle_qkd_init"),
         args,
-        12,
+        current_time + delay,
     );
 
     Ok(())

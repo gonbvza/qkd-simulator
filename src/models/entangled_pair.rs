@@ -21,10 +21,11 @@ pub struct EntangledPair {
     pub src_measured: Option<i16>,
     pub dst_measured: Option<i16>,
     pub timeout_timestamp: i64,
+    pub process_id: i32,
 }
 
 impl EntangledPair {
-    pub fn new(src_id: i32, dst_id: i32) -> Result<EntangledPair, PairError> {
+    pub fn new(src_id: i32, dst_id: i32, process_id: i32) -> Result<EntangledPair, PairError> {
         let mut conn = establish_connection();
         let current_time = {
             let loop_pair = Arc::clone(&*EventLoop::instance());
@@ -39,6 +40,7 @@ impl EntangledPair {
             dst_id,
             current_time,
             current_time + TIMEOUT.clone(),
+            process_id,
         )
     }
 }

@@ -1,16 +1,19 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use crate::{
-    core::event_loop::EventLoop,
-    error::{Error, NodeError, SimError},
-    get_link_arg, get_node_arg,
+    core::{event_loop::EventLoop, process::Process},
+    database::detector::get_detector_by_id,
+    error::{DetectorError, Error, NodeError, SimError},
+    establish_connection, get_link_arg,
     models::{
         args::EventArgs,
+        detector::Detector,
         entangled_pair::EntangledPair,
         links::Link,
         qubit_ref::{QubitRef, QubitRefSide},
     },
     nodes::node::Node,
+    utility::get_node_arg,
 };
 
 // Initializes a QKD session.
@@ -26,13 +29,18 @@ use crate::{
 // * `src_epr_link` - Link between source and EPR node
 // * `dst_epr_link` - Link between destination and EPR node
 pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
-    let src_node = get_node_arg!(args, "src_node");
-    let dst_node = get_node_arg!(args, "dst_node");
-    let epr_node = get_node_arg!(args, "epr_node");
+    let mut src_node: Node = get_node_arg(args, "src_node")?;
+    let mut dst_node: Node = get_node_arg(args, "dst_node")?;
+    let mut epr_node: Node = get_node_arg(args, "epr_node")?;
     let src_epr_link = get_link_arg!(args, "src_epr_link");
     let dst_epr_link = get_link_arg!(args, "dst_epr_link");
 
-    if src_node.in_use || dst_node.in_use || epr_node.in_use {
+    let process = Process::new()?;
+
+    if !src_node.try_acquire(process.id)
+        || !dst_node.try_acquire(process.id)
+        || !epr_node.try_acquire(process.id)
+    {
         return Err(Error::Node(NodeError::NodeInUse()));
     }
 
@@ -44,7 +52,8 @@ pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
             src_epr_link.to_owned(),
             dst_epr_link.to_owned(),
             qubit_nr,
-        );
+            process.id,
+        )?;
     }
     Ok(())
 }
@@ -83,13 +92,21 @@ pub fn emit_pair(
     src_epr_link: Link,
     dst_epr_link: Link,
     qubit_nr: i32,
+    procces_id: i32,
 ) -> Result<(), Error> {
     // Create entangled pair
-    let entangled_pair = EntangledPair::new(src_node.id, src_node.id)?;
+    let entangled_pair = EntangledPair::new(src_node.id, src_node.id, procces_id)?;
+    let current_time = {
+        let loop_pair = Arc::clone(&*EventLoop::instance());
+        let (event_loop, _) = &*loop_pair;
+
+        let mut guard = event_loop.lock().unwrap();
+        guard.get_current_time()
+    };
     // Create left qubit ref and event args
     let src_qubit_ref: QubitRef = QubitRef::new(entangled_pair.id, QubitRefSide::Source);
     let src_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("src_node"), EventArgs::Node(src_node)),
+        (String::from("node"), EventArgs::Node(src_node.id)),
         (
             String::from("qubit_ref"),
             EventArgs::QubitRef(src_qubit_ref),
@@ -98,7 +115,7 @@ pub fn emit_pair(
     // Create right qubit ref and event args
     let dst_qubit_ref: QubitRef = QubitRef::new(entangled_pair.id, QubitRefSide::Destination);
     let dst_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("src_node"), EventArgs::Node(dst_node)),
+        (String::from("node"), EventArgs::Node(dst_node.id)),
         (
             String::from("qubit_ref"),
             EventArgs::QubitRef(dst_qubit_ref),
@@ -108,13 +125,13 @@ pub fn emit_pair(
         "receive_pair_event".to_string(),
         "receive_pair".to_string(),
         src_detector_args,
-        (1000 * qubit_nr).into(),
+        current_time + (src_epr_link.propagation_delay_us() * qubit_nr as i64),
     );
     EventLoop::new_and_push(
         "receive_pair_event".to_string(),
         "receive_pair".to_string(),
         dst_detector_args,
-        (800 * qubit_nr).into(),
+        current_time + (dst_epr_link.propagation_delay_us() * qubit_nr as i64),
     );
     Ok(())
 }
@@ -129,8 +146,22 @@ pub fn emit_pair(
 /// # Arguments
 /// * `qubit_ref`   - The [`qubit_ref`] of the entangled pair
 /// * `node`        - The node that receives the qubit ref
-
 pub fn receive_pair(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
-    dbg!(args);
+    let mut conn = establish_connection();
+    let node: Node = get_node_arg(args, "node")?;
+    let mut detector: Detector = get_detector_by_id(&mut conn, node.detector_id)?;
+    let current_time = {
+        let loop_pair = Arc::clone(&*EventLoop::instance());
+        let (event_loop, _) = &*loop_pair;
+
+        let mut guard = event_loop.lock().unwrap();
+        guard.get_current_time()
+    };
+    if detector.is_cooling(current_time) {
+        return Err(DetectorError::CoolingDown(detector.id).into());
+    }
+
+    detector.set_detection_time(current_time)?;
+
     Ok(())
 }

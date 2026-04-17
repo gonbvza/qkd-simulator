@@ -10,11 +10,13 @@ pub fn create_node(
     conn: &mut PgConnection,
     name: &str,
     node_type: &str,
+    detector_id: i32,
 ) -> Result<Node, NodeError> {
     diesel::insert_into(schema::nodes::table)
         .values((
             schema::nodes::name.eq(name.clone()),
             schema::nodes::node_type.eq(node_type),
+            schema::nodes::detector_id.eq(detector_id),
         ))
         .get_result(conn)
         .map_err(|e| map_db_error(name.to_string(), e))
@@ -34,18 +36,10 @@ pub fn get_node_by_name(conn: &mut PgConnection, node_name: &str) -> Result<Node
         .map_err(|e| map_db_error(node_name.to_string(), e))
 }
 
-pub fn get_nodes_in_use(conn: &mut PgConnection) -> Result<Vec<Node>, NodeError> {
-    schema::nodes::table
-        .filter(schema::nodes::in_use.eq(true))
-        .load(conn)
-        .map_err(|e| map_db_error("get_in_use".to_string(), e))
-}
-
-pub fn set_node_usage(node: &mut Node, conn: &mut PgConnection) -> Result<(), NodeError> {
-    node.set_in_use(true);
+pub fn lock_node(node: &Node, conn: &mut PgConnection, process_id: i32) -> Result<(), NodeError> {
     diesel::update(schema::nodes::table)
         .filter(schema::nodes::id.eq(node.get_id()))
-        .set(schema::nodes::in_use.eq(false))
+        .set(schema::nodes::locked_by.eq(process_id))
         .execute(conn)?;
     Ok(())
 }

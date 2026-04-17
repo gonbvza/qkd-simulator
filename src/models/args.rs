@@ -8,6 +8,6 @@ pub enum EventArgs {
     ArgStr(String),
     ArgInt(u32),
     QubitRef(QubitRef),
-    Node(Node),
+    Node(i32),
     Link(Link),
 }

@@ -51,7 +51,6 @@ pub fn run_loop(mut registry: Registry) {
                 let (event_loop, cvar) = &*pair;
 
                 let guard = event_loop.lock().unwrap();
-                println!("obtained");
                 let _unused = cvar.wait(guard).unwrap();
             }
         }

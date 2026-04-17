@@ -30,8 +30,8 @@ impl EventLoop {
         cvar.notify_one();
     }
 
-    pub fn set_new_timestamp(&mut self, delta: &i64) -> i64 {
-        self.current_time = self.current_time + delta;
+    pub fn set_new_timestamp(&mut self, new_time: &i64) -> i64 {
+        self.current_time = *new_time;
         return self.current_time;
     }
 

@@ -1,6 +1,16 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    detector (id) {
+        id -> Int4,
+        resolution_ps -> Int8,
+        cooldown_ps -> Int8,
+        dark_count_rate -> Int4,
+        last_detection_time -> Int8,
+    }
+}
+
+diesel::table! {
     entangled_pair (id) {
         id -> Int4,
         src_id -> Int4,
@@ -10,6 +20,7 @@ diesel::table! {
         src_measured -> Nullable<Int2>,
         dst_measured -> Nullable<Int2>,
         timeout_timestamp -> Int8,
+        process_id -> Int4,
     }
 }
 
@@ -41,10 +52,11 @@ diesel::table! {
         id -> Int4,
         #[max_length = 255]
         name -> Varchar,
-        in_use -> Bool,
+        locked_by -> Nullable<Int4>,
         measurements -> Int8,
         #[max_length = 255]
         node_type -> Varchar,
+        detector_id -> Int4,
     }
 }
 
@@ -59,13 +71,25 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    process (id) {
+        id -> Int4,
+        started_at -> Int8,
+    }
+}
+
+diesel::joinable!(entangled_pair -> process (process_id));
 diesel::joinable!(measurements -> nodes (node_id));
+diesel::joinable!(nodes -> detector (detector_id));
+diesel::joinable!(nodes -> process (locked_by));
 diesel::joinable!(pending_measurements -> nodes (node_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    detector,
     entangled_pair,
     links,
     measurements,
     nodes,
     pending_measurements,
+    process,
 );

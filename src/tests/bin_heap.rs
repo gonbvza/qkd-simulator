@@ -6,7 +6,7 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_event(ts: i32) -> Event {
+    fn make_event(ts: i64) -> Event {
         Event {
             name: format!("e{}", ts),
             function: "noop".to_string(),
