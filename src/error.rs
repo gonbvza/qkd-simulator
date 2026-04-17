@@ -72,11 +72,20 @@ pub enum PairError {
     Database(#[from] diesel::result::Error),
 }
 
+// process errors
+#[derive(Error, Debug)]
+pub enum ProcessError {
+    #[error("Database error: {0}")]
+    Database(#[from] diesel::result::Error),
+}
+
 // detector errors
 #[derive(Error, Debug)]
 pub enum DetectorError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
+    #[error("Current detector {0} is busy cooling down")]
+    CoolingDown(i32),
 }
 
 // TODO: Change this to macro
@@ -110,6 +119,9 @@ pub enum Error {
     // Pair errors
     #[error("{0}")]
     Pair(#[from] PairError),
+    //Process Error
+    #[error("{0}")]
+    Process(#[from] ProcessError),
     //Detector error
     #[error("{0}")]
     Detector(#[from] DetectorError),

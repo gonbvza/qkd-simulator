@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::{
     core::event_loop::EventLoop,
     database::detector::get_detector_by_id,
-    error::{Error, NodeError, SimError},
+    error::{DetectorError, Error, NodeError, SimError},
     establish_connection, get_link_arg, get_node_arg, get_qubit_ref_arg,
     models::{
         args::EventArgs,
@@ -135,7 +135,21 @@ pub fn emit_pair(
 pub fn receive_pair(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
     let mut conn = establish_connection();
     let node: &Node = get_node_arg!(args, "node");
-    let detector: Detector = get_detector_by_id(&mut conn, node.detector_id)?;
-    dbg!(detector);
+    let mut detector: Detector = get_detector_by_id(&mut conn, node.detector_id)?;
+
+    let pair = EventLoop::instance().clone();
+    let (event_loop, _) = &*pair;
+    let current_time = event_loop
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .get_current_time();
+
+    if detector.is_cooling(current_time) {
+        println!("fuck");
+        return Err(DetectorError::CoolingDown(detector.id).into());
+    }
+
+    detector.set_detection_time(current_time)?;
+
     Ok(())
 }

@@ -51,7 +51,7 @@ diesel::table! {
         id -> Int4,
         #[max_length = 255]
         name -> Varchar,
-        in_use -> Bool,
+        locked_by -> Nullable<Int4>,
         measurements -> Int8,
         #[max_length = 255]
         node_type -> Varchar,
@@ -70,8 +70,16 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    process (id) {
+        id -> Int4,
+        started_at -> Int8,
+    }
+}
+
 diesel::joinable!(measurements -> nodes (node_id));
 diesel::joinable!(nodes -> detector (detector_id));
+diesel::joinable!(nodes -> process (locked_by));
 diesel::joinable!(pending_measurements -> nodes (node_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
@@ -81,4 +89,5 @@ diesel::allow_tables_to_appear_in_same_query!(
     measurements,
     nodes,
     pending_measurements,
+    process,
 );

@@ -9,7 +9,7 @@ use diesel::prelude::*;
 pub struct Node {
     pub id: i32,
     pub name: String,
-    pub in_use: bool,
+    pub locked_by: Option<i32>,
     pub measurements: i64,
     pub node_type: String,
     pub detector_id: i32,

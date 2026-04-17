@@ -1,6 +1,10 @@
 use diesel::prelude::*;
 
-use crate::{database::detector::create_new_detector, error::DetectorError, establish_connection};
+use crate::{
+    database::detector::{create_new_detector, set_detection_time},
+    error::DetectorError,
+    establish_connection,
+};
 
 #[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = crate::schema::detector)]
@@ -17,5 +21,20 @@ impl Detector {
     pub fn new() -> Result<Detector, DetectorError> {
         let mut conn = establish_connection();
         create_new_detector(&mut conn)
+    }
+
+    pub fn is_cooling(&self, current_time: i64) -> bool {
+        println!(
+            "Check cooling down current_time: {} and last time {}",
+            &current_time, &self.last_detection_time
+        );
+        current_time < self.last_detection_time + self.cooldown_ps
+    }
+
+    pub fn set_detection_time(&mut self, current_time: i64) -> Result<(), DetectorError> {
+        let mut conn = establish_connection();
+        set_detection_time(&mut conn, self.id, current_time)?;
+        self.last_detection_time = current_time;
+        Ok(())
     }
 }
