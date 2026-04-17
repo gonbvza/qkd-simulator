@@ -5,3 +5,4 @@ DROP TABLE IF EXISTS measurements;
 DROP TABLE IF EXISTS entangled_pair; 
 DROP TABLE IF EXISTS nodes;
 DROP TABLE IF EXISTS detector; 
+DROP TABLE IF EXISTS process;

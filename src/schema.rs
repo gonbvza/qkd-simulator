@@ -20,6 +20,7 @@ diesel::table! {
         src_measured -> Nullable<Int2>,
         dst_measured -> Nullable<Int2>,
         timeout_timestamp -> Int8,
+        process_id -> Int4,
     }
 }
 
@@ -77,6 +78,7 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(entangled_pair -> process (process_id));
 diesel::joinable!(measurements -> nodes (node_id));
 diesel::joinable!(nodes -> detector (detector_id));
 diesel::joinable!(nodes -> process (locked_by));

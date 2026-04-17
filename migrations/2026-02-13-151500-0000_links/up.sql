@@ -63,5 +63,6 @@ CREATE TABLE entangled_pair (
   created_at BIGINT NOT NULL, 
   src_measured SMALLINT DEFAULT NULL,
   dst_measured SMALLINT DEFAULT NULL,
-  timeout_timestamp BIGINT NOT NULL
+  timeout_timestamp BIGINT NOT NULL,
+  process_id INT NOT NULL REFERENCES process(id)
 );

@@ -24,11 +24,7 @@ impl Detector {
     }
 
     pub fn is_cooling(&self, current_time: i64) -> bool {
-        println!(
-            "Check cooling down current_time: {} and last time {}",
-            &current_time, &self.last_detection_time
-        );
-        current_time < self.last_detection_time + self.cooldown_ps
+        current_time < (self.last_detection_time + self.cooldown_ps)
     }
 
     pub fn set_detection_time(&mut self, current_time: i64) -> Result<(), DetectorError> {

@@ -1,5 +1,5 @@
 use crate::{
-    database::nodes::create_node,
+    database::nodes::{create_node, lock_node},
     error::NodeError,
     establish_connection,
     models::{detector::Detector, measurement::Measurement},
@@ -34,7 +34,30 @@ impl Node {
         return self.id;
     }
 
-    pub fn set_in_use(&mut self, value: bool) {
-        self.in_use = value;
+    pub fn is_locked(&self) -> Option<i32> {
+        self.locked_by
+    }
+
+    pub fn is_available_for(&self, process_id: i32) -> bool {
+        self.locked_by.is_none() || self.locked_by == Some(process_id)
+    }
+
+    pub fn try_acquire(&mut self, process_id: i32) -> bool {
+        let mut conn = establish_connection();
+        match self.locked_by {
+            None => {
+                self.locked_by = Some(process_id);
+                lock_node(&self, &mut conn, process_id);
+                true
+            }
+            Some(owner) if owner == process_id => true,
+            _ => false,
+        }
+    }
+
+    pub fn release(&mut self, process_id: i32) {
+        if self.locked_by == Some(process_id) {
+            self.locked_by = None;
+        }
     }
 }

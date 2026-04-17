@@ -60,15 +60,17 @@ impl fmt::Display for Node {
         let kind = NodeKind::try_from(&self.node_type)
             .map(|k| k.to_string())
             .unwrap_or_else(|_| format!("Unknown ({})", self.node_type));
-
+        let owner = if let Some(owner) = self.locked_by {
+            {
+                format!("{}", owner)
+            }
+        } else {
+            "No".to_string()
+        };
         write!(
             f,
             "[{}] {} | Type: {} | In Use: {} | Measurements: {}",
-            self.id,
-            self.name,
-            kind,
-            if self.in_use { "Yes" } else { "No" },
-            self.measurements
+            self.id, self.name, kind, owner, self.measurements
         )
     }
 }

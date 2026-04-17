@@ -25,10 +25,12 @@ pub async fn create_link_cli() -> Result<(), Error> {
     let src_id = read_line().trim().parse::<i32>().unwrap();
     println!("Enter destination node id:");
     let dst_id = read_line().trim().parse::<i32>().unwrap();
+    println!("Enter distance in meters:");
+    let distance = read_line().trim().parse::<i64>().unwrap();
 
     // TODO: Request rest of link attr
 
-    create_link_api(src_id, dst_id).await?;
+    create_link_api(src_id, dst_id, distance).await?;
     Ok(())
 }
 
