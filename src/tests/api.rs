@@ -68,7 +68,7 @@ async fn test_create_link_api_succeeds_with_valid_nodes() {
         .await
         .expect("dst node should be created");
 
-    let result = create_link_api(src.id, dst.id).await;
+    let result = create_link_api(src.id, dst.id, 100).await;
 
     dbg!(&result);
     assert!(result.is_ok());
@@ -90,7 +90,7 @@ async fn test_create_link_api_fails_with_missing_src() {
         .expect("dst node should be created");
 
     // Use an ID that cannot exist after a clean
-    let result = create_link_api(dst.id + 999, dst.id).await;
+    let result = create_link_api(dst.id + 999, dst.id, 100).await;
 
     assert!(result.is_err());
 }
@@ -104,7 +104,7 @@ async fn test_create_link_api_fails_with_missing_dst() {
         .await
         .expect("src node should be created");
 
-    let result = create_link_api(src.id, src.id + 999).await;
+    let result = create_link_api(src.id, src.id + 999, 100).await;
 
     assert!(result.is_err());
 }
@@ -127,10 +127,10 @@ async fn test_start_qkd_succeeds_with_valid_topology() {
         .await
         .expect("epr node should be created");
 
-    create_link_api(src.id, epr.id)
+    create_link_api(src.id, epr.id, 100)
         .await
         .expect("src-epr link should be created");
-    create_link_api(dst.id, epr.id)
+    create_link_api(dst.id, epr.id, 100)
         .await
         .expect("dst-epr link should be created");
 
@@ -171,7 +171,7 @@ async fn test_start_qkd_fails_when_no_epr_node_in_graph() {
         .await
         .expect("dst node should be created");
 
-    create_link_api(src.id, dst.id)
+    create_link_api(src.id, dst.id, 100)
         .await
         .expect("direct link should be created");
 

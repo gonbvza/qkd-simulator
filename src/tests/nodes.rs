@@ -11,6 +11,9 @@ use crate::{
 fn test_create_client_node() {
     let mut conn = establish_connection();
     // Clean tables for deterministic test
+    diesel::delete(schema::entangled_pair::table)
+        .execute(&mut conn)
+        .unwrap();
     diesel::delete(schema::links::table)
         .execute(&mut conn)
         .unwrap();
