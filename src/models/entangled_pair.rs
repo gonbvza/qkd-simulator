@@ -4,9 +4,12 @@ use diesel::{prelude::Queryable, Selectable};
 
 use crate::{
     core::{event_loop::EventLoop, settings::TIMEOUT},
-    database::entangled_pair::create_entangled_pair,
+    database::entangled_pair::{
+        change_dst_measurement, change_src_measurement, create_entangled_pair,
+    },
     error::PairError,
     establish_connection,
+    models::qubit_ref::QubitRefSide,
 };
 
 #[derive(Queryable, Selectable, Debug, Clone)]
@@ -22,10 +25,16 @@ pub struct EntangledPair {
     pub dst_measured: Option<i16>,
     pub timeout_timestamp: i64,
     pub process_id: i32,
+    pub qubit_nr: i32,
 }
 
 impl EntangledPair {
-    pub fn new(src_id: i32, dst_id: i32, process_id: i32) -> Result<EntangledPair, PairError> {
+    pub fn new(
+        src_id: i32,
+        dst_id: i32,
+        process_id: i32,
+        qubit_nr: i32,
+    ) -> Result<EntangledPair, PairError> {
         let mut conn = establish_connection();
         let current_time = {
             let loop_pair = Arc::clone(&*EventLoop::instance());
@@ -41,6 +50,21 @@ impl EntangledPair {
             current_time,
             current_time + TIMEOUT.clone(),
             process_id,
+            qubit_nr,
         )
+    }
+
+    pub fn set_measurement(&mut self, side: QubitRefSide, value: i16) {
+        let mut conn = establish_connection();
+        match side {
+            QubitRefSide::Source => {
+                self.src_measured = Some(value);
+                change_src_measurement(&mut conn, self.id, value);
+            }
+            QubitRefSide::Destination => {
+                self.dst_measured = Some(value);
+                change_dst_measurement(&mut conn, self.id, value);
+            }
+        }
     }
 }

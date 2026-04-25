@@ -48,3 +48,11 @@ pub fn get_all_nodes(conn: &mut PgConnection) -> Result<Vec<Node>, NodeError> {
     let nodes: Vec<Node> = schema::nodes::table.load(conn)?;
     return Ok(nodes);
 }
+
+pub fn release_node(conn: &mut PgConnection, node_id: i32) -> Result<(), NodeError> {
+    diesel::update(schema::nodes::table)
+        .filter(schema::nodes::id.eq(node_id))
+        .set(schema::nodes::locked_by.eq(None::<i32>))
+        .execute(conn)?;
+    Ok(())
+}

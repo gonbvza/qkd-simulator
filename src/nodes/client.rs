@@ -1,5 +1,5 @@
 use crate::{
-    database::nodes::{create_node, lock_node},
+    database::nodes::{create_node, lock_node, release_node},
     error::NodeError,
     establish_connection,
     models::{detector::Detector, measurement::Measurement},
@@ -55,9 +55,12 @@ impl Node {
         }
     }
 
-    pub fn release(&mut self, process_id: i32) {
+    pub fn release(&mut self, process_id: i32) -> Result<(), NodeError> {
+        let mut conn = establish_connection();
         if self.locked_by == Some(process_id) {
             self.locked_by = None;
+            release_node(&mut conn, self.id)?;
         }
+        Ok(())
     }
 }
