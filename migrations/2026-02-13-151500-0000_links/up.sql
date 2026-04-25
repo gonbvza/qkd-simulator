@@ -1,4 +1,4 @@
--- Table for the detector
+-- Table for the detectorsche
 CREATE TABLE detector (
   id SERIAL PRIMARY KEY, 
   resolution_ps BIGINT NOT NULL, 
@@ -18,19 +18,8 @@ CREATE TABLE nodes (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) UNIQUE NOT NULL DEFAULT 'Unnamed Node',
   locked_by INT REFERENCES process(id),
-  measurements BIGINT NOT NULL DEFAULT 0,
   node_type VARCHAR(255) NOT NULL DEFAULT 'client',
   detector_id INT NOT NULL REFERENCES detector(id)
-);
-
--- Table for the measurements
-CREATE TABLE measurements (
-  id SERIAL PRIMARY KEY,
-  node_id INT NOT NULL REFERENCES nodes(id),
-  basis INT NOT NULL,
-  measurement_id BIGINT NOT NULL,
-  value SMALLINT NOT NULL,
-  consumed BOOLEAN NOT NULL
 );
 
 -- Table for the pending measurements
@@ -39,8 +28,7 @@ CREATE TABLE pending_measurements (
   node_id INT NOT NULL REFERENCES nodes(id),
   basis INT NOT NULL,
   measurement_id BIGINT NOT NULL,
-  value SMALLINT NOT NULL,
-  consumed BOOLEAN NOT NULL
+  value SMALLINT NOT NULL
 );
 
 -- Table for the links
@@ -64,5 +52,17 @@ CREATE TABLE entangled_pair (
   src_measured SMALLINT DEFAULT NULL,
   dst_measured SMALLINT DEFAULT NULL,
   timeout_timestamp BIGINT NOT NULL,
+  process_id INT NOT NULL REFERENCES process(id),
+  qubit_nr INT NOT NULL 
+);
+
+-- Table for the measurements
+CREATE TABLE measurements (
+  id SERIAL PRIMARY KEY,
+  node_id INT NOT NULL REFERENCES nodes(id),
+  basis INT NOT NULL,
+  entangled_pair_id INT NOT NULL REFERENCES entangled_pair(id),
+  value SMALLINT NOT NULL,
+  accepted BOOLEAN NOT NULL DEFAULT False,
   process_id INT NOT NULL REFERENCES process(id)
 );

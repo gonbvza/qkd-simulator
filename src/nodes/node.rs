@@ -10,7 +10,6 @@ pub struct Node {
     pub id: i32,
     pub name: String,
     pub locked_by: Option<i32>,
-    pub measurements: i64,
     pub node_type: String,
     pub detector_id: i32,
 }
@@ -69,8 +68,8 @@ impl fmt::Display for Node {
         };
         write!(
             f,
-            "[{}] {} | Type: {} | In Use: {} | Measurements: {}",
-            self.id, self.name, kind, owner, self.measurements
+            "[{}] {} | Type: {} | In Use: {} | ",
+            self.id, self.name, kind, owner
         )
     }
 }

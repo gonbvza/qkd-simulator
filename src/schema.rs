@@ -21,6 +21,7 @@ diesel::table! {
         dst_measured -> Nullable<Int2>,
         timeout_timestamp -> Int8,
         process_id -> Int4,
+        qubit_nr -> Int4,
     }
 }
 
@@ -41,9 +42,10 @@ diesel::table! {
         id -> Int4,
         node_id -> Int4,
         basis -> Int4,
-        measurement_id -> Int8,
+        entangled_pair_id -> Int4,
         value -> Int2,
-        consumed -> Bool,
+        accepted -> Bool,
+        process_id -> Int4,
     }
 }
 
@@ -53,7 +55,6 @@ diesel::table! {
         #[max_length = 255]
         name -> Varchar,
         locked_by -> Nullable<Int4>,
-        measurements -> Int8,
         #[max_length = 255]
         node_type -> Varchar,
         detector_id -> Int4,
@@ -67,7 +68,6 @@ diesel::table! {
         basis -> Int4,
         measurement_id -> Int8,
         value -> Int2,
-        consumed -> Bool,
     }
 }
 
@@ -79,7 +79,9 @@ diesel::table! {
 }
 
 diesel::joinable!(entangled_pair -> process (process_id));
+diesel::joinable!(measurements -> entangled_pair (entangled_pair_id));
 diesel::joinable!(measurements -> nodes (node_id));
+diesel::joinable!(measurements -> process (process_id));
 diesel::joinable!(nodes -> detector (detector_id));
 diesel::joinable!(nodes -> process (locked_by));
 diesel::joinable!(pending_measurements -> nodes (node_id));

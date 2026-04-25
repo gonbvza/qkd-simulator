@@ -70,6 +70,10 @@ pub enum SimError {
 pub enum PairError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
+    #[error("Database error: {0}")]
+    Measurement(#[from] MeasurementError),
+    #[error("Node error: {0}")]
+    Node(#[from] NodeError),
 }
 
 // process errors
@@ -86,6 +90,13 @@ pub enum DetectorError {
     Database(#[from] diesel::result::Error),
     #[error("Current detector {0} is busy cooling down")]
     CoolingDown(i32),
+}
+
+// measurement errors
+#[derive(Error, Debug)]
+pub enum MeasurementError {
+    #[error("Database error: {0}")]
+    Database(#[from] diesel::result::Error),
 }
 
 // TODO: Change this to macro
@@ -125,6 +136,9 @@ pub enum Error {
     //Detector error
     #[error("{0}")]
     Detector(#[from] DetectorError),
+    //Measurement error
+    #[error("{0}")]
+    Measurement(#[from] MeasurementError),
 
     // Event loop error
     #[error("Function {0} does not exist")]
