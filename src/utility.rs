@@ -20,18 +20,16 @@ pub fn read_line() -> String {
     return buffer.trim().to_string();
 }
 
-// Keep functions to retrive instances from db
-pub fn get_node_arg(args: &HashMap<String, EventArgs>, key: &str) -> Result<Node, Error> {
-    let mut conn = establish_connection();
-    match args.get(key) {
-        Some(EventArgs::Node(node_id)) => {
-            let node = get_node_by_id(&mut conn, node_id.to_owned())?;
-            Ok(node)
+#[macro_export]
+macro_rules! get_node_arg {
+    ($args:expr, $key:expr) => {{
+        match $args.get($key) {
+            Some(EventArgs::Node(node)) => node,
+            _ => {
+                return Err(Error::Sim(SimError::MissingArgument($key.to_string())));
+            }
         }
-        _ => {
-            return Err(SimError::MissingArgument(key.to_string()).into());
-        }
-    }
+    }};
 }
 
 #[macro_export]

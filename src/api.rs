@@ -56,9 +56,9 @@ pub async fn start_qkd(src_node: Node, dst_node: Node) -> Result<()> {
     let delay: i64 = src_epr_link.propagation_delay_us();
 
     let args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("src_node"), EventArgs::Node(src_node.id)),
-        (String::from("dst_node"), EventArgs::Node(dst_node.id)),
-        (String::from("epr_node"), EventArgs::Node(epr_node.id)),
+        (String::from("src_node"), EventArgs::Node(src_node)),
+        (String::from("dst_node"), EventArgs::Node(dst_node)),
+        (String::from("epr_node"), EventArgs::Node(epr_node)),
         (String::from("src_epr_link"), EventArgs::Link(src_epr_link)),
         (String::from("dst_epr_link"), EventArgs::Link(dst_epr_link)),
     ]);

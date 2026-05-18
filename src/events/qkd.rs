@@ -6,16 +6,16 @@ use crate::{
     },
     database::detector::get_detector_by_id,
     error::{DetectorError, Error, NodeError, SimError},
-    establish_connection, get_link_arg, get_qubit_ref_arg,
+    establish_connection, get_link_arg, get_node_arg, get_qubit_ref_arg,
     models::{
         args::EventArgs,
         detector::Detector,
         entangled_pair::EntangledPair,
         links::Link,
+        measurement::Measurement,
         qubit_ref::{QubitRef, QubitRefSide},
     },
     nodes::node::Node,
-    utility::get_node_arg,
 };
 
 // Initializes a QKD session.
@@ -30,10 +30,10 @@ use crate::{
 // * `epr_node` - EPR node used for entanglement generation
 // * `src_epr_link` - Link between source and EPR node
 // * `dst_epr_link` - Link between destination and EPR node
-pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
-    let mut src_node: Node = get_node_arg(args, "src_node")?;
-    let mut dst_node: Node = get_node_arg(args, "dst_node")?;
-    let epr_node: Node = get_node_arg(args, "epr_node")?;
+pub fn handle_qkd_init(args: &HashMap<String, EventArgs>, current_time: i64) -> Result<(), Error> {
+    let mut src_node: Node = get_node_arg!(args, "src_node").to_owned();
+    let mut dst_node: Node = get_node_arg!(args, "dst_node").to_owned();
+    let epr_node: Node = get_node_arg!(args, "epr_node").to_owned();
     let src_epr_link = get_link_arg!(args, "src_epr_link");
     let dst_epr_link = get_link_arg!(args, "dst_epr_link");
 
@@ -43,6 +43,7 @@ pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
         return Err(Error::Node(NodeError::NodeInUse()));
     }
 
+    let measurements: Vec<Measurement> = Vec::new();
     for qubit_nr in 1..QUBIT_AMOUNT {
         println!("Sending pair {}", qubit_nr);
         emit_pair(
@@ -106,7 +107,7 @@ pub fn emit_pair(
     // Create left qubit ref and event args
     let src_qubit_ref: QubitRef = QubitRef::new(entangled_pair.id, QubitRefSide::Source);
     let src_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("node"), EventArgs::Node(src_node.id)),
+        (String::from("node"), EventArgs::Node(src_node)),
         (
             String::from("qubit_ref"),
             EventArgs::QubitRef(src_qubit_ref),
@@ -116,7 +117,7 @@ pub fn emit_pair(
     // Create right qubit ref and event args
     let dst_qubit_ref: QubitRef = QubitRef::new(entangled_pair.id, QubitRefSide::Destination);
     let dst_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("node"), EventArgs::Node(dst_node.id)),
+        (String::from("node"), EventArgs::Node(dst_node)),
         (
             String::from("qubit_ref"),
             EventArgs::QubitRef(dst_qubit_ref),
@@ -149,19 +150,13 @@ pub fn emit_pair(
 /// * `qubit_ref`   - The [`qubit_ref`] of the entangled pair
 /// * `node`        - The node that receives the qubit ref
 /// * `link`        - The link through which the qubit was received
-pub fn receive_pair(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
+pub fn receive_pair(args: &HashMap<String, EventArgs>, current_time: i64) -> Result<(), Error> {
     let mut conn = establish_connection();
-    let node: Node = get_node_arg(args, "node")?;
+    let node: &Node = get_node_arg!(args, "node");
     let link: &Link = get_link_arg!(args, "link");
     let qubit_ref: &QubitRef = get_qubit_ref_arg!(args, "qubit_ref");
     let mut detector: Detector = get_detector_by_id(&mut conn, node.detector_id)?;
-    let current_time = {
-        let loop_pair = Arc::clone(&*EventLoop::instance());
-        let (event_loop, _) = &*loop_pair;
 
-        let mut guard = event_loop.lock().unwrap();
-        guard.get_current_time()
-    };
     if detector.is_cooling(current_time) {
         println!("Cooling down, skipped");
         return Err(DetectorError::CoolingDown(detector.id).into());
@@ -171,7 +166,7 @@ pub fn receive_pair(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
 
     // TODO: Think about the to_owned, maybe is good to change from macro to function and own the
     // instance
-    measure_qubit(qubit_ref.to_owned(), node, link.length)?;
+    measure_qubit(qubit_ref.to_owned(), node.to_owned(), link.length)?;
 
     Ok(())
 }

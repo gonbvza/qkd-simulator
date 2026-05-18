@@ -9,7 +9,7 @@ use crate::{
 pub struct Registry {
     pub funcs: HashMap<
         String,
-        Box<dyn Fn(&HashMap<String, EventArgs>) -> Result<(), Error> + Send + Sync>,
+        Box<dyn Fn(&HashMap<String, EventArgs>, i64) -> Result<(), Error> + Send + Sync>,
     >,
 }
 
@@ -25,7 +25,7 @@ impl Registry {
         &self,
     ) -> Vec<(
         &'static str,
-        Box<dyn Fn(&HashMap<String, EventArgs>) -> Result<(), Error> + Send + Sync>,
+        Box<dyn Fn(&HashMap<String, EventArgs>, i64) -> Result<(), Error> + Send + Sync>,
     )> {
         vec![
             ("handle_qkd_init", Box::new(handle_qkd_init)),
@@ -35,7 +35,7 @@ impl Registry {
 
     pub fn push_func<F>(&mut self, name: String, func: F)
     where
-        F: Fn(&HashMap<String, EventArgs>) -> Result<(), Error> + Send + Sync + 'static,
+        F: Fn(&HashMap<String, EventArgs>, i64) -> Result<(), Error> + Send + Sync + 'static,
     {
         self.funcs.insert(name, Box::new(func));
     }
@@ -43,7 +43,7 @@ impl Registry {
     pub fn instantiate_functions(&mut self) {
         let funcs: Vec<(
             &'static str,
-            Box<dyn Fn(&HashMap<String, EventArgs>) -> Result<(), Error> + Send + Sync>,
+            Box<dyn Fn(&HashMap<String, EventArgs>, i64) -> Result<(), Error> + Send + Sync>,
         )> = self.get_event_functions();
         for key in funcs {
             self.push_func(key.0.to_string(), key.1);
@@ -52,7 +52,7 @@ impl Registry {
 
     pub fn exec_event(&mut self, event: Event) -> Result<(), Error> {
         match self.funcs.get(&event.function) {
-            Some(function) => function(&event.args),
+            Some(function) => function(&event.args, event.timestamp),
             None => Err(Error::NonExistantFunction(event.function)),
         }
     }

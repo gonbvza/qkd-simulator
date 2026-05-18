@@ -369,6 +369,7 @@ version = "0.1.0"
 dependencies = [
  "diesel",
  "dotenv",
+ "either",
  "lazy_static",
  "rand",
  "thiserror",
