@@ -42,7 +42,7 @@ diesel::table! {
         id -> Int4,
         node_id -> Int4,
         basis -> Int4,
-        entangled_pair_id -> Int4,
+        qubit_nr -> Int4,
         value -> Int2,
         accepted -> Bool,
         process_id -> Int4,
@@ -75,11 +75,11 @@ diesel::table! {
     process (id) {
         id -> Int4,
         started_at -> Int8,
+        accepted_pairs -> Int4,
     }
 }
 
 diesel::joinable!(entangled_pair -> process (process_id));
-diesel::joinable!(measurements -> entangled_pair (entangled_pair_id));
 diesel::joinable!(measurements -> nodes (node_id));
 diesel::joinable!(measurements -> process (process_id));
 diesel::joinable!(nodes -> detector (detector_id));

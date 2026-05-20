@@ -6,7 +6,7 @@ lazy_static! {
 }
 
 pub const TIMEOUT: i64 = 1000;
-pub const KEY_LENGTH: usize = 1024;
+pub const KEY_LENGTH: i32 = 1024;
 pub const QUBIT_AMOUNT: i32 = 10000;
 pub const DETECTOR_RESOLUTION: i64 = 100;
 pub const DETECTOR_COOLDOWN_US: i64 = 300;
@@ -15,3 +15,4 @@ pub const LIGHT_SPEED_FIBER: f64 = 2e8;
 pub const FIDELITY_DEGRADATION: f32 = 14.0 / 10_000_000.0;
 pub const FULL_CIRCLE: f64 = 360.0;
 pub const HALF_CIRCLE: f64 = 180.0;
+pub const CHUNK_SIZE: usize = 2000;

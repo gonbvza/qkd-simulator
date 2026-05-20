@@ -6,3 +6,4 @@ pub mod measurement;
 pub mod process;
 pub mod registry;
 pub mod settings;
+pub mod state;

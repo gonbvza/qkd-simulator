@@ -24,12 +24,17 @@ pub fn create_entangled_pair(
     Ok(pair)
 }
 
-pub fn get_pair_by_id(
+pub fn get_pair(
     conn: &mut PgConnection,
-    entangled_pair_id: i32,
+    process_id: i32,
+    qubit_nr: i32,
 ) -> Result<EntangledPair, PairError> {
     let entangled_pair: EntangledPair = schema::entangled_pair::table
-        .filter(schema::entangled_pair::id.eq(entangled_pair_id))
+        .filter(
+            schema::entangled_pair::process_id
+                .eq(process_id)
+                .and(schema::entangled_pair::qubit_nr.eq(qubit_nr)),
+        )
         .first(conn)?;
     Ok(entangled_pair)
 }

@@ -8,15 +8,32 @@ use crate::database::nodes::get_node_by_id;
 use crate::error::Error;
 use crate::establish_connection;
 use crate::models::args::EventArgs;
+use crate::models::detector::Detector;
 use crate::models::links::Link;
 use crate::nodes::node::{Node, NodeKind};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub async fn create_node_api(name: String, node_type: NodeKind) -> Result<Node> {
-    let mut conn = establish_connection();
-    let node: Node = Node::new(&mut conn, name, node_type.to_string())?;
-    Ok(node)
+pub async fn create_node_api(name: String, node_type: NodeKind) -> Result<()> {
+    let args: HashMap<String, EventArgs> = HashMap::from([
+        (String::from("name"), EventArgs::String(name)),
+        (String::from("node_type"), EventArgs::NodeType(node_type)),
+    ]);
+    let current_time = {
+        let loop_pair = Arc::clone(&*EventLoop::instance());
+        let (event_loop, _) = &*loop_pair;
+
+        let mut guard = event_loop.lock().unwrap();
+        guard.get_current_time()
+    };
+    EventLoop::new_and_push(
+        "create_node".to_string(),
+        "create_node".to_string(),
+        args,
+        // Give priority to this type of events
+        current_time + 1,
+    );
+    Ok(())
 }
 
 pub async fn create_link_api(src_id: i32, dst_id: i32, distance: i64) -> Result<Link> {

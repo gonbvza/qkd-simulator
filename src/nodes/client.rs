@@ -13,9 +13,9 @@ impl Node {
         conn: &mut PgConnection,
         name: String,
         node_type: String,
+        detector_id: i32,
     ) -> Result<Node, NodeError> {
-        let detector = Detector::new()?;
-        create_node(conn, &name, &node_type, detector.id)
+        create_node(conn, &name, &node_type, detector_id)
     }
 
     // TODO: MOVE THIS TO DB FILE

@@ -74,6 +74,10 @@ pub enum PairError {
     Measurement(#[from] MeasurementError),
     #[error("Node error: {0}")]
     Node(#[from] NodeError),
+    #[error("Entangled pair {0} not present")]
+    PairNotFound(i32),
+    #[error("Measurement missing")]
+    NotMeasured(),
 }
 
 // process errors
@@ -81,6 +85,8 @@ pub enum PairError {
 pub enum ProcessError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
+    #[error("Process missing")]
+    NotFound(),
 }
 
 // detector errors
@@ -90,6 +96,8 @@ pub enum DetectorError {
     Database(#[from] diesel::result::Error),
     #[error("Current detector {0} is busy cooling down")]
     CoolingDown(i32),
+    #[error("Detector for node {0} not found")]
+    NotFound(i32),
 }
 
 // measurement errors

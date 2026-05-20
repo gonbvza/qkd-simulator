@@ -11,7 +11,6 @@ mod tests {
             id,
             name: format!("client_{}", id),
             locked_by: None,
-            measurements: 0,
             node_type: NodeKind::ClientNode.to_string(),
             detector_id: 0,
         }
@@ -22,7 +21,6 @@ mod tests {
             id,
             name: format!("epr_{}", id),
             locked_by: None,
-            measurements: 0,
             node_type: NodeKind::EprNode.to_string(),
             detector_id: 0,
         }

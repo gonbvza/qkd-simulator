@@ -28,8 +28,6 @@ impl Detector {
     }
 
     pub fn set_detection_time(&mut self, current_time: i64) -> Result<(), DetectorError> {
-        let mut conn = establish_connection();
-        set_detection_time(&mut conn, self.id, current_time)?;
         self.last_detection_time = current_time;
         Ok(())
     }

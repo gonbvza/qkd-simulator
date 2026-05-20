@@ -10,7 +10,8 @@ CREATE TABLE detector (
 -- QKD process
 CREATE TABLE process (
   id SERIAL PRIMARY KEY,
-  started_at BIGINT NOT NULL
+  started_at BIGINT NOT NULL,
+  accepted_pairs INT NOT NULL
 );
 
 -- Table for the nodes
@@ -61,7 +62,7 @@ CREATE TABLE measurements (
   id SERIAL PRIMARY KEY,
   node_id INT NOT NULL REFERENCES nodes(id),
   basis INT NOT NULL,
-  entangled_pair_id INT NOT NULL REFERENCES entangled_pair(id),
+  qubit_nr INT NOT NULL,
   value SMALLINT NOT NULL,
   accepted BOOLEAN NOT NULL DEFAULT False,
   process_id INT NOT NULL REFERENCES process(id)

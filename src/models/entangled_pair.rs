@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use diesel::{prelude::Queryable, Selectable};
+use diesel::{
+    prelude::{Insertable, Queryable},
+    Selectable,
+};
 
 use crate::{
     core::{event_loop::EventLoop, settings::TIMEOUT},
@@ -9,8 +12,22 @@ use crate::{
     },
     error::PairError,
     establish_connection,
-    models::qubit_ref::QubitRefSide,
+    models::{measurement::Measurement, qubit_ref::QubitRefSide},
 };
+
+#[derive(Debug, Clone)]
+pub struct NewEntangledPair {
+    pub src_id: i32,
+    pub dst_id: i32,
+    pub fidelity: f32,
+    pub created_at: i64,
+    pub src_measurement: Option<Measurement>,
+    pub dst_measurement: Option<Measurement>,
+    pub timeout_timestamp: i64,
+    pub process_id: i32,
+    pub qubit_nr: i32,
+    pub accepted: bool,
+}
 
 #[derive(Queryable, Selectable, Debug, Clone)]
 #[diesel(table_name = crate::schema::entangled_pair)]
@@ -28,43 +45,58 @@ pub struct EntangledPair {
     pub qubit_nr: i32,
 }
 
-impl EntangledPair {
+impl NewEntangledPair {
     pub fn new(
         src_id: i32,
         dst_id: i32,
         process_id: i32,
         qubit_nr: i32,
-    ) -> Result<EntangledPair, PairError> {
-        let mut conn = establish_connection();
-        let current_time = {
-            let loop_pair = Arc::clone(&*EventLoop::instance());
-            let (event_loop, _) = &*loop_pair;
-
-            let mut guard = event_loop.lock().unwrap();
-            guard.get_current_time()
-        };
-        create_entangled_pair(
-            &mut conn,
+        save: bool,
+        current_time: i64,
+    ) -> Result<NewEntangledPair, PairError> {
+        let pair = NewEntangledPair {
             src_id,
             dst_id,
-            current_time,
-            current_time + TIMEOUT.clone(),
+            fidelity: 1 as f32,
+            created_at: current_time,
+            src_measurement: None,
+            dst_measurement: None,
+            timeout_timestamp: 0,
             process_id,
             qubit_nr,
-        )
+            accepted: false,
+        };
+        if save {
+            let mut conn = establish_connection();
+            println!("SAVING");
+            create_entangled_pair(
+                &mut conn,
+                src_id,
+                dst_id,
+                current_time,
+                current_time + TIMEOUT.clone(),
+                process_id,
+                qubit_nr,
+            )?;
+        }
+        Ok(pair)
     }
 
-    pub fn set_measurement(&mut self, side: QubitRefSide, value: i16) {
-        let mut conn = establish_connection();
+    pub fn set_measurement(&mut self, side: QubitRefSide, measurement: Measurement) {
         match side {
             QubitRefSide::Source => {
-                self.src_measured = Some(value);
-                change_src_measurement(&mut conn, self.id, value);
+                self.src_measurement = Some(measurement);
             }
             QubitRefSide::Destination => {
-                self.dst_measured = Some(value);
-                change_dst_measurement(&mut conn, self.id, value);
+                self.dst_measurement = Some(measurement);
             }
+        }
+    }
+
+    pub fn get_measurement(&mut self, side: QubitRefSide) -> Result<Measurement, PairError> {
+        match side {
+            QubitRefSide::Source => self.dst_measurement.ok_or(PairError::NotMeasured()),
+            QubitRefSide::Destination => self.dst_measurement.ok_or(PairError::NotMeasured()),
         }
     }
 }
