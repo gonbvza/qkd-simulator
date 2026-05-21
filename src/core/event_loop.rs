@@ -21,8 +21,8 @@ impl EventLoopHandler {
 }
 
 pub struct EventLoop {
-    pub bin_heap: BinHeap,
-    pub current_time: i64,
+    bin_heap: BinHeap,
+    current_time: i64,
 }
 
 impl EventLoop {
@@ -40,6 +40,10 @@ impl EventLoop {
             timestamp: timestamp,
         };
         self.bin_heap.insert(schedule_event);
+    }
+
+    pub fn pop_next_event(&mut self) -> Option<ScheduledEvent> {
+        self.bin_heap.extract_min()
     }
 
     pub fn set_new_timestamp(&mut self, new_time: &i64) -> i64 {

@@ -42,7 +42,7 @@ pub fn run_loop(
             event_loop.push_event(event, event_loop.get_current_time());
         }
 
-        let Some(scheduled_event) = event_loop.bin_heap.extract_min() else {
+        let Some(scheduled_event) = event_loop.pop_next_event() else {
             match rx.recv() {
                 Ok(event) => {
                     event_loop.push_event(event, event_loop.get_current_time());

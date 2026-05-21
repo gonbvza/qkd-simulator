@@ -6,7 +6,6 @@ use crate::database::link::{get_all_links, get_link};
 use crate::database::nodes::{get_all_nodes, get_node_by_id};
 use crate::error::Error;
 use crate::establish_connection;
-use crate::models::args::EventArgs;
 use crate::models::event::Event;
 use crate::models::event_types::{
     CreateLinkPayload, CreateNodePayload, EventName, EventPayload, HandleQkdInitPayload,

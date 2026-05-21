@@ -10,7 +10,6 @@ use crate::{
     },
     error::PairError,
     models::{
-        args::EventArgs,
         basis::Basis,
         entangled_pair::NewEntangledPair,
         event::Event,
@@ -111,9 +110,7 @@ pub fn second_measurement(
         process.accepted_pairs += 1;
     }
     // 9. Check if process has finished
-    if process.accepted_pairs < QUBIT_AMOUNT - 100 {
-        println!("This qubit was {}", entangled_pair.qubit_nr);
-        println!("Accepted are {}", process.accepted_pairs);
+    if process.accepted_pairs <= QUBIT_AMOUNT - 100 {
         return Ok(());
     }
     // 10. If so, start classical sifting

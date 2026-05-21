@@ -9,7 +9,6 @@ use crate::{
         state::{create_link, create_node},
     },
     models::{
-        args::EventArgs,
         event::ScheduledEvent,
         event_types::{EventName, EventPayload},
     },

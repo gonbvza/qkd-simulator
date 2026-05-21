@@ -6,9 +6,7 @@ use crate::{
         settings::QUBIT_AMOUNT, state::SimulationState,
     },
     error::{DetectorError, Error, NodeError, SimError},
-    get_link_arg, get_number_arg, get_side_arg,
     models::{
-        args::EventArgs,
         detector::Detector,
         entangled_pair::NewEntangledPair,
         event::Event,

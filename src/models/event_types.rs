@@ -1,12 +1,8 @@
 //! Strongly-typed event function identifiers and payload structs.
 //!
 //! This module defines the canonical set of event kinds (`EventFn`) and
-//! the corresponding typed payloads for each event. These types are intended
-//! to replace stringly-typed function names and loose `HashMap<String, EventArgs>`
-//! usage progressively, allowing compile-time checks and clearer handler
-//! signatures.
+//! the corresponding typed payloads for each event.
 
-use crate::models::links::Link;
 use crate::models::qubit_ref::QubitRefSide;
 use crate::nodes::node::NodeKind;
 use derive_new::new;
