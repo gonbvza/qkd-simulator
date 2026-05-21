@@ -14,7 +14,7 @@ use crate::{
         links::Link,
         qubit_ref::QubitRefSide,
     },
-    nodes::node::Node,
+    models::node::Node,
 };
 
 // Initializes a QKD session.

@@ -11,7 +11,7 @@ use crate::models::event_types::{
     CreateLinkPayload, CreateNodePayload, EventName, EventPayload, HandleQkdInitPayload,
 };
 use crate::models::links::Link;
-use crate::nodes::node::{Node, NodeKind};
+use crate::models::node::{Node, NodeKind};
 
 pub type Result<T> = std::result::Result<T, Error>;
 

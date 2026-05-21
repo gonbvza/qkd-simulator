@@ -1,7 +1,7 @@
 use crate::{
     api::{create_link_api, create_node_api, start_qkd},
     establish_connection,
-    nodes::node::NodeKind,
+    models::node::NodeKind,
     schema,
 };
 use diesel::prelude::*;

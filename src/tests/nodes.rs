@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use crate::{
     database::nodes::{get_node_by_id, get_node_by_name},
     establish_connection,
-    nodes::node::{Node, NodeKind},
+    models::node::{Node, NodeKind},
     schema,
 };
 

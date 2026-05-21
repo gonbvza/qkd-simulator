@@ -17,7 +17,7 @@ use crate::{
         measurement::Measurement,
         qubit_ref::QubitRefSide,
     },
-    nodes::node::Node,
+    models::node::Node,
     utility::is_first,
 };
 

@@ -1,5 +1,6 @@
 use std::fmt;
 
+use crate::database::nodes::create_node;
 use crate::error::{CliError, NodeError};
 use diesel::prelude::*;
 
@@ -34,6 +35,7 @@ impl std::str::FromStr for NodeKind {
 
 impl TryFrom<&String> for NodeKind {
     type Error = NodeError;
+
     fn try_from(s: &String) -> Result<Self, Self::Error> {
         match s.trim() {
             "0" => Ok(NodeKind::ClientNode),
@@ -54,15 +56,42 @@ impl fmt::Display for NodeKind {
     }
 }
 
+impl Node {
+    pub fn new(
+        conn: &mut PgConnection,
+        name: String,
+        node_type: String,
+        detector_id: i32,
+    ) -> Result<Self, NodeError> {
+        create_node(conn, &name, &node_type, detector_id)
+    }
+
+    pub fn try_acquire(&mut self, process_id: i32) -> bool {
+        match self.locked_by {
+            None => {
+                self.locked_by = Some(process_id);
+                true
+            }
+            Some(owner) if owner == process_id => true,
+            _ => false,
+        }
+    }
+
+    pub fn release(&mut self, process_id: i32) -> Result<(), NodeError> {
+        if self.locked_by == Some(process_id) {
+            self.locked_by = None;
+        }
+        Ok(())
+    }
+}
+
 impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let kind = NodeKind::try_from(&self.node_type)
             .map(|k| k.to_string())
             .unwrap_or_else(|_| format!("Unknown ({})", self.node_type));
         let owner = if let Some(owner) = self.locked_by {
-            {
-                format!("{}", owner)
-            }
+            format!("{}", owner)
         } else {
             "No".to_string()
         };

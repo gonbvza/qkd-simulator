@@ -3,8 +3,8 @@
 //! This module defines the canonical set of event kinds (`EventFn`) and
 //! the corresponding typed payloads for each event.
 
+use crate::models::node::NodeKind;
 use crate::models::qubit_ref::QubitRefSide;
-use crate::nodes::node::NodeKind;
 use derive_new::new;
 
 /// Canonical list of event functions the system can execute.

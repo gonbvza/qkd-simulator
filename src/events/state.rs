@@ -3,7 +3,7 @@ use crate::models::event_types::EventPayload;
 use crate::models::links::Link;
 use crate::{
     core::state::SimulationState, error::Error, establish_connection, models::detector::Detector,
-    nodes::node::Node,
+    models::node::Node,
 };
 
 pub fn create_node(

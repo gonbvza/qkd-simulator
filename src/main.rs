@@ -17,7 +17,6 @@ mod database;
 mod error;
 mod events;
 mod models;
-mod nodes;
 mod schema;
 mod tests;
 mod utility;

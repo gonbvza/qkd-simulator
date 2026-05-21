@@ -2,7 +2,7 @@ use diesel::prelude::*;
 
 use crate::{
     error::{map_db_error, NodeError},
-    nodes::node::Node,
+    models::node::Node,
     schema,
 };
 
@@ -38,7 +38,7 @@ pub fn get_node_by_name(conn: &mut PgConnection, node_name: &str) -> Result<Node
 
 pub fn lock_node(node: &Node, conn: &mut PgConnection, process_id: i32) -> Result<(), NodeError> {
     diesel::update(schema::nodes::table)
-        .filter(schema::nodes::id.eq(node.get_id()))
+        .filter(schema::nodes::id.eq(node.id))
         .set(schema::nodes::locked_by.eq(process_id))
         .execute(conn)?;
     Ok(())

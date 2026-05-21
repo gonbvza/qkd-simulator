@@ -5,7 +5,7 @@ use crate::{
     models::{
         detector::Detector, entangled_pair::NewEntangledPair, links::Link, measurement::Measurement,
     },
-    nodes::node::Node,
+    models::node::Node,
 };
 
 /// Central in-memory state of the QKD simulation.

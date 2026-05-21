@@ -4,7 +4,7 @@ mod tests {
     use crate::core::graph::{Graph, GraphNode};
     use crate::error::{GraphError, LinkError};
     use crate::models::links::Link;
-    use crate::nodes::node::{Node, NodeKind};
+    use crate::models::node::{Node, NodeKind};
 
     fn make_client(id: i32) -> Node {
         Node {
