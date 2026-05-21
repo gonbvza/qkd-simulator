@@ -1,3 +1,7 @@
+//! Interactive CLI runner.
+//!
+//! This file hosts the top-level input loop and dispatches each parsed command
+//! to the corresponding handler in `methods`.
 use crate::cli::command::Command;
 use crate::cli::methods::{
     create_link_cli, create_node_cli, get_links_cli, get_nodes_cli, start_qkd_cli,
@@ -6,7 +10,10 @@ use crate::core::event_loop::EventLoopHandler;
 use crate::error::Error;
 use crate::utility::read_line;
 
-// TODO: Create cli error
+/// Runs the interactive CLI loop until `exit` is entered.
+///
+/// The loop is intentionally resilient to command parsing failures:
+/// invalid input is reported and the prompt is shown again.
 pub async fn run_cli(handle: EventLoopHandler) -> Result<(), Error> {
     loop {
         println!("What do you want to do?");

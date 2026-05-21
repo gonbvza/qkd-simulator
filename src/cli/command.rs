@@ -1,15 +1,23 @@
 use crate::error::CliError;
 
+/// CLI commands accepted by the interactive prompt.
 #[derive(Debug)]
 pub enum Command {
+    /// Create a node.
     CreateNode,
+    /// Create a link between two nodes.
     CreateLink,
+    /// List known nodes.
     GetNodes,
+    /// List known links.
     GetLinks,
+    /// Start a QKD session.
     Start,
+    /// Stop the interactive CLI.
     Exit,
 }
 
+/// Converts raw user input into a typed [`Command`].
 impl TryFrom<String> for Command {
     type Error = CliError;
 
