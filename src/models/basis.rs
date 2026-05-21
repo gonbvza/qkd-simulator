@@ -2,13 +2,9 @@ use diesel::{
     deserialize::{self, FromSql, FromSqlRow},
     expression::AsExpression,
     pg::Pg,
-    prelude::Queryable,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
-    Selectable,
 };
-
-use rand::Rng;
 
 use crate::models::qubit_ref::QubitRefSide;
 

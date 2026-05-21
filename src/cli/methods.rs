@@ -1,5 +1,6 @@
 use crate::{
     api::{create_link_api, create_node_api, start_qkd},
+    core::event_loop::EventLoopHandler,
     database::{
         link::get_all_links,
         nodes::{get_all_nodes, get_node_by_id},
@@ -11,16 +12,16 @@ use crate::{
     utility::read_line,
 };
 
-pub async fn create_node_cli() -> Result<(), Error> {
+pub async fn create_node_cli(handle: &EventLoopHandler) -> Result<(), Error> {
     println!("Enter node name:");
     let name = read_line();
     println!("Enter node type:");
     let node_type = read_line();
-    create_node_api(name.trim().to_string(), node_type.parse()?).await?;
+    create_node_api(name.trim().to_string(), node_type.parse()?, handle).await?;
     Ok(())
 }
 
-pub async fn create_link_cli() -> Result<(), Error> {
+pub async fn create_link_cli(handle: &EventLoopHandler) -> Result<(), Error> {
     println!("Enter source node id:");
     let src_id = read_line().trim().parse::<i32>().unwrap();
     println!("Enter destination node id:");
@@ -30,11 +31,11 @@ pub async fn create_link_cli() -> Result<(), Error> {
 
     // TODO: Request rest of link attr
 
-    create_link_api(src_id, dst_id, distance).await?;
+    create_link_api(src_id, dst_id, distance, handle).await?;
     Ok(())
 }
 
-pub async fn start_qkd_cli() -> Result<(), Error> {
+pub async fn start_qkd_cli(handle: &EventLoopHandler) -> Result<(), Error> {
     let mut conn = establish_connection();
     println!("Enter source id:");
     let src_node: Node = get_node_by_id(
@@ -46,7 +47,7 @@ pub async fn start_qkd_cli() -> Result<(), Error> {
         &mut conn,
         read_line().trim().parse::<i32>().map_err(CliError::from)?,
     )?;
-    start_qkd(src_node, dst_node).await?;
+    start_qkd(src_node, dst_node, handle).await?;
     Ok(())
 }
 

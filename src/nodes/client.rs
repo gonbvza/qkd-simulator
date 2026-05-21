@@ -1,11 +1,4 @@
-use crate::{
-    database::nodes::{create_node, lock_node, release_node},
-    error::NodeError,
-    establish_connection,
-    models::{detector::Detector, measurement::Measurement},
-    nodes::node::Node,
-    schema::{self},
-};
+use crate::{database::nodes::create_node, error::NodeError, nodes::node::Node};
 use diesel::prelude::*;
 
 impl Node {
@@ -16,18 +9,6 @@ impl Node {
         detector_id: i32,
     ) -> Result<Node, NodeError> {
         create_node(conn, &name, &node_type, detector_id)
-    }
-
-    // TODO: MOVE THIS TO DB FILE
-    pub fn get_measurements(&self) -> Result<Vec<Measurement>, NodeError> {
-        let mut conn = establish_connection();
-
-        let measurements: Vec<Measurement> = schema::measurements::table
-            .select(Measurement::as_select())
-            .filter(schema::measurements::node_id.eq(self.id))
-            .load(&mut conn)?;
-
-        Ok(measurements)
     }
 
     pub fn get_id(&self) -> i32 {
@@ -43,11 +24,9 @@ impl Node {
     }
 
     pub fn try_acquire(&mut self, process_id: i32) -> bool {
-        let mut conn = establish_connection();
         match self.locked_by {
             None => {
                 self.locked_by = Some(process_id);
-                lock_node(&self, &mut conn, process_id);
                 true
             }
             Some(owner) if owner == process_id => true,
@@ -56,10 +35,8 @@ impl Node {
     }
 
     pub fn release(&mut self, process_id: i32) -> Result<(), NodeError> {
-        let mut conn = establish_connection();
         if self.locked_by == Some(process_id) {
             self.locked_by = None;
-            release_node(&mut conn, self.id)?;
         }
         Ok(())
     }

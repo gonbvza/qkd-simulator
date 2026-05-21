@@ -29,7 +29,7 @@ pub struct SimulationState {
     pub detectors: HashMap<i32, Detector>,
 
     /// Links between nodes (optional but useful if you want fast lookup)
-    pub links: HashMap<i32, Link>,
+    pub links: HashMap<(i32, i32), Link>,
 }
 
 impl SimulationState {
@@ -75,7 +75,7 @@ impl SimulationState {
 
     /// Insert or update link
     pub fn upsert_link(&mut self, link: Link) {
-        self.links.insert(link.id, link);
+        self.links.insert((link.src_id, link.dst_id), link);
     }
 
     /// Get proces
@@ -97,11 +97,11 @@ impl SimulationState {
         new_id
     }
 
-    pub fn get_accepted_measurements(self, process_id: i32) -> Vec<Measurement> {
+    pub fn get_accepted_measurements(&self, process_id: i32) -> Vec<NewEntangledPair> {
         self.pairs
             .values()
             .filter(|pair| pair.process_id == process_id && pair.accepted)
-            .filter_map(|pair| pair.src_measurement.clone())
+            .filter_map(|pair| Some(pair.clone()))
             .collect()
     }
 

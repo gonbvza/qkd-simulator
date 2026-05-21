@@ -1,44 +1,47 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::core::event_loop::EventLoop;
+use crate::core::event_loop::{EventLoop, EventLoopHandler};
 use crate::core::graph::Graph;
 use crate::database::link::get_link;
 use crate::database::nodes::get_node_by_id;
 use crate::error::Error;
 use crate::establish_connection;
 use crate::models::args::EventArgs;
-use crate::models::detector::Detector;
+use crate::models::event::Event;
 use crate::models::links::Link;
 use crate::nodes::node::{Node, NodeKind};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub async fn create_node_api(name: String, node_type: NodeKind) -> Result<()> {
+pub async fn create_node_api(
+    name: String,
+    node_type: NodeKind,
+    handle: &EventLoopHandler,
+) -> Result<()> {
     let args: HashMap<String, EventArgs> = HashMap::from([
         (String::from("name"), EventArgs::String(name)),
         (String::from("node_type"), EventArgs::NodeType(node_type)),
     ]);
-    let current_time = {
-        let loop_pair = Arc::clone(&*EventLoop::instance());
-        let (event_loop, _) = &*loop_pair;
-
-        let mut guard = event_loop.lock().unwrap();
-        guard.get_current_time()
-    };
-    EventLoop::new_and_push(
-        "create_node".to_string(),
-        "create_node".to_string(),
-        args,
-        // Give priority to this type of events
-        current_time + 1,
-    );
+    let event = Event::new_now("create_node".to_string(), "create_node".to_string(), args);
+    handle.push_event(event);
     Ok(())
 }
 
-pub async fn create_link_api(src_id: i32, dst_id: i32, distance: i64) -> Result<Link> {
-    let link = Link::new(distance, 0.4, 0.1, src_id, dst_id)?;
-    Ok(link)
+pub async fn create_link_api(
+    src_id: i32,
+    dst_id: i32,
+    distance: i64,
+    handle: &EventLoopHandler,
+) -> Result<()> {
+    let args: HashMap<String, EventArgs> = HashMap::from([
+        (String::from("distance"), EventArgs::BigNumber(distance)),
+        (String::from("src_id"), EventArgs::Number(src_id)),
+        (String::from("dst_id"), EventArgs::Number(dst_id)),
+    ]);
+    let event = Event::new_now("create_link".to_string(), "create_link".to_string(), args);
+    handle.push_event(event);
+    Ok(())
 }
 
 /// Initiates a QKD session between two client nodes via an EPR source.
@@ -54,7 +57,7 @@ pub async fn create_link_api(src_id: i32, dst_id: i32, distance: i64) -> Result<
 ///
 /// # Errors
 /// Returns an error if any of the three node IDs are not found in the repository
-pub async fn start_qkd(src_node: Node, dst_node: Node) -> Result<()> {
+pub async fn start_qkd(src_node: Node, dst_node: Node, handle: &EventLoopHandler) -> Result<()> {
     // Get the nodes
     let mut conn = establish_connection();
 
@@ -63,30 +66,19 @@ pub async fn start_qkd(src_node: Node, dst_node: Node) -> Result<()> {
 
     let src_epr_link: Link = get_link(&mut conn, src_node.id, epr_node.id)?;
     let dst_epr_link: Link = get_link(&mut conn, dst_node.id, epr_node.id)?;
-    let current_time = {
-        let loop_pair = Arc::clone(&*EventLoop::instance());
-        let (event_loop, _) = &*loop_pair;
-
-        let mut guard = event_loop.lock().unwrap();
-        guard.get_current_time()
-    };
-    let delay: i64 = src_epr_link.propagation_delay_us();
-
+    // TODO CHANGE CURRENT TIME SET
     let args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("src_node"), EventArgs::Node(src_node)),
-        (String::from("dst_node"), EventArgs::Node(dst_node)),
-        (String::from("epr_node"), EventArgs::Node(epr_node)),
+        (String::from("src_node_id"), EventArgs::Number(src_node.id)),
+        (String::from("dst_node_id"), EventArgs::Number(dst_node.id)),
+        (String::from("epr_node_id"), EventArgs::Number(epr_node.id)),
         (String::from("src_epr_link"), EventArgs::Link(src_epr_link)),
         (String::from("dst_epr_link"), EventArgs::Link(dst_epr_link)),
     ]);
 
     // TODO: Calculate timestamp
-    EventLoop::new_and_push(
-        String::from("handle_qkd_event"),
-        String::from("handle_qkd_init"),
-        args,
-        current_time + delay,
-    );
+    let event = Event::new_now(String::from("handle_qkd_event"), String::from("handle_qkd_init"), args);
+
+    handle.push_event(event);
 
     Ok(())
 }

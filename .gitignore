@@ -2,3 +2,9 @@
 
 # Environment variable
 .env
+
+# Log files
+*.txt
+
+# Python files for testing
+*.py

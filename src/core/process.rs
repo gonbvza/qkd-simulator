@@ -1,8 +1,4 @@
-use std::sync::Arc;
-
 use diesel::prelude::*;
-
-use crate::{core::event_loop::EventLoop, error::ProcessError, establish_connection};
 
 #[derive(Queryable, Selectable, Debug, Clone)]
 #[diesel(table_name = crate::schema::process)]

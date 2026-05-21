@@ -1,7 +1,7 @@
-use crate::models::event::Event;
+use crate::models::event::ScheduledEvent;
 
 pub struct BinHeap {
-    pub arr: Vec<Event>,
+    pub arr: Vec<ScheduledEvent>,
 }
 
 impl BinHeap {
@@ -22,11 +22,11 @@ impl BinHeap {
     }
 
     // Peek min
-    pub fn get_min(&self) -> Option<Event> {
+    pub fn get_min(&self) -> Option<ScheduledEvent> {
         self.arr.first().cloned()
     }
 
-    pub fn insert(&mut self, event: Event) {
+    pub fn insert(&mut self, event: ScheduledEvent) {
         // Push at end
         self.arr.push(event);
 
@@ -46,7 +46,7 @@ impl BinHeap {
     }
 
     // Decrease the key (time) at index i
-    pub fn decrease_key(&mut self, mut i: usize, new_event: Event) {
+    pub fn decrease_key(&mut self, mut i: usize, new_event: ScheduledEvent) {
         self.arr[i] = new_event;
 
         // Bubble up
@@ -63,7 +63,7 @@ impl BinHeap {
     }
 
     // Remove and return minimum element (root)
-    pub fn extract_min(&mut self) -> Option<Event> {
+    pub fn extract_min(&mut self) -> Option<ScheduledEvent> {
         if self.arr.is_empty() {
             return None;
         }

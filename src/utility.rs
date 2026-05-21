@@ -84,6 +84,18 @@ macro_rules! get_number_arg {
 }
 
 #[macro_export]
+macro_rules! get_big_number_arg {
+    ($args:expr, $key:expr) => {{
+        match $args.get($key) {
+            Some(EventArgs::BigNumber(num)) => num,
+            _ => {
+                return Err(Error::Sim(SimError::MissingArgument($key.to_string())));
+            }
+        }
+    }};
+}
+
+#[macro_export]
 macro_rules! get_side_arg {
     ($args:expr, $key:expr) => {{
         match $args.get($key) {
@@ -127,7 +139,7 @@ pub fn is_first(
 ) -> Result<bool, PairError> {
     match side {
         QubitRefSide::Source => Ok(entangled_pair.dst_measurement.is_none()),
-        QubitRefSide::Destination => Ok(entangled_pair.dst_measurement.is_none()),
+        QubitRefSide::Destination => Ok(entangled_pair.src_measurement.is_none()),
     }
 }
 

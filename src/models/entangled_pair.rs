@@ -96,7 +96,7 @@ impl NewEntangledPair {
     pub fn get_measurement(&mut self, side: QubitRefSide) -> Result<Measurement, PairError> {
         match side {
             QubitRefSide::Source => self.dst_measurement.ok_or(PairError::NotMeasured()),
-            QubitRefSide::Destination => self.dst_measurement.ok_or(PairError::NotMeasured()),
+            QubitRefSide::Destination => self.src_measurement.ok_or(PairError::NotMeasured()),
         }
     }
 }

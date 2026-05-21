@@ -15,4 +15,3 @@ pub const LIGHT_SPEED_FIBER: f64 = 2e8;
 pub const FIDELITY_DEGRADATION: f32 = 14.0 / 10_000_000.0;
 pub const FULL_CIRCLE: f64 = 360.0;
 pub const HALF_CIRCLE: f64 = 180.0;
-pub const CHUNK_SIZE: usize = 2000;

@@ -1,12 +1,15 @@
 use std::env;
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, MutexGuard};
 
 use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
 
 use crate::cli::cli::run_cli;
-use crate::core::event_loop::EventLoop;
+use crate::core::event_loop::{self, EventLoop, EventLoopHandler};
 use crate::core::registry::Registry;
+use crate::error::Error;
+use crate::models::event::{Event, EventTime};
 
 mod api;
 mod cli;
@@ -28,47 +31,50 @@ pub fn establish_connection() -> PgConnection {
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-pub fn run_loop(mut registry: Registry) {
-    loop {
-        let event = {
-            let loop_pair = Arc::clone(&*EventLoop::instance());
-            let (event_loop, _) = &*loop_pair;
+pub fn run_loop(
+    mut registry: Registry,
+    handle: EventLoopHandler,
+    rx: Receiver<Event>,
+) -> Result<(), Error> {
+    let mut event_loop = EventLoop::new();
 
-            let mut guard = event_loop.lock().unwrap();
-            let event = guard.bin_heap.extract_min();
-            if let Some(event) = event.clone() {
-                guard.set_new_timestamp(&event.timestamp);
+    loop {
+        while let Ok(event) = rx.try_recv() {
+            event_loop.push_event(event, event_loop.get_current_time());
+        }
+
+        let Some(scheduled_event) = event_loop.bin_heap.extract_min() else {
+            match rx.recv() {
+                Ok(event) => {
+                    event_loop.push_event(event, event_loop.get_current_time());
+                    continue;
+                }
+                Err(_) => return Ok(()),
             }
-            event
         };
 
-        match event {
-            Some(event) => {
-                let _ = &registry.exec_event(event.to_owned());
-            }
-            None => {
-                let pair = EventLoop::instance().clone();
-                let (event_loop, cvar) = &*pair;
-
-                let guard = event_loop.lock().unwrap();
-                let _unused = cvar.wait(guard).unwrap();
-            }
-        }
+        event_loop.set_new_timestamp(&scheduled_event.timestamp);
+        registry.exec_event(scheduled_event, &handle)?;
     }
 }
 
 #[tokio::main]
 async fn main() {
-    let mut registry = Registry::new();
-    registry.instantiate_functions();
+    let (tx, rx): (Sender<Event>, Receiver<Event>) = channel();
+    let handler: EventLoopHandler = EventLoopHandler::new(tx.clone());
+    let sim_handler: EventLoopHandler = EventLoopHandler::new(tx.clone());
 
     // Spawn CLI (async)
     tokio::spawn(async move {
-        match run_cli().await {
+        match run_cli(handler).await {
             Ok(_) => println!("Loop closed succesfully"),
             Err(e) => println!("{}", e),
         }
     });
 
-    run_loop(registry);
+    // Create event loop and registry
+    let mut registry = Registry::new();
+    registry.instantiate_functions();
+
+    run_loop(registry, sim_handler, rx);
 }

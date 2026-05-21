@@ -1,6 +1,9 @@
 use std::fmt;
 
-use crate::{core::settings::LIGHT_SPEED_FIBER, error::LinkError, establish_connection, schema};
+use crate::{
+    core::settings::LIGHT_SPEED_FIBER, database::link::create_link, error::LinkError,
+    establish_connection, schema,
+};
 use diesel::{dsl, insert_into, prelude::*, select};
 
 #[derive(Queryable, Selectable, Debug, Clone)]
@@ -18,41 +21,28 @@ pub struct Link {
 
 impl Link {
     pub fn new(
+        conn: &mut PgConnection,
         length: i64,
         attenuation: f32,
         error_rate: f32,
         src_id: i32,
         dst_id: i32,
     ) -> Result<Link, LinkError> {
-        // TODO: FIX SRP!!!
-        let mut conn = establish_connection();
-
         let node_a_exists = select(dsl::exists(
             schema::nodes::table.filter(schema::nodes::id.eq(src_id)),
         ))
-        .get_result::<bool>(&mut conn)?;
+        .get_result::<bool>(conn)?;
 
         let node_b_exists = select(dsl::exists(
             schema::nodes::table.filter(schema::nodes::id.eq(dst_id)),
         ))
-        .get_result::<bool>(&mut conn)?;
+        .get_result::<bool>(conn)?;
 
         if !node_a_exists || !node_b_exists {
             return Err(LinkError::NonExistingNodes(src_id, dst_id));
         }
 
-        let link = insert_into(schema::links::table)
-            .values((
-                schema::links::length.eq(length),
-                schema::links::attenuation.eq(attenuation),
-                schema::links::error_rate.eq(error_rate),
-                schema::links::src_id.eq(src_id),
-                schema::links::dst_id.eq(dst_id),
-                schema::links::next_available_time.eq(0),
-            ))
-            .get_result(&mut conn)?;
-
-        Ok(link)
+        create_link(conn, length, attenuation, error_rate, src_id, dst_id)
     }
 
     pub fn get_link(node_a_id: i32, node_b_id: i32) -> Result<Link, LinkError> {

@@ -1,4 +1,8 @@
+use std::sync::mpsc::SendError;
+
 use thiserror::Error;
+
+use crate::models::event::Event;
 
 // graph errors
 #[derive(Error, Debug)]
@@ -43,6 +47,8 @@ pub enum NodeError {
     NotValidKind(String),
     #[error("Error while creating the detector")]
     DetectorErro(#[from] DetectorError),
+    #[error("Node {0} not found in hashmap")]
+    NodeNotFound(i32),
 }
 
 // cli errors
@@ -63,6 +69,8 @@ pub enum SimError {
     NotValidInput(String),
     #[error("Missing arg argument: {0}")]
     MissingArgument(String),
+    #[error("Error in sending event")]
+    ChannelSendError(#[from] SendError<Event>),
 }
 
 // entangled_pair errors

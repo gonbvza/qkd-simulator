@@ -1,10 +1,6 @@
 use diesel::prelude::*;
 
-use crate::{
-    database::detector::{create_new_detector, set_detection_time},
-    error::DetectorError,
-    establish_connection,
-};
+use crate::{database::detector::create_new_detector, error::DetectorError, establish_connection};
 
 #[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = crate::schema::detector)]

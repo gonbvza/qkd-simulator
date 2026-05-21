@@ -1,29 +1,17 @@
-use std::{collections::HashMap, sync::Arc};
-
-use diesel::{insert_into, RunQueryDsl};
+use std::collections::HashMap;
 
 use crate::{
     core::{
-        event_loop::EventLoop,
-        measurement::measure_qubit,
-        process::Process,
-        settings::{CHUNK_SIZE, QUBIT_AMOUNT},
-        state::SimulationState,
+        event_loop::EventLoopHandler, measurement::measure_qubit, process::Process,
+        settings::QUBIT_AMOUNT, state::SimulationState,
     },
-    database::detector::get_detector_by_id,
-    error::{DetectorError, Error, NodeError, PairError, SimError},
-    establish_connection, get_link_arg, get_node_arg, get_number_arg, get_pairs_arg,
-    get_qubit_ref_arg, get_side_arg,
+    error::{DetectorError, Error, NodeError, SimError},
+    get_link_arg, get_number_arg, get_side_arg,
     models::{
-        args::EventArgs,
-        detector::Detector,
-        entangled_pair::{self, EntangledPair, NewEntangledPair},
-        links::Link,
-        measurement::Measurement,
-        qubit_ref::{QubitRef, QubitRefSide},
+        args::EventArgs, detector::Detector, entangled_pair::NewEntangledPair, event::Event,
+        links::Link, qubit_ref::QubitRefSide,
     },
     nodes::node::Node,
-    schema,
 };
 
 // Initializes a QKD session.
@@ -42,12 +30,24 @@ pub fn handle_qkd_init(
     args: &HashMap<String, EventArgs>,
     current_time: i64,
     state: &mut SimulationState,
+    handle: &EventLoopHandler,
 ) -> Result<(), Error> {
-    let mut src_node: Node = get_node_arg!(args, "src_node").to_owned();
-    let mut dst_node: Node = get_node_arg!(args, "dst_node").to_owned();
-    let epr_node: Node = get_node_arg!(args, "epr_node").to_owned();
+    let src_node_id: &i32 = get_number_arg!(args, "src_node_id");
+    let dst_node_id: &i32 = get_number_arg!(args, "dst_node_id");
+    let _epr_node_id: &i32 = get_number_arg!(args, "epr_node_id");
     let src_epr_link = get_link_arg!(args, "src_epr_link");
     let dst_epr_link = get_link_arg!(args, "dst_epr_link");
+
+    let mut src_node: Node = state
+        .nodes
+        .get(src_node_id)
+        .cloned()
+        .ok_or_else(|| Error::Sim(SimError::MissingArgument("src_node_id".to_string())))?;
+    let mut dst_node: Node = state
+        .nodes
+        .get(dst_node_id)
+        .cloned()
+        .ok_or_else(|| Error::Sim(SimError::MissingArgument("dst_node_id".to_string())))?;
 
     let process = Process::new(current_time);
     let process_id = state.push_process(process);
@@ -60,14 +60,14 @@ pub fn handle_qkd_init(
     for qubit_nr in 1..QUBIT_AMOUNT {
         println!("Sending pair {}", qubit_nr);
         let pair = emit_pair(
-            src_node.to_owned(),
-            dst_node.to_owned(),
-            epr_node.to_owned(),
+            src_node.id,
+            dst_node.id,
             src_epr_link.to_owned(),
             dst_epr_link.to_owned(),
             qubit_nr,
             process_id,
             current_time,
+            handle,
         )?;
         state.insert_pair(pair);
     }
@@ -108,33 +108,33 @@ pub fn handle_qkd_init(
 /// * `sender_id`   - The [`NodeId`] of the client node receiving the left qubit
 /// * `receiver_id` - The [`NodeId`] of the client node receiving the right qubit
 pub fn emit_pair(
-    src_node: Node,
-    dst_node: Node,
-    epr_node: Node,
+    src_node_id: i32,
+    dst_node_id: i32,
     src_epr_link: Link,
     dst_epr_link: Link,
     qubit_nr: i32,
     procces_id: i32,
     current_time: i64,
+    handle: &EventLoopHandler,
 ) -> Result<NewEntangledPair, Error> {
     // Create entangled pair
     let entangled_pair = NewEntangledPair::new(
-        src_node.id,
-        src_node.id,
+        src_node_id,
+        src_node_id,
         procces_id,
         qubit_nr,
         false,
         current_time,
     )?;
     let src_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("node"), EventArgs::Node(src_node)),
+        (String::from("node_id"), EventArgs::Number(src_node_id)),
         (String::from("side"), EventArgs::Side(QubitRefSide::Source)),
         (String::from("qubit_nr"), EventArgs::Number(qubit_nr)),
         (String::from("procces_id"), EventArgs::Number(procces_id)),
         (String::from("link"), EventArgs::Link(src_epr_link.clone())),
     ]);
     let dst_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("node"), EventArgs::Node(dst_node)),
+        (String::from("node_id"), EventArgs::Number(dst_node_id)),
         (
             String::from("side"),
             EventArgs::Side(QubitRefSide::Destination),
@@ -143,18 +143,18 @@ pub fn emit_pair(
         (String::from("procces_id"), EventArgs::Number(procces_id)),
         (String::from("link"), EventArgs::Link(dst_epr_link.clone())),
     ]);
-    EventLoop::new_and_push(
+    handle.push_event(Event::new_at(
         "receive_pair_event".to_string(),
         "receive_pair".to_string(),
         src_detector_args,
         current_time + (src_epr_link.propagation_delay_us() * qubit_nr as i64),
-    );
-    EventLoop::new_and_push(
+    ));
+    handle.push_event(Event::new_at(
         "receive_pair_event".to_string(),
         "receive_pair".to_string(),
         dst_detector_args,
         current_time + (dst_epr_link.propagation_delay_us() * qubit_nr as i64),
-    );
+    ));
     Ok(entangled_pair)
 }
 
@@ -173,14 +173,20 @@ pub fn receive_pair(
     args: &HashMap<String, EventArgs>,
     current_time: i64,
     state: &mut SimulationState,
+    handle: &EventLoopHandler,
 ) -> Result<(), Error> {
-    let node: &Node = get_node_arg!(args, "node");
+    let (detectors, nodes) = (&mut state.detectors, &mut state.nodes);
+    let node_id: &i32 = get_number_arg!(args, "node_id");
+    let node = nodes
+        .get_mut(node_id)
+        .ok_or(NodeError::NodeNotFound(node_id.to_owned()))?;
     let link: &Link = get_link_arg!(args, "link");
     let qubit_nr: &i32 = get_number_arg!(args, "qubit_nr");
+    println!("receive qubit {}", qubit_nr);
     let procces_id: &i32 = get_number_arg!(args, "procces_id");
     let side: &QubitRefSide = get_side_arg!(args, "side");
-    let detector: &mut Detector = state
-        .get_detector_mut(node.detector_id)
+    let detector: &mut Detector = detectors
+        .get_mut(&node.detector_id)
         .ok_or(DetectorError::NotFound(node.detector_id))?;
 
     if detector.is_cooling(current_time) {
@@ -190,8 +196,6 @@ pub fn receive_pair(
 
     detector.set_detection_time(current_time)?;
 
-    // TODO: Think about the to_owned, maybe is good to change from macro to function and own the
-    // instance
     measure_qubit(
         *procces_id,
         *qubit_nr,
@@ -199,6 +203,7 @@ pub fn receive_pair(
         node.to_owned(),
         link.length,
         state,
+        handle,
     )?;
 
     Ok(())

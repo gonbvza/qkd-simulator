@@ -14,6 +14,7 @@ pub enum EventArgs {
     Node(Node),
     Link(Link),
     Number(i32),
+    BigNumber(i64),
     String(String),
     NodeType(NodeKind),
     Side(QubitRefSide),
