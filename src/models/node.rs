@@ -41,7 +41,7 @@ impl TryFrom<&String> for NodeKind {
             "0" => Ok(NodeKind::ClientNode),
             "client" => Ok(NodeKind::ClientNode),
             "1" => Ok(NodeKind::EprNode),
-            "epr" => Ok(NodeKind::ClientNode),
+            "epr" => Ok(NodeKind::EprNode),
             _ => Err(NodeError::NotValidKind(s.to_string())),
         }
     }

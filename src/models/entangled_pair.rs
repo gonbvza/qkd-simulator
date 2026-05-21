@@ -29,22 +29,6 @@ pub struct NewEntangledPair {
     pub accepted: bool,
 }
 
-#[derive(Queryable, Selectable, Debug, Clone)]
-#[diesel(table_name = crate::schema::entangled_pair)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct EntangledPair {
-    pub id: i32,
-    pub src_id: i32,
-    pub dst_id: i32,
-    pub fidelity: f32,
-    pub created_at: i64,
-    pub src_measured: Option<i16>,
-    pub dst_measured: Option<i16>,
-    pub timeout_timestamp: i64,
-    pub process_id: i32,
-    pub qubit_nr: i32,
-}
-
 impl NewEntangledPair {
     pub fn new(
         src_id: i32,
@@ -68,7 +52,6 @@ impl NewEntangledPair {
         };
         if save {
             let mut conn = establish_connection();
-            println!("SAVING");
             create_entangled_pair(
                 &mut conn,
                 src_id,

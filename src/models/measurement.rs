@@ -2,10 +2,9 @@ use diesel::prelude::*;
 
 use crate::{error::MeasurementError, establish_connection, models::basis::Basis};
 
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, Debug, Clone, Copy, PartialEq)]
 #[diesel(table_name = crate::schema::measurements)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Measurement {
     pub node_id: i32,
     pub basis: Basis,
