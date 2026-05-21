@@ -1,15 +1,14 @@
 use std::env;
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{Arc, MutexGuard};
 
 use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
 
 use crate::cli::cli::run_cli;
-use crate::core::event_loop::{self, EventLoop, EventLoopHandler};
+use crate::core::event_loop::{EventLoop, EventLoopHandler};
 use crate::core::registry::Registry;
 use crate::error::Error;
-use crate::models::event::{Event, EventTime};
+use crate::models::event::Event;
 
 mod api;
 mod cli;

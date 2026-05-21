@@ -1,14 +1,8 @@
 use std::{collections::HashMap, io};
 
 use crate::{
-    database::{entangled_pair::get_pair, nodes::get_node_by_id},
-    error::{Error, PairError, SimError},
-    establish_connection,
-    models::{
-        args::EventArgs, entangled_pair::NewEntangledPair, measurement::Measurement,
-        qubit_ref::QubitRefSide,
-    },
-    nodes::node::Node,
+    error::PairError,
+    models::{entangled_pair::NewEntangledPair, measurement::Measurement, qubit_ref::QubitRefSide},
 };
 
 pub fn verify_args() {
@@ -140,11 +134,5 @@ pub fn is_first(
     match side {
         QubitRefSide::Source => Ok(entangled_pair.dst_measurement.is_none()),
         QubitRefSide::Destination => Ok(entangled_pair.src_measurement.is_none()),
-    }
-}
-
-pub fn form_word(measurements: Vec<Measurement>) {
-    for measurement in measurements {
-        print!("{}", measurement.value);
     }
 }
