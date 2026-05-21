@@ -8,8 +8,13 @@ use crate::{
     error::{DetectorError, Error, NodeError, SimError},
     get_link_arg, get_number_arg, get_side_arg,
     models::{
-        args::EventArgs, detector::Detector, entangled_pair::NewEntangledPair, event::Event,
-        links::Link, qubit_ref::QubitRefSide,
+        args::EventArgs,
+        detector::Detector,
+        entangled_pair::NewEntangledPair,
+        event::Event,
+        event_types::{EventName, EventPayload, ReceivePairPayload},
+        links::Link,
+        qubit_ref::QubitRefSide,
     },
     nodes::node::Node,
 };
@@ -27,30 +32,34 @@ use crate::{
 // * `src_epr_link` - Link between source and EPR node
 // * `dst_epr_link` - Link between destination and EPR node
 pub fn handle_qkd_init(
-    args: &HashMap<String, EventArgs>,
+    payload: EventPayload,
     current_time: i64,
     state: &mut SimulationState,
     handle: &EventLoopHandler,
 ) -> Result<(), Error> {
-    let src_node_id: &i32 = get_number_arg!(args, "src_node_id");
-    let dst_node_id: &i32 = get_number_arg!(args, "dst_node_id");
-    let _epr_node_id: &i32 = get_number_arg!(args, "epr_node_id");
-    let src_epr_link = get_link_arg!(args, "src_epr_link");
-    let dst_epr_link = get_link_arg!(args, "dst_epr_link");
-
-    let mut src_node: Node = state
-        .nodes
-        .get(src_node_id)
-        .cloned()
-        .ok_or_else(|| Error::Sim(SimError::MissingArgument("src_node_id".to_string())))?;
-    let mut dst_node: Node = state
-        .nodes
-        .get(dst_node_id)
-        .cloned()
-        .ok_or_else(|| Error::Sim(SimError::MissingArgument("dst_node_id".to_string())))?;
+    let EventPayload::HandleQkdInit(args) = payload else {
+        return Err(Error::WrongArgs());
+    };
 
     let process = Process::new(current_time);
     let process_id = state.push_process(process);
+
+    let (nodes, links, pairs) = (&mut state.nodes, &mut state.links, &mut state.pairs);
+
+    let mut src_node: Node = nodes
+        .get(&args.src_node_id)
+        .cloned()
+        .ok_or_else(|| Error::Sim(SimError::MissingArgument("src_node_id".to_string())))?;
+    let mut dst_node: Node = nodes
+        .get(&args.dst_node_id)
+        .cloned()
+        .ok_or_else(|| Error::Sim(SimError::MissingArgument("dst_node_id".to_string())))?;
+    let src_epr_link = links
+        .get(&args.src_epr_link_id)
+        .ok_or_else(|| Error::Sim(SimError::MissingArgument("dst_node_id".to_string())))?;
+    let dst_epr_link = links
+        .get(&args.dst_epr_link_id)
+        .ok_or_else(|| Error::Sim(SimError::MissingArgument("dst_node_id".to_string())))?;
 
     if !src_node.try_acquire(process_id) || !dst_node.try_acquire(process_id) {
         return Err(Error::Node(NodeError::NodeInUse()));
@@ -69,14 +78,8 @@ pub fn handle_qkd_init(
             current_time,
             handle,
         )?;
-        state.insert_pair(pair);
+        pairs.insert((pair.process_id, pair.qubit_nr), pair);
     }
-    // for chunk in pairs.chunks(CHUNK_SIZE) {
-    //     insert_into(schema::entangled_pair::table)
-    //         .values(chunk)
-    //         .execute(&mut conn)
-    //         .map_err(PairError::from)?;
-    // }
     Ok(())
 }
 
@@ -113,7 +116,7 @@ pub fn emit_pair(
     src_epr_link: Link,
     dst_epr_link: Link,
     qubit_nr: i32,
-    procces_id: i32,
+    process_id: i32,
     current_time: i64,
     handle: &EventLoopHandler,
 ) -> Result<NewEntangledPair, Error> {
@@ -121,38 +124,35 @@ pub fn emit_pair(
     let entangled_pair = NewEntangledPair::new(
         src_node_id,
         src_node_id,
-        procces_id,
+        process_id,
         qubit_nr,
         false,
         current_time,
     )?;
-    let src_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("node_id"), EventArgs::Number(src_node_id)),
-        (String::from("side"), EventArgs::Side(QubitRefSide::Source)),
-        (String::from("qubit_nr"), EventArgs::Number(qubit_nr)),
-        (String::from("procces_id"), EventArgs::Number(procces_id)),
-        (String::from("link"), EventArgs::Link(src_epr_link.clone())),
-    ]);
-    let dst_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("node_id"), EventArgs::Number(dst_node_id)),
-        (
-            String::from("side"),
-            EventArgs::Side(QubitRefSide::Destination),
-        ),
-        (String::from("qubit_nr"), EventArgs::Number(qubit_nr)),
-        (String::from("procces_id"), EventArgs::Number(procces_id)),
-        (String::from("link"), EventArgs::Link(dst_epr_link.clone())),
-    ]);
+    let src_detector_payload: ReceivePairPayload = ReceivePairPayload::new(
+        src_node_id,
+        QubitRefSide::Source,
+        qubit_nr,
+        process_id,
+        src_epr_link.id,
+    );
+
+    let dst_detector_payload: ReceivePairPayload = ReceivePairPayload::new(
+        dst_node_id,
+        QubitRefSide::Destination,
+        qubit_nr,
+        process_id,
+        dst_epr_link.id,
+    );
+
     handle.push_event(Event::new_at(
-        "receive_pair_event".to_string(),
-        "receive_pair".to_string(),
-        src_detector_args,
+        EventName::ReceivePair,
+        EventPayload::ReceivePair(src_detector_payload),
         current_time + (src_epr_link.propagation_delay_us() * qubit_nr as i64),
     ));
     handle.push_event(Event::new_at(
-        "receive_pair_event".to_string(),
-        "receive_pair".to_string(),
-        dst_detector_args,
+        EventName::ReceivePair,
+        EventPayload::ReceivePair(dst_detector_payload),
         current_time + (dst_epr_link.propagation_delay_us() * qubit_nr as i64),
     ));
     Ok(entangled_pair)
@@ -170,21 +170,22 @@ pub fn emit_pair(
 /// * `node`        - The node that receives the qubit ref
 /// * `link`        - The link through which the qubit was received
 pub fn receive_pair(
-    args: &HashMap<String, EventArgs>,
+    payload: EventPayload,
     current_time: i64,
     state: &mut SimulationState,
     handle: &EventLoopHandler,
 ) -> Result<(), Error> {
-    let (detectors, nodes) = (&mut state.detectors, &mut state.nodes);
-    let node_id: &i32 = get_number_arg!(args, "node_id");
+    let (detectors, nodes, links) = (&mut state.detectors, &mut state.nodes, &mut state.links);
+    let EventPayload::ReceivePair(args) = payload else {
+        return Err(Error::WrongArgs());
+    };
     let node = nodes
-        .get_mut(node_id)
-        .ok_or(NodeError::NodeNotFound(node_id.to_owned()))?;
-    let link: &Link = get_link_arg!(args, "link");
-    let qubit_nr: &i32 = get_number_arg!(args, "qubit_nr");
-    println!("receive qubit {}", qubit_nr);
-    let procces_id: &i32 = get_number_arg!(args, "procces_id");
-    let side: &QubitRefSide = get_side_arg!(args, "side");
+        .get_mut(&args.node_id)
+        .ok_or(NodeError::NodeNotFound(args.node_id.to_owned()))?;
+    let link: &Link = links
+        .get(&args.link_id)
+        .ok_or(NodeError::NodeNotFound(args.node_id.to_owned()))?;
+
     let detector: &mut Detector = detectors
         .get_mut(&node.detector_id)
         .ok_or(DetectorError::NotFound(node.detector_id))?;
@@ -197,9 +198,9 @@ pub fn receive_pair(
     detector.set_detection_time(current_time)?;
 
     measure_qubit(
-        *procces_id,
-        *qubit_nr,
-        side.clone(),
+        args.process_id,
+        args.qubit_nr,
+        args.side,
         node.to_owned(),
         link.length,
         state,

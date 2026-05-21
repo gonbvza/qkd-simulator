@@ -1,13 +1,9 @@
-use std::{collections::HashMap, io};
+use std::io;
 
 use crate::{
     error::PairError,
-    models::{entangled_pair::NewEntangledPair, measurement::Measurement, qubit_ref::QubitRefSide},
+    models::{entangled_pair::NewEntangledPair, qubit_ref::QubitRefSide},
 };
-
-pub fn verify_args() {
-    todo!()
-}
 
 pub fn read_line() -> String {
     let mut buffer = String::new();

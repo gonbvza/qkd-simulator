@@ -2,7 +2,7 @@ use std::sync::mpsc::SendError;
 
 use thiserror::Error;
 
-use crate::models::event::Event;
+use crate::models::{event::Event, event_types::EventName};
 
 // graph errors
 #[derive(Error, Debug)]
@@ -157,6 +157,9 @@ pub enum Error {
     Measurement(#[from] MeasurementError),
 
     // Event loop error
-    #[error("Function {0} does not exist")]
-    NonExistantFunction(String),
+    #[error("Function does not exist")]
+    NonExistantFunction(EventName),
+
+    #[error("Wrong argument struct")]
+    WrongArgs(),
 }

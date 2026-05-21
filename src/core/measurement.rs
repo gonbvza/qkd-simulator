@@ -10,8 +10,13 @@ use crate::{
     },
     error::PairError,
     models::{
-        args::EventArgs, basis::Basis, entangled_pair::NewEntangledPair, event::Event,
-        measurement::Measurement, qubit_ref::QubitRefSide,
+        args::EventArgs,
+        basis::Basis,
+        entangled_pair::NewEntangledPair,
+        event::Event,
+        event_types::{EventName, EventPayload, SameBasisPayload},
+        measurement::Measurement,
+        qubit_ref::QubitRefSide,
     },
     nodes::node::Node,
     utility::is_first,
@@ -118,12 +123,10 @@ pub fn second_measurement(
         .ok_or(PairError::PairNotFound(first_measurement.node_id))?;
     first_node.release(entangled_pair.process_id)?;
 
-    let args: HashMap<String, EventArgs> =
-        HashMap::from([(String::from("process_id"), EventArgs::Number(process.id))]);
+    let payload: SameBasisPayload = SameBasisPayload::new(process.id);
     handle.push_event(Event::new_now(
-        "same_basis".to_string(),
-        "same_basis".to_string(),
-        args,
+        EventName::SameBasis,
+        EventPayload::SameBasis(payload),
     ));
 
     println!("Finished qkd, starting classical sifting");

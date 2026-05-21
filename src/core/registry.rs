@@ -10,20 +10,16 @@ use crate::{
     },
     models::{
         args::EventArgs,
-        event::{Event, ScheduledEvent},
+        event::ScheduledEvent,
+        event_types::{EventName, EventPayload},
     },
 };
 
 pub struct Registry {
     pub funcs: HashMap<
-        String,
+        EventName,
         Box<
-            dyn Fn(
-                    &HashMap<String, EventArgs>,
-                    i64,
-                    &mut SimulationState,
-                    &EventLoopHandler,
-                ) -> Result<(), Error>
+            dyn Fn(EventPayload, i64, &mut SimulationState, &EventLoopHandler) -> Result<(), Error>
                 + Send
                 + Sync,
         >,
@@ -43,35 +39,25 @@ impl Registry {
     pub fn get_event_functions(
         &self,
     ) -> Vec<(
-        &'static str,
+        EventName,
         Box<
-            dyn Fn(
-                    &HashMap<String, EventArgs>,
-                    i64,
-                    &mut SimulationState,
-                    &EventLoopHandler,
-                ) -> Result<(), Error>
+            dyn Fn(EventPayload, i64, &mut SimulationState, &EventLoopHandler) -> Result<(), Error>
                 + Send
                 + Sync,
         >,
     )> {
         vec![
-            ("handle_qkd_init", Box::new(handle_qkd_init)),
-            ("receive_pair", Box::new(receive_pair)),
-            ("create_node", Box::new(create_node)),
-            ("create_link", Box::new(create_link)),
-            ("same_basis", Box::new(same_basis)),
+            (EventName::HandleQkdInit, Box::new(handle_qkd_init)),
+            (EventName::ReceivePair, Box::new(receive_pair)),
+            (EventName::CreateNode, Box::new(create_node)),
+            (EventName::CreateLink, Box::new(create_link)),
+            (EventName::SameBasis, Box::new(same_basis)),
         ]
     }
 
-    pub fn push_func<F>(&mut self, name: String, func: F)
+    pub fn push_func<F>(&mut self, name: EventName, func: F)
     where
-        F: Fn(
-                &HashMap<String, EventArgs>,
-                i64,
-                &mut SimulationState,
-                &EventLoopHandler,
-            ) -> Result<(), Error>
+        F: Fn(EventPayload, i64, &mut SimulationState, &EventLoopHandler) -> Result<(), Error>
             + Send
             + Sync
             + 'static,
@@ -81,10 +67,10 @@ impl Registry {
 
     pub fn instantiate_functions(&mut self) {
         let funcs: Vec<(
-            &'static str,
+            EventName,
             Box<
                 dyn Fn(
-                        &HashMap<String, EventArgs>,
+                        EventPayload,
                         i64,
                         &mut SimulationState,
                         &EventLoopHandler,
@@ -94,7 +80,7 @@ impl Registry {
             >,
         )> = self.get_event_functions();
         for key in funcs {
-            self.push_func(key.0.to_string(), key.1);
+            self.push_func(key.0, key.1);
         }
     }
 
@@ -103,10 +89,10 @@ impl Registry {
         scheduled_event: ScheduledEvent,
         handle: &EventLoopHandler,
     ) -> Result<(), Error> {
-        match self.funcs.get(&scheduled_event.event.function) {
+        match self.funcs.get(&scheduled_event.event.name) {
             Some(function) => {
                 if let Err(e) = function(
-                    &scheduled_event.event.args,
+                    scheduled_event.event.payload,
                     scheduled_event.timestamp,
                     &mut self.state,
                     handle,
@@ -117,7 +103,7 @@ impl Registry {
 
                 Ok(())
             }
-            None => Err(Error::NonExistantFunction(scheduled_event.event.function)),
+            None => Err(Error::NonExistantFunction(scheduled_event.event.name)),
         }
     }
 }

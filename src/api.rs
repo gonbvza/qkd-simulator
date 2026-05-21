@@ -8,6 +8,9 @@ use crate::error::Error;
 use crate::establish_connection;
 use crate::models::args::EventArgs;
 use crate::models::event::Event;
+use crate::models::event_types::{
+    CreateLinkPayload, CreateNodePayload, EventName, EventPayload, HandleQkdInitPayload,
+};
 use crate::models::links::Link;
 use crate::nodes::node::{Node, NodeKind};
 
@@ -18,11 +21,8 @@ pub async fn create_node_api(
     node_type: NodeKind,
     handle: &EventLoopHandler,
 ) -> Result<()> {
-    let args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("name"), EventArgs::String(name)),
-        (String::from("node_type"), EventArgs::NodeType(node_type)),
-    ]);
-    let event = Event::new_now("create_node".to_string(), "create_node".to_string(), args);
+    let payload: CreateNodePayload = CreateNodePayload::new(name, node_type);
+    let event = Event::new_now(EventName::CreateNode, EventPayload::CreateNode(payload));
     handle.push_event(event);
     Ok(())
 }
@@ -33,12 +33,8 @@ pub async fn create_link_api(
     distance: i64,
     handle: &EventLoopHandler,
 ) -> Result<()> {
-    let args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("distance"), EventArgs::BigNumber(distance)),
-        (String::from("src_id"), EventArgs::Number(src_id)),
-        (String::from("dst_id"), EventArgs::Number(dst_id)),
-    ]);
-    let event = Event::new_now("create_link".to_string(), "create_link".to_string(), args);
+    let payload: CreateLinkPayload = CreateLinkPayload::new(src_id, dst_id, distance);
+    let event = Event::new_now(EventName::CreateLink, EventPayload::CreateLink(payload));
     handle.push_event(event);
     Ok(())
 }
@@ -84,18 +80,17 @@ pub async fn start_qkd(
     let src_epr_link: Link = get_link(&mut conn, src_node.id, epr_node.id)?;
     let dst_epr_link: Link = get_link(&mut conn, dst_node.id, epr_node.id)?;
 
-    let args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("src_node_id"), EventArgs::Number(src_node.id)),
-        (String::from("dst_node_id"), EventArgs::Number(dst_node.id)),
-        (String::from("epr_node_id"), EventArgs::Number(epr_node.id)),
-        (String::from("src_epr_link"), EventArgs::Link(src_epr_link)),
-        (String::from("dst_epr_link"), EventArgs::Link(dst_epr_link)),
-    ]);
+    let payload: HandleQkdInitPayload = HandleQkdInitPayload::new(
+        src_node_id,
+        dst_node_id,
+        epr_node.id,
+        src_epr_link.id,
+        dst_epr_link.id,
+    );
 
     let event = Event::new_now(
-        String::from("handle_qkd_event"),
-        String::from("handle_qkd_init"),
-        args,
+        EventName::HandleQkdInit,
+        EventPayload::HandleQkdInit(payload),
     );
 
     handle.push_event(event);

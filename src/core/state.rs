@@ -29,7 +29,7 @@ pub struct SimulationState {
     pub detectors: HashMap<i32, Detector>,
 
     /// Links between nodes (optional but useful if you want fast lookup)
-    pub links: HashMap<(i32, i32), Link>,
+    pub links: HashMap<i32, Link>,
 }
 
 impl SimulationState {
@@ -75,7 +75,7 @@ impl SimulationState {
 
     /// Insert or update link
     pub fn upsert_link(&mut self, link: Link) {
-        self.links.insert((link.src_id, link.dst_id), link);
+        self.links.insert(link.id, link);
     }
 
     /// Get proces

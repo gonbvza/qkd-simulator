@@ -1,33 +1,27 @@
-use std::collections::HashMap;
-
 use crate::core::event_loop::EventLoopHandler;
-use crate::error::SimError;
+use crate::models::event_types::EventPayload;
 use crate::models::links::Link;
 use crate::{
-    core::state::SimulationState,
-    error::Error,
-    establish_connection, get_node_type_arg, get_string_arg,
-    models::{args::EventArgs, detector::Detector},
+    core::state::SimulationState, error::Error, establish_connection, models::detector::Detector,
     nodes::node::Node,
 };
-use crate::{get_big_number_arg, get_number_arg};
 
 pub fn create_node(
-    args: &HashMap<String, EventArgs>,
+    payload: EventPayload,
     _current_time: i64,
     state: &mut SimulationState,
     _handle: &EventLoopHandler,
 ) -> Result<(), Error> {
     let mut conn = establish_connection();
-
-    let name = get_string_arg!(args, "name");
-    let node_type = get_node_type_arg!(args, "node_type");
+    let EventPayload::CreateNode(args) = payload else {
+        return Err(Error::WrongArgs());
+    };
 
     let detector = Detector::new()?;
     let node: Node = Node::new(
         &mut conn,
-        name.to_owned(),
-        node_type.to_string(),
+        args.name,
+        args.node_type.to_string(),
         detector.id,
     )?;
 
@@ -38,18 +32,17 @@ pub fn create_node(
 }
 
 pub fn create_link(
-    args: &HashMap<String, EventArgs>,
+    payload: EventPayload,
     _current_time: i64,
     state: &mut SimulationState,
     _handle: &EventLoopHandler,
 ) -> Result<(), Error> {
     let mut conn = establish_connection();
+    let EventPayload::CreateLink(args) = payload else {
+        return Err(Error::WrongArgs());
+    };
 
-    let distance = get_big_number_arg!(args, "distance").to_owned();
-    let src_id = get_number_arg!(args, "src_id").to_owned();
-    let dst_id = get_number_arg!(args, "dst_id").to_owned();
-
-    let link = Link::new(&mut conn, distance, 0.4, 0.1, src_id, dst_id)?;
+    let link = Link::new(&mut conn, args.distance, 0.4, 0.1, args.src_id, args.dst_id)?;
 
     // Create in local state
     state.upsert_link(link);

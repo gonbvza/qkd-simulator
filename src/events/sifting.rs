@@ -1,21 +1,21 @@
-use std::collections::HashMap;
-
 use crate::{
     core::{event_loop::EventLoopHandler, state::SimulationState},
-    error::{Error, PairError, SimError},
-    get_number_arg,
-    models::args::EventArgs,
+    error::{Error, PairError},
+    models::event_types::EventPayload,
 };
 
 pub fn same_basis(
-    args: &HashMap<String, EventArgs>,
+    payload: EventPayload,
     _current_time: i64,
     state: &mut SimulationState,
     _handle: &EventLoopHandler,
 ) -> Result<(), Error> {
     println!("Received same bassi");
-    let process_id = get_number_arg!(args, "process_id").to_owned();
-    let acc_pairs = state.get_accepted_measurements(process_id);
+    let EventPayload::SameBasis(args) = payload else {
+        return Err(Error::WrongArgs());
+    };
+
+    let acc_pairs = state.get_accepted_measurements(args.process_id);
     let mut same_basis_num = 0;
 
     for pair in acc_pairs.clone() {
