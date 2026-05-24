@@ -2,10 +2,8 @@ use std::collections::HashMap;
 
 use crate::{
     core::process::Process,
-    models::{
-        detector::Detector, entangled_pair::NewEntangledPair, links::Link, measurement::Measurement,
-    },
     models::node::Node,
+    models::{detector::Detector, entangled_pair::NewEntangledPair, links::Link},
 };
 
 /// Central in-memory state of the QKD simulation.
@@ -79,7 +77,7 @@ impl SimulationState {
     }
 
     /// Get proces
-    pub fn get_proces_mut(&mut self, process_id: i32) -> Option<&mut Process> {
+    pub fn get_process_mut(&mut self, process_id: i32) -> Option<&mut Process> {
         self.processes.get_mut(&process_id)
     }
 

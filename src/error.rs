@@ -46,7 +46,7 @@ pub enum NodeError {
     #[error("Not valid node kind: {0}")]
     NotValidKind(String),
     #[error("Error while creating the detector")]
-    DetectorErro(#[from] DetectorError),
+    DetectorError(#[from] DetectorError),
     #[error("Node {0} not found in hashmap")]
     NodeNotFound(i32),
 }
@@ -58,8 +58,8 @@ pub enum CliError {
     NotValidInput(String),
     #[error("Command {0} is not valid")]
     NotValidCommand(String),
-    #[error("Not valid integer: {0}")]
-    NoValidInteger(#[from] std::num::ParseIntError),
+    #[error("Invalid integer: {0}")]
+    InvalidInteger(#[from] std::num::ParseIntError),
 }
 
 // simulation errors
@@ -82,6 +82,8 @@ pub enum PairError {
     Measurement(#[from] MeasurementError),
     #[error("Node error: {0}")]
     Node(#[from] NodeError),
+    #[error("Simulation error: {0}")]
+    Sim(#[from] SimError),
     #[error("Entangled pair {0} not present")]
     PairNotFound(i32),
     #[error("Measurement missing")]
@@ -157,8 +159,8 @@ pub enum Error {
     Measurement(#[from] MeasurementError),
 
     // Event loop error
-    #[error("Function does not exist")]
-    NonExistantFunction(EventName),
+    #[error("Function not found: {0:?}")]
+    FunctionNotFound(EventName),
 
     #[error("Wrong argument struct")]
     WrongArgs(),

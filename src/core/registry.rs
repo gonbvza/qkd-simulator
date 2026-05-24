@@ -102,7 +102,7 @@ impl Registry {
 
                 Ok(())
             }
-            None => Err(Error::NonExistantFunction(scheduled_event.event.name)),
+            None => Err(Error::FunctionNotFound(scheduled_event.event.name)),
         }
     }
 }

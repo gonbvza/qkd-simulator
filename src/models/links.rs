@@ -4,7 +4,7 @@ use crate::{
     core::settings::LIGHT_SPEED_FIBER, database::link::create_link, error::LinkError,
     establish_connection, schema,
 };
-use diesel::{dsl, insert_into, prelude::*, select};
+use diesel::{dsl, prelude::*, select};
 
 #[derive(Queryable, Selectable, Debug, Clone)]
 #[diesel(table_name = crate::schema::links)]

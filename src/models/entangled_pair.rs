@@ -1,9 +1,10 @@
-use crate::{
-    core::{event_loop::EventLoop, settings::TIMEOUT},
-    error::PairError,
-    establish_connection,
-    models::{measurement::Measurement, qubit_ref::QubitRefSide},
-};
+use crate::{error::PairError, models::measurement::Measurement};
+
+#[derive(Debug, Clone, Copy)]
+pub enum Side {
+    Source,
+    Destination,
+}
 
 #[derive(Debug, Clone)]
 pub struct NewEntangledPair {
@@ -44,21 +45,21 @@ impl NewEntangledPair {
         Ok(pair)
     }
 
-    pub fn set_measurement(&mut self, side: QubitRefSide, measurement: Measurement) {
+    pub fn set_measurement(&mut self, side: Side, measurement: Measurement) {
         match side {
-            QubitRefSide::Source => {
+            Side::Source => {
                 self.src_measurement = Some(measurement);
             }
-            QubitRefSide::Destination => {
+            Side::Destination => {
                 self.dst_measurement = Some(measurement);
             }
         }
     }
 
-    pub fn get_measurement(&mut self, side: QubitRefSide) -> Result<Measurement, PairError> {
+    pub fn get_measurement(&mut self, side: Side) -> Result<Measurement, PairError> {
         match side {
-            QubitRefSide::Source => self.dst_measurement.ok_or(PairError::NotMeasured()),
-            QubitRefSide::Destination => self.src_measurement.ok_or(PairError::NotMeasured()),
+            Side::Source => self.dst_measurement.ok_or(PairError::NotMeasured()),
+            Side::Destination => self.src_measurement.ok_or(PairError::NotMeasured()),
         }
     }
 }

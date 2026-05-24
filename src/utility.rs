@@ -2,7 +2,7 @@ use std::io;
 
 use crate::{
     error::PairError,
-    models::{entangled_pair::NewEntangledPair, qubit_ref::QubitRefSide},
+    models::entangled_pair::{NewEntangledPair, Side},
 };
 
 pub fn read_line() -> String {
@@ -13,12 +13,9 @@ pub fn read_line() -> String {
     return buffer.trim().to_string();
 }
 
-pub fn is_first(
-    entangled_pair: &mut NewEntangledPair,
-    side: QubitRefSide,
-) -> Result<bool, PairError> {
+pub fn is_first(entangled_pair: &mut NewEntangledPair, side: Side) -> Result<bool, PairError> {
     match side {
-        QubitRefSide::Source => Ok(entangled_pair.dst_measurement.is_none()),
-        QubitRefSide::Destination => Ok(entangled_pair.src_measurement.is_none()),
+        Side::Source => Ok(entangled_pair.dst_measurement.is_none()),
+        Side::Destination => Ok(entangled_pair.src_measurement.is_none()),
     }
 }

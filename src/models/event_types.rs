@@ -3,8 +3,8 @@
 //! This module defines the canonical set of event kinds (`EventFn`) and
 //! the corresponding typed payloads for each event.
 
+use crate::models::entangled_pair::Side;
 use crate::models::node::NodeKind;
-use crate::models::qubit_ref::QubitRefSide;
 use derive_new::new;
 
 /// Canonical list of event functions the system can execute.
@@ -63,7 +63,7 @@ pub struct HandleQkdInitPayload {
 #[derive(Debug, Clone, new)]
 pub struct ReceivePairPayload {
     pub node_id: i32,
-    pub side: QubitRefSide,
+    pub side: Side,
     pub qubit_nr: i32,
     pub process_id: i32,
     pub link_id: i32,

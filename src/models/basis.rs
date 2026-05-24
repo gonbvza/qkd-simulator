@@ -6,7 +6,7 @@ use diesel::{
     sql_types::Integer,
 };
 
-use crate::models::qubit_ref::QubitRefSide;
+use crate::models::entangled_pair::Side;
 
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, AsExpression, FromSqlRow)]
@@ -65,11 +65,11 @@ impl Basis {
         &DST_BASES
     }
 
-    pub fn get_random_basis(side: QubitRefSide) -> Basis {
+    pub fn get_random_basis(side: Side) -> Basis {
         let random_number = rand::random_range(0..3);
         match side {
-            QubitRefSide::Source => Basis::src_bases()[random_number],
-            QubitRefSide::Destination => Basis::dst_bases()[random_number],
+            Side::Source => Basis::src_bases()[random_number],
+            Side::Destination => Basis::dst_bases()[random_number],
         }
     }
 }

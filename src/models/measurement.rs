@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 
-use crate::{error::MeasurementError, establish_connection, models::basis::Basis};
+use crate::models::basis::Basis;
 
 #[derive(Queryable, Selectable, Debug, Clone, Copy, PartialEq)]
 #[diesel(table_name = crate::schema::measurements)]

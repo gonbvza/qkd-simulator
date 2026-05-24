@@ -18,11 +18,11 @@ pub async fn create_node_cli(handle: &EventLoopHandler) -> Result<(), Error> {
 /// Prompts for link fields and forwards link creation to the API layer.
 pub async fn create_link_cli(handle: &EventLoopHandler) -> Result<(), Error> {
     println!("Enter source node id:");
-    let src_id = read_line().trim().parse::<i32>().unwrap();
+    let src_id = read_line().trim().parse::<i32>().map_err(CliError::from)?;
     println!("Enter destination node id:");
-    let dst_id = read_line().trim().parse::<i32>().unwrap();
+    let dst_id = read_line().trim().parse::<i32>().map_err(CliError::from)?;
     println!("Enter distance in meters:");
-    let distance = read_line().trim().parse::<i64>().unwrap();
+    let distance = read_line().trim().parse::<i64>().map_err(CliError::from)?;
     create_link_api(src_id, dst_id, distance, handle).await?;
     Ok(())
 }

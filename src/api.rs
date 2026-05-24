@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::core::event_loop::EventLoopHandler;
 use crate::core::graph::Graph;
 use crate::database::link::{get_all_links, get_link};
@@ -22,7 +20,7 @@ pub async fn create_node_api(
 ) -> Result<()> {
     let payload: CreateNodePayload = CreateNodePayload::new(name, node_type);
     let event = Event::new_now(EventName::CreateNode, EventPayload::CreateNode(payload));
-    handle.push_event(event);
+    handle.push_event(event)?;
     Ok(())
 }
 
@@ -34,7 +32,7 @@ pub async fn create_link_api(
 ) -> Result<()> {
     let payload: CreateLinkPayload = CreateLinkPayload::new(src_id, dst_id, distance);
     let event = Event::new_now(EventName::CreateLink, EventPayload::CreateLink(payload));
-    handle.push_event(event);
+    handle.push_event(event)?;
     Ok(())
 }
 
@@ -92,7 +90,7 @@ pub async fn start_qkd(
         EventPayload::HandleQkdInit(payload),
     );
 
-    handle.push_event(event);
+    handle.push_event(event)?;
 
     Ok(())
 }

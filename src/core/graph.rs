@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::{
     database::{link::get_all_links, nodes::get_all_nodes},
-    error::{GraphError, LinkError},
+    error::{GraphError, LinkError, NodeError},
     establish_connection,
     models::links::Link,
     models::node::{Node, NodeKind},
@@ -52,10 +52,16 @@ impl Graph {
         };
         // Instantiate nodes
         for node in curr_nodes.iter() {
-            graph.nodes.insert(
-                node.id,
-                GraphNode::new(node.id, (&node.node_type).try_into()?),
-            );
+                graph.nodes.insert(
+                    node.id,
+                    GraphNode::new(
+                        node.id,
+                        node
+                            .node_type
+                            .parse::<NodeKind>()
+                            .map_err(|_| NodeError::NotValidKind(node.node_type.clone()))?,
+                    ),
+                );
             graph.connections.insert(node.id, HashSet::new());
         }
         //Instantiate connections

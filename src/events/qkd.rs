@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{
     core::{
         event_loop::EventLoopHandler, measurement::measure_qubit, process::Process,
@@ -9,11 +7,10 @@ use crate::{
     models::node::Node,
     models::{
         detector::Detector,
-        entangled_pair::NewEntangledPair,
+        entangled_pair::{NewEntangledPair, Side},
         event::Event,
         event_types::{EventName, EventPayload, ReceivePairPayload},
         links::Link,
-        qubit_ref::QubitRefSide,
     },
 };
 
@@ -129,7 +126,7 @@ pub fn emit_pair(
     )?;
     let src_detector_payload: ReceivePairPayload = ReceivePairPayload::new(
         src_node_id,
-        QubitRefSide::Source,
+        Side::Source,
         qubit_nr,
         process_id,
         src_epr_link.id,
@@ -137,22 +134,22 @@ pub fn emit_pair(
 
     let dst_detector_payload: ReceivePairPayload = ReceivePairPayload::new(
         dst_node_id,
-        QubitRefSide::Destination,
+        Side::Destination,
         qubit_nr,
         process_id,
         dst_epr_link.id,
     );
 
-    handle.push_event(Event::new_at(
+    let _ = handle.push_event(Event::new_at(
         EventName::ReceivePair,
         EventPayload::ReceivePair(src_detector_payload),
         current_time + (src_epr_link.propagation_delay_us() * qubit_nr as i64),
-    ));
-    handle.push_event(Event::new_at(
+    ))?;
+    let _ = handle.push_event(Event::new_at(
         EventName::ReceivePair,
         EventPayload::ReceivePair(dst_detector_payload),
         current_time + (dst_epr_link.propagation_delay_us() * qubit_nr as i64),
-    ));
+    ))?;
     Ok(entangled_pair)
 }
 

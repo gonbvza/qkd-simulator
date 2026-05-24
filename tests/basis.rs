@@ -1,5 +1,5 @@
 use qkd_simulator::models::basis::{Basis, DST_BASES, SRC_BASES};
-use qkd_simulator::models::qubit_ref::QubitRefSide;
+use qkd_simulator::models::entangled_pair::Side;
 
 #[test]
 fn try_from_and_into_roundtrip() {
@@ -27,9 +27,9 @@ fn base_sets_and_random_choice() {
     assert!(DST_BASES.contains(&Basis::Deg22_5));
 
     // Random choice should return one of the allowed bases
-    let s = Basis::get_random_basis(QubitRefSide::Source);
+    let s = Basis::get_random_basis(Side::Source);
     assert!(SRC_BASES.contains(&s));
 
-    let d = Basis::get_random_basis(QubitRefSide::Destination);
+    let d = Basis::get_random_basis(Side::Destination);
     assert!(DST_BASES.contains(&d));
 }

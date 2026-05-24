@@ -33,19 +33,8 @@ impl std::str::FromStr for NodeKind {
     }
 }
 
-impl TryFrom<&String> for NodeKind {
-    type Error = NodeError;
-
-    fn try_from(s: &String) -> Result<Self, Self::Error> {
-        match s.trim() {
-            "0" => Ok(NodeKind::ClientNode),
-            "client" => Ok(NodeKind::ClientNode),
-            "1" => Ok(NodeKind::EprNode),
-            "epr" => Ok(NodeKind::EprNode),
-            _ => Err(NodeError::NotValidKind(s.to_string())),
-        }
-    }
-}
+// Prefer parsing via `FromStr`/`parse()`; the older `TryFrom<&String>` was
+// redundant and less ergonomic.
 
 impl fmt::Display for NodeKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -87,7 +76,9 @@ impl Node {
 
 impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let kind = NodeKind::try_from(&self.node_type)
+        let kind = self
+            .node_type
+            .parse::<NodeKind>()
             .map(|k| k.to_string())
             .unwrap_or_else(|_| format!("Unknown ({})", self.node_type));
         let owner = if let Some(owner) = self.locked_by {

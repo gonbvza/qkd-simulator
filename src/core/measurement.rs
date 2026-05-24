@@ -5,26 +5,25 @@ use crate::{
         event_loop::EventLoopHandler,
         maths::{calculate_basis_difference, calculate_entanglement_prob, calculate_new_fidelity},
         process::Process,
-        settings::{KEY_LENGTH, QUBIT_AMOUNT},
+        settings::QUBIT_AMOUNT,
         state::SimulationState,
     },
     error::PairError,
+    models::node::Node,
     models::{
         basis::Basis,
-        entangled_pair::NewEntangledPair,
+        entangled_pair::{NewEntangledPair, Side},
         event::Event,
         event_types::{EventName, EventPayload, SameBasisPayload},
         measurement::Measurement,
-        qubit_ref::QubitRefSide,
     },
-    models::node::Node,
     utility::is_first,
 };
 
 pub fn measure_qubit(
     process_id: i32,
     qubit_nr: i32,
-    side: QubitRefSide,
+    side: Side,
     node: Node,
     distance: i64,
     state: &mut SimulationState,
@@ -46,7 +45,7 @@ pub fn measure_qubit(
 
 pub fn first_measurement(
     entangled_pair: &mut NewEntangledPair,
-    side: QubitRefSide,
+    side: Side,
     node: Node,
 ) -> Result<(), PairError> {
     // 1. Chose random basis
@@ -67,7 +66,7 @@ pub fn first_measurement(
 
 pub fn second_measurement(
     entangled_pair: &mut NewEntangledPair,
-    side: QubitRefSide,
+    side: Side,
     mut node: Node,
     distance: i64,
     process: &mut Process,
@@ -124,7 +123,7 @@ pub fn second_measurement(
     handle.push_event(Event::new_now(
         EventName::SameBasis,
         EventPayload::SameBasis(payload),
-    ));
+    ))?;
 
     println!("Finished qkd, starting classical sifting");
     Ok(())

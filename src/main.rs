@@ -18,6 +18,7 @@ mod error;
 mod events;
 mod models;
 mod schema;
+#[cfg(test)]
 mod tests;
 mod utility;
 
@@ -57,7 +58,7 @@ pub fn run_loop(
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Error> {
     let (tx, rx): (Sender<Event>, Receiver<Event>) = channel();
     let handler: EventLoopHandler = EventLoopHandler::new(tx.clone());
     let sim_handler: EventLoopHandler = EventLoopHandler::new(tx.clone());
@@ -74,5 +75,6 @@ async fn main() {
     let mut registry = Registry::new();
     registry.instantiate_functions();
 
-    run_loop(registry, sim_handler, rx);
+    run_loop(registry, sim_handler, rx)?;
+    Ok(())
 }
