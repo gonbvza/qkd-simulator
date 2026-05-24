@@ -6,6 +6,7 @@ use crate::{
         settings::QUBIT_AMOUNT, state::SimulationState,
     },
     error::{DetectorError, Error, NodeError, SimError},
+    models::node::Node,
     models::{
         detector::Detector,
         entangled_pair::NewEntangledPair,
@@ -14,7 +15,6 @@ use crate::{
         links::Link,
         qubit_ref::QubitRefSide,
     },
-    models::node::Node,
 };
 
 // Initializes a QKD session.

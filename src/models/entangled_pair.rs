@@ -1,15 +1,5 @@
-use std::sync::Arc;
-
-use diesel::{
-    prelude::{Insertable, Queryable},
-    Selectable,
-};
-
 use crate::{
     core::{event_loop::EventLoop, settings::TIMEOUT},
-    database::entangled_pair::{
-        change_dst_measurement, change_src_measurement, create_entangled_pair,
-    },
     error::PairError,
     establish_connection,
     models::{measurement::Measurement, qubit_ref::QubitRefSide},
@@ -35,7 +25,7 @@ impl NewEntangledPair {
         dst_id: i32,
         process_id: i32,
         qubit_nr: i32,
-        save: bool,
+        _save: bool,
         current_time: i64,
     ) -> Result<NewEntangledPair, PairError> {
         let pair = NewEntangledPair {
@@ -50,18 +40,7 @@ impl NewEntangledPair {
             qubit_nr,
             accepted: false,
         };
-        if save {
-            let mut conn = establish_connection();
-            create_entangled_pair(
-                &mut conn,
-                src_id,
-                dst_id,
-                current_time,
-                current_time + TIMEOUT.clone(),
-                process_id,
-                qubit_nr,
-            )?;
-        }
+
         Ok(pair)
     }
 

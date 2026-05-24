@@ -1,5 +1,3 @@
-use std::error;
-
 use diesel::{insert_into, prelude::*};
 
 use crate::{

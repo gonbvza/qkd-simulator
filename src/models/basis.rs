@@ -57,12 +57,12 @@ impl Basis {
         }
     }
 
-    pub fn src_bases() -> [Basis; 3] {
-        [Basis::Deg0, Basis::Deg45, Basis::Deg90]
+    pub fn src_bases() -> &'static [Basis; 3] {
+        &SRC_BASES
     }
 
-    pub fn dst_bases() -> [Basis; 3] {
-        [Basis::DegNeg22_5, Basis::Deg22_5, Basis::Deg45]
+    pub fn dst_bases() -> &'static [Basis; 3] {
+        &DST_BASES
     }
 
     pub fn get_random_basis(side: QubitRefSide) -> Basis {
@@ -73,3 +73,6 @@ impl Basis {
         }
     }
 }
+
+pub const SRC_BASES: [Basis; 3] = [Basis::Deg0, Basis::Deg45, Basis::Deg90];
+pub const DST_BASES: [Basis; 3] = [Basis::DegNeg22_5, Basis::Deg22_5, Basis::Deg45];
