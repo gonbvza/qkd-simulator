@@ -1,16 +1,19 @@
 use crate::{
     core::{
-        event_loop::EventLoopHandler, measurement::measure_qubit, process::Process,
-        settings::QUBIT_AMOUNT, state::SimulationState,
+        event_loop::EventLoopHandler,
+        measurement::measure_qubit,
+        process::Process,
+        settings::QUBIT_AMOUNT,
+        state::{PairKey, SimulationState},
     },
     error::{DetectorError, Error, NodeError, SimError},
-    models::node::Node,
     models::{
         detector::Detector,
         entangled_pair::{NewEntangledPair, Side},
         event::Event,
         event_types::{EventName, EventPayload, ReceivePairPayload},
         links::Link,
+        node::Node,
     },
 };
 
@@ -63,13 +66,16 @@ pub fn handle_qkd_init(
     // Remove pair array and change pair_hm name
     for qubit_nr in 1..QUBIT_AMOUNT {
         println!("Sending pair {}", qubit_nr);
+        let pair_key: PairKey = PairKey {
+            qubit_nr,
+            process_id,
+        };
         let pair = emit_pair(
             src_node.id,
             dst_node.id,
             src_epr_link.to_owned(),
             dst_epr_link.to_owned(),
-            qubit_nr,
-            process_id,
+            pair_key,
             current_time,
             handle,
         )?;
@@ -110,8 +116,7 @@ pub fn emit_pair(
     dst_node_id: i32,
     src_epr_link: Link,
     dst_epr_link: Link,
-    qubit_nr: i32,
-    process_id: i32,
+    pair_key: PairKey,
     current_time: i64,
     handle: &EventLoopHandler,
 ) -> Result<NewEntangledPair, Error> {
@@ -119,36 +124,36 @@ pub fn emit_pair(
     let entangled_pair = NewEntangledPair::new(
         src_node_id,
         src_node_id,
-        process_id,
-        qubit_nr,
+        pair_key.process_id,
+        pair_key.qubit_nr,
         false,
         current_time,
     )?;
     let src_detector_payload: ReceivePairPayload = ReceivePairPayload::new(
         src_node_id,
         Side::Source,
-        qubit_nr,
-        process_id,
+        pair_key.qubit_nr,
+        pair_key.process_id,
         src_epr_link.id,
     );
 
     let dst_detector_payload: ReceivePairPayload = ReceivePairPayload::new(
         dst_node_id,
         Side::Destination,
-        qubit_nr,
-        process_id,
+        pair_key.qubit_nr,
+        pair_key.process_id,
         dst_epr_link.id,
     );
 
-    let _ = handle.push_event(Event::new_at(
+    handle.push_event(Event::new_at(
         EventName::ReceivePair,
         EventPayload::ReceivePair(src_detector_payload),
-        current_time + (src_epr_link.propagation_delay_us() * qubit_nr as i64),
+        current_time + (src_epr_link.propagation_delay_us() * pair_key.qubit_nr as i64),
     ))?;
-    let _ = handle.push_event(Event::new_at(
+    handle.push_event(Event::new_at(
         EventName::ReceivePair,
         EventPayload::ReceivePair(dst_detector_payload),
-        current_time + (dst_epr_link.propagation_delay_us() * qubit_nr as i64),
+        current_time + (dst_epr_link.propagation_delay_us() * pair_key.qubit_nr as i64),
     ))?;
     Ok(entangled_pair)
 }

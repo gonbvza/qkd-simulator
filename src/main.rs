@@ -1,10 +1,10 @@
 use std::env;
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{Receiver, Sender, channel};
 
 use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
 
-use crate::cli::cli::run_cli;
+use crate::cli::runner::run_cli;
 use crate::core::event_loop::{EventLoop, EventLoopHandler};
 use crate::core::registry::Registry;
 use crate::error::Error;

@@ -32,7 +32,7 @@ impl NewEntangledPair {
         let pair = NewEntangledPair {
             src_id,
             dst_id,
-            fidelity: 1 as f32,
+            fidelity: 1_f32,
             created_at: current_time,
             src_measurement: None,
             dst_measurement: None,

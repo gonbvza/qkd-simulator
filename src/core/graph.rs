@@ -52,16 +52,15 @@ impl Graph {
         };
         // Instantiate nodes
         for node in curr_nodes.iter() {
-                graph.nodes.insert(
+            graph.nodes.insert(
+                node.id,
+                GraphNode::new(
                     node.id,
-                    GraphNode::new(
-                        node.id,
-                        node
-                            .node_type
-                            .parse::<NodeKind>()
-                            .map_err(|_| NodeError::NotValidKind(node.node_type.clone()))?,
-                    ),
-                );
+                    node.node_type
+                        .parse::<NodeKind>()
+                        .map_err(|_| NodeError::NotValidKind(node.node_type.clone()))?,
+                ),
+            );
             graph.connections.insert(node.id, HashSet::new());
         }
         //Instantiate connections

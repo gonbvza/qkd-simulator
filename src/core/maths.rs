@@ -21,9 +21,8 @@ pub fn calculate_basis_difference(basis_a: Basis, basis_b: Basis) -> f64 {
 }
 
 pub fn calculate_entanglement_prob(fidelity: f32, basis_diff: f64) -> f64 {
-    let depolarizing_noise = (1 as f64 - fidelity as f64) * 0.5;
+    let depolarizing_noise = (1_f64 - fidelity as f64) * 0.5;
     // `basis_diff` is expressed in degrees; convert to radians for `cos`.
     let angle = basis_diff.to_radians().cos();
-    let prob = (fidelity as f64 * angle.powi(2)) + depolarizing_noise;
-    return prob;
+    (fidelity as f64 * angle.powi(2)) + depolarizing_noise
 }

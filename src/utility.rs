@@ -10,7 +10,7 @@ pub fn read_line() -> String {
     io::stdin()
         .read_line(&mut buffer)
         .expect("Failed to read line");
-    return buffer.trim().to_string();
+    buffer.trim().to_string()
 }
 
 pub fn is_first(entangled_pair: &mut NewEntangledPair, side: Side) -> Result<bool, PairError> {

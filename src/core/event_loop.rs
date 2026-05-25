@@ -34,11 +34,8 @@ impl EventLoop {
     }
 
     pub fn push_event(&mut self, event: Event, current_time: i64) {
-        let timestamp = (&event.timestamp).resolve(current_time);
-        let schedule_event = ScheduledEvent {
-            event,
-            timestamp: timestamp,
-        };
+        let timestamp = event.timestamp.resolve(current_time);
+        let schedule_event = ScheduledEvent { event, timestamp };
         self.bin_heap.insert(schedule_event);
     }
 
@@ -48,10 +45,10 @@ impl EventLoop {
 
     pub fn set_new_timestamp(&mut self, new_time: &i64) -> i64 {
         self.current_time = *new_time;
-        return self.current_time;
+        self.current_time
     }
 
     pub fn get_current_time(&self) -> i64 {
-        return self.current_time;
+        self.current_time
     }
 }

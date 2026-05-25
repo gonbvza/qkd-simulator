@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 
 use crate::{
-    error::{map_db_error, NodeError},
+    error::{NodeError, map_db_error},
     models::node::Node,
     schema,
 };
@@ -31,5 +31,5 @@ pub fn get_node_by_id(conn: &mut PgConnection, node_id: i32) -> Result<Node, Nod
 
 pub fn get_all_nodes(conn: &mut PgConnection) -> Result<Vec<Node>, NodeError> {
     let nodes: Vec<Node> = schema::nodes::table.load(conn)?;
-    return Ok(nodes);
+    Ok(nodes)
 }

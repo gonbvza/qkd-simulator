@@ -6,6 +6,11 @@ use crate::{
     models::{detector::Detector, entangled_pair::NewEntangledPair, links::Link},
 };
 
+pub struct PairKey {
+    pub qubit_nr: i32,
+    pub process_id: i32,
+}
+
 /// Central in-memory state of the QKD simulation.
 ///
 /// IMPORTANT:
@@ -99,7 +104,7 @@ impl SimulationState {
         self.pairs
             .values()
             .filter(|pair| pair.process_id == process_id && pair.accepted)
-            .filter_map(|pair| Some(pair.clone()))
+            .cloned()
             .collect()
     }
 
@@ -109,5 +114,11 @@ impl SimulationState {
         self.nodes.clear();
         self.detectors.clear();
         self.links.clear();
+    }
+}
+
+impl Default for SimulationState {
+    fn default() -> Self {
+        Self::new()
     }
 }

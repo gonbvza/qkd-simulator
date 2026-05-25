@@ -58,7 +58,7 @@ impl Link {
     }
 
     pub fn propagation_delay_us(&self) -> i64 {
-        let seconds = self.length as f64 / LIGHT_SPEED_FIBER.clone();
+        let seconds = self.length as f64 / LIGHT_SPEED_FIBER;
         (seconds * 1e6) as i64 // Convert from m/s to m/us
     }
 }

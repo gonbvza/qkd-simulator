@@ -20,10 +20,10 @@ pub fn same_basis(
 
     for pair in acc_pairs.clone() {
         let Some(src_measurement) = pair.src_measurement else {
-            return Err(Error::Pair(PairError::NotMeasured()))
+            return Err(Error::Pair(PairError::NotMeasured()));
         };
         let Some(dst_measurement) = pair.dst_measurement else {
-            return Err(Error::Pair(PairError::NotMeasured()))
+            return Err(Error::Pair(PairError::NotMeasured()));
         };
 
         if src_measurement.basis == dst_measurement.basis {

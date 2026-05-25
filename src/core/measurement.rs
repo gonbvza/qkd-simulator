@@ -86,7 +86,7 @@ pub fn second_measurement(
     let prob = calculate_entanglement_prob(fidelity, basis_diff);
     // 6. Based on this probability calculate measuremen
     let rand_num = rand::random_range(0..11);
-    let value: i16 = if (rand_num as f64) < (prob * 10 as f64) {
+    let value: i16 = if (rand_num as f64) < (prob * 10_f64) {
         first_measurement.value
     } else {
         1 - first_measurement.value

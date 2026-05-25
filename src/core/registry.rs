@@ -14,15 +14,14 @@ use crate::{
     },
 };
 
+type EventFunction = Box<
+    dyn Fn(EventPayload, i64, &mut SimulationState, &EventLoopHandler) -> Result<(), Error>
+        + Send
+        + Sync,
+>;
+
 pub struct Registry {
-    pub funcs: HashMap<
-        EventName,
-        Box<
-            dyn Fn(EventPayload, i64, &mut SimulationState, &EventLoopHandler) -> Result<(), Error>
-                + Send
-                + Sync,
-        >,
-    >,
+    pub funcs: HashMap<EventName, EventFunction>,
     state: SimulationState,
 }
 
@@ -33,20 +32,11 @@ impl Registry {
             state: SimulationState::new(),
         };
         reg.instantiate_functions();
-        return reg;
+        reg
     }
 
     // Return all functions as (name, function pointer) tuples
-    pub fn get_event_functions(
-        &self,
-    ) -> Vec<(
-        EventName,
-        Box<
-            dyn Fn(EventPayload, i64, &mut SimulationState, &EventLoopHandler) -> Result<(), Error>
-                + Send
-                + Sync,
-        >,
-    )> {
+    pub fn get_event_functions(&self) -> Vec<(EventName, EventFunction)> {
         vec![
             (EventName::HandleQkdInit, Box::new(handle_qkd_init)),
             (EventName::ReceivePair, Box::new(receive_pair)),
@@ -67,19 +57,7 @@ impl Registry {
     }
 
     pub fn instantiate_functions(&mut self) {
-        let funcs: Vec<(
-            EventName,
-            Box<
-                dyn Fn(
-                        EventPayload,
-                        i64,
-                        &mut SimulationState,
-                        &EventLoopHandler,
-                    ) -> Result<(), Error>
-                    + Send
-                    + Sync,
-            >,
-        )> = self.get_event_functions();
+        let funcs: Vec<(EventName, EventFunction)> = self.get_event_functions();
         for key in funcs {
             self.push_func(key.0, key.1);
         }
@@ -106,5 +84,11 @@ impl Registry {
             }
             None => Err(Error::FunctionNotFound(scheduled_event.event.name)),
         }
+    }
+}
+
+impl Default for Registry {
+    fn default() -> Self {
+        Self::new()
     }
 }
