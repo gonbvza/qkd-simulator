@@ -72,8 +72,7 @@ async fn main() -> Result<(), Error> {
     });
 
     // Create event loop and registry
-    let mut registry = Registry::new();
-    registry.instantiate_functions();
+    let registry = Registry::new();
 
     run_loop(registry, sim_handler, rx)?;
     Ok(())

@@ -28,10 +28,12 @@ pub struct Registry {
 
 impl Registry {
     pub fn new() -> Registry {
-        Registry {
+        let mut reg = Registry {
             funcs: HashMap::new(),
             state: SimulationState::new(),
-        }
+        };
+        reg.instantiate_functions();
+        return reg;
     }
 
     // Return all functions as (name, function pointer) tuples

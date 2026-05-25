@@ -17,6 +17,7 @@ use crate::utility::read_line;
 pub async fn run_cli(handle: EventLoopHandler) -> Result<(), Error> {
     loop {
         println!("What do you want to do?");
+
         let command: Command = match read_line().try_into() {
             Ok(cmd) => cmd,
             Err(e) => {
@@ -24,14 +25,32 @@ pub async fn run_cli(handle: EventLoopHandler) -> Result<(), Error> {
                 continue;
             }
         };
+
         match command {
-            Command::CreateNode => create_node_cli(&handle).await?,
-            Command::CreateLink => create_link_cli(&handle).await?,
-            Command::Start => start_qkd_cli(&handle).await?,
-            Command::GetNodes => get_nodes_cli().await?,
-            Command::GetLinks => get_links_cli().await?,
             Command::Exit => break,
+
+            cmd => {
+                loop {
+                    let result = match cmd {
+                        Command::CreateNode => create_node_cli(&handle).await,
+                        Command::CreateLink => create_link_cli(&handle).await,
+                        Command::Start => start_qkd_cli(&handle).await,
+                        Command::GetNodes => get_nodes_cli().await,
+                        Command::GetLinks => get_links_cli().await,
+                        Command::Exit => unreachable!(),
+                    };
+
+                    match result {
+                        Ok(_) => break, // command succeeded
+                        Err(e) => {
+                            println!("Command failed: {}", e);
+                            println!("Retrying...");
+                        }
+                    }
+                }
+            }
         }
     }
+
     Ok(())
 }
