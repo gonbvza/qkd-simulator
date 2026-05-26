@@ -20,19 +20,19 @@ pub struct PairKey {
 #[derive(Debug, Clone)]
 pub struct SimulationState {
     /// Active entangled pairs indexed by (process_id, qubit_nr)
-    pub pairs: HashMap<(i32, i32), NewEntangledPair>,
+    pairs: HashMap<(i32, i32), NewEntangledPair>,
 
     /// Nodes participating in the simulation
-    pub nodes: HashMap<i32, Node>,
+    nodes: HashMap<i32, Node>,
 
     /// Processes
-    pub processes: HashMap<i32, Process>,
+    processes: HashMap<i32, Process>,
 
     /// Detectors mapped by node id (or detector id depending on your model)
-    pub detectors: HashMap<i32, Detector>,
+    detectors: HashMap<i32, Detector>,
 
     /// Links between nodes (optional but useful if you want fast lookup)
-    pub links: HashMap<i32, Link>,
+    links: HashMap<i32, Link>,
 }
 
 impl SimulationState {
@@ -106,6 +106,41 @@ impl SimulationState {
             .filter(|pair| pair.process_id == process_id && pair.accepted)
             .cloned()
             .collect()
+    }
+
+    /// Borrow nodes, links and pairs mutably at the same time.
+    ///
+    /// This keeps fields private while still supporting multi-map event handlers.
+    pub fn split_nodes_links_pairs_mut(
+        &mut self,
+    ) -> (
+        &mut HashMap<i32, Node>,
+        &mut HashMap<i32, Link>,
+        &mut HashMap<(i32, i32), NewEntangledPair>,
+    ) {
+        (&mut self.nodes, &mut self.links, &mut self.pairs)
+    }
+
+    /// Borrow detectors, nodes and links mutably at the same time.
+    pub fn split_detectors_nodes_links_mut(
+        &mut self,
+    ) -> (
+        &mut HashMap<i32, Detector>,
+        &mut HashMap<i32, Node>,
+        &mut HashMap<i32, Link>,
+    ) {
+        (&mut self.detectors, &mut self.nodes, &mut self.links)
+    }
+
+    /// Borrow pairs, processes and nodes mutably at the same time.
+    pub fn split_pairs_processes_nodes_mut(
+        &mut self,
+    ) -> (
+        &mut HashMap<(i32, i32), NewEntangledPair>,
+        &mut HashMap<i32, Process>,
+        &mut HashMap<i32, Node>,
+    ) {
+        (&mut self.pairs, &mut self.processes, &mut self.nodes)
     }
 
     /// Reset simulation state (useful for restarting QKD runs)

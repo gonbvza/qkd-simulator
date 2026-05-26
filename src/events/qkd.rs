@@ -42,7 +42,7 @@ pub fn handle_qkd_init(
     let process = Process::new(current_time);
     let process_id = state.push_process(process);
 
-    let (nodes, links, pairs) = (&mut state.nodes, &mut state.links, &mut state.pairs);
+    let (nodes, links, pairs) = state.split_nodes_links_pairs_mut();
 
     let mut src_node: Node = nodes
         .get(&args.src_node_id)
@@ -175,34 +175,37 @@ pub fn receive_pair(
     state: &mut SimulationState,
     handle: &EventLoopHandler,
 ) -> Result<(), Error> {
-    let (detectors, nodes, links) = (&mut state.detectors, &mut state.nodes, &mut state.links);
+    let (detectors, nodes, links) = state.split_detectors_nodes_links_mut();
     let EventPayload::ReceivePair(args) = payload else {
         return Err(Error::WrongArgs());
     };
-    let node = nodes
-        .get_mut(&args.node_id)
-        .ok_or(NodeError::NodeNotFound(args.node_id.to_owned()))?;
-    let link: &Link = links
-        .get(&args.link_id)
-        .ok_or(NodeError::NodeNotFound(args.node_id.to_owned()))?;
+    let (node_copy, link_length) = {
+        let node = nodes
+            .get_mut(&args.node_id)
+            .ok_or(NodeError::NodeNotFound(args.node_id.to_owned()))?;
+        let link = links
+            .get(&args.link_id)
+            .ok_or(NodeError::NodeNotFound(args.node_id.to_owned()))?;
 
-    let detector: &mut Detector = detectors
-        .get_mut(&node.detector_id)
-        .ok_or(DetectorError::NotFound(node.detector_id))?;
+        let detector: &mut Detector = detectors
+            .get_mut(&node.detector_id)
+            .ok_or(DetectorError::NotFound(node.detector_id))?;
 
-    if detector.is_cooling(current_time) {
-        println!("Cooling down, skipped");
-        return Err(DetectorError::CoolingDown(detector.id).into());
-    }
+        if detector.is_cooling(current_time) {
+            println!("Cooling down, skipped");
+            return Err(DetectorError::CoolingDown(detector.id).into());
+        }
 
-    detector.set_detection_time(current_time)?;
+        detector.set_detection_time(current_time)?;
+        (node.to_owned(), link.length)
+    };
 
     measure_qubit(
         args.process_id,
         args.qubit_nr,
         args.side,
-        node.to_owned(),
-        link.length,
+        node_copy,
+        link_length,
         state,
         handle,
     )?;

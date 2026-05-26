@@ -69,19 +69,12 @@ impl Registry {
         handle: &EventLoopHandler,
     ) -> Result<(), Error> {
         match self.funcs.get(&scheduled_event.event.name) {
-            Some(function) => {
-                if let Err(e) = function(
-                    scheduled_event.event.payload,
-                    scheduled_event.timestamp,
-                    &mut self.state,
-                    handle,
-                ) {
-                    eprintln!("Function execution failed: {}", e);
-                    return Err(e);
-                }
-
-                Ok(())
-            }
+            Some(function) => function(
+                scheduled_event.event.payload,
+                scheduled_event.timestamp,
+                &mut self.state,
+                handle,
+            ),
             None => Err(Error::FunctionNotFound(scheduled_event.event.name)),
         }
     }

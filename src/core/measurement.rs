@@ -29,7 +29,7 @@ pub fn measure_qubit(
     state: &mut SimulationState,
     handle: &EventLoopHandler,
 ) -> Result<(), PairError> {
-    let (pairs, processes, nodes) = (&mut state.pairs, &mut state.processes, &mut state.nodes);
+    let (pairs, processes, nodes) = state.split_pairs_processes_nodes_mut();
     let entangled_pair = pairs
         .get_mut(&(process_id, qubit_nr))
         .ok_or(PairError::PairNotFound(qubit_nr))?;

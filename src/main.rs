@@ -53,7 +53,15 @@ pub fn run_loop(
         };
 
         event_loop.set_new_timestamp(&scheduled_event.timestamp);
-        registry.exec_event(scheduled_event, &handle)?;
+        let event_name = scheduled_event.event.name.clone();
+        let timestamp = scheduled_event.timestamp;
+
+        if let Err(e) = registry.exec_event(scheduled_event, &handle) {
+            eprintln!(
+                "Event {:?} at t={} failed; continuing loop: {}",
+                event_name, timestamp, e
+            );
+        }
     }
 }
 
