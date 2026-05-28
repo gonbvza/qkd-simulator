@@ -60,6 +60,53 @@ impl BinHeap {
         Some(root)
     }
 
+    pub fn get_min(&self) -> Option<&ScheduledEvent> {
+        self.arr.first()
+    }
+
+    pub fn decrease_key(&mut self, index: usize, new_event: ScheduledEvent) {
+        if index >= self.arr.len() {
+            return;
+        }
+        self.arr[index] = new_event;
+
+        // Bubble up
+        let mut i = index;
+        while i > 0 {
+            let p = Self::parent(i);
+            if self.arr[i].timestamp < self.arr[p].timestamp {
+                self.arr.swap(i, p);
+                i = p;
+            } else {
+                break;
+            }
+        }
+    }
+
+    pub fn delete_key(&mut self, index: usize) {
+        if index >= self.arr.len() {
+            return;
+        }
+        let last = self.arr.pop().unwrap();
+        if index < self.arr.len() {
+            self.arr[index] = last;
+            // Fix heap: try bubble up, otherwise heapify down
+            let mut i = index;
+            while i > 0 {
+                let p = Self::parent(i);
+                if self.arr[i].timestamp < self.arr[p].timestamp {
+                    self.arr.swap(i, p);
+                    i = p;
+                } else {
+                    break;
+                }
+            }
+            if i == index {
+                self.min_heapify(index);
+            }
+        }
+    }
+
     // Heapify downward from index i
     fn min_heapify(&mut self, i: usize) {
         let n = self.arr.len();

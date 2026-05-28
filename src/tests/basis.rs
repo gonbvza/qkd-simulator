@@ -1,5 +1,5 @@
-use qkd_simulator::models::basis::{Basis, DST_BASES, SRC_BASES};
-use qkd_simulator::models::entangled_pair::Side;
+use crate::models::basis::{Basis, DST_BASES, SRC_BASES};
+use crate::models::entangled_pair::Side;
 
 #[test]
 fn try_from_and_into_roundtrip() {

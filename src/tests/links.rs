@@ -38,7 +38,7 @@ fn link_creation_fails_if_node_missing() {
         .unwrap();
 
     let missing_node = node_id + 999;
-    let link = Link::new(100, 0.1, 0.01, node_id, missing_node);
+    let link = Link::new(&mut conn, 100, 0.1, 0.01, node_id, missing_node);
     assert!(!link.is_ok());
 }
 
@@ -65,7 +65,7 @@ fn link_creation_succeeds_with_valid_nodes() {
         .get_result(&mut conn)
         .unwrap();
 
-    let link = Link::new(42, 0.25, 0.001, src_id, dst_id).expect("Link should be created");
+    let link = Link::new(&mut conn, 42, 0.25, 0.001, src_id, dst_id).expect("Link should be created");
 
     assert_eq!(link.length, 42);
     assert_eq!(link.attenuation, 0.25);

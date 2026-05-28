@@ -51,7 +51,7 @@ impl Node {
         name: String,
         node_type: String,
         detector_id: i32,
-    ) -> Result<Self, NodeError> {
+    ) -> Result<Node, NodeError> {
         create_node(conn, &name, &node_type, detector_id)
     }
 
@@ -67,9 +67,10 @@ impl Node {
     }
 
     pub fn release(&mut self, process_id: i32) -> Result<(), NodeError> {
-        if self.locked_by == Some(process_id) {
-            self.locked_by = None;
+        if self.locked_by != Some(process_id) {
+            return Err(NodeError::NotAuthorized(process_id));
         }
+        self.locked_by = None;
         Ok(())
     }
 }

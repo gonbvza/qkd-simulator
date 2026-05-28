@@ -76,3 +76,30 @@ impl Basis {
 
 pub const SRC_BASES: [Basis; 3] = [Basis::Deg0, Basis::Deg45, Basis::Deg90];
 pub const DST_BASES: [Basis; 3] = [Basis::DegNeg22_5, Basis::Deg22_5, Basis::Deg45];
+
+impl TryFrom<i32> for Basis {
+    type Error = String;
+
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(Basis::Deg0),
+            2 => Ok(Basis::DegNeg22_5),
+            3 => Ok(Basis::Deg22_5),
+            4 => Ok(Basis::Deg45),
+            5 => Ok(Basis::Deg90),
+            v => Err(format!("Unknown Basis value: {}", v)),
+        }
+    }
+}
+
+impl From<Basis> for i32 {
+    fn from(b: Basis) -> Self {
+        match b {
+            Basis::Deg0 => 1,
+            Basis::DegNeg22_5 => 2,
+            Basis::Deg22_5 => 3,
+            Basis::Deg45 => 4,
+            Basis::Deg90 => 5,
+        }
+    }
+}

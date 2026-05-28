@@ -1,18 +1,18 @@
 #[cfg(test)]
 mod tests {
     use crate::core::bin_heap::BinHeap;
-    use crate::models::event::Event;
+    use crate::models::event::{Event, ScheduledEvent};
 
     use super::*;
     use std::collections::HashMap;
 
-    fn make_event(ts: i64) -> Event {
-        Event {
-            name: format!("e{}", ts),
-            function: "noop".to_string(),
-            args: HashMap::new(),
-            timestamp: ts,
-        }
+    fn make_event(ts: i64) -> ScheduledEvent {
+        // Construct a dummy scheduled event using CreateNode payload as a placeholder
+        let payload = crate::models::event_types::EventPayload::CreateNode(
+            crate::models::event_types::CreateNodePayload::new("n".to_string(), crate::models::node::NodeKind::ClientNode),
+        );
+        let event = Event::new(crate::models::event_types::EventName::CreateNode, payload, crate::models::event::EventTime::Now);
+        ScheduledEvent { event, timestamp: ts }
     }
 
     #[test]

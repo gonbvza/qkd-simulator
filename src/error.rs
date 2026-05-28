@@ -3,9 +3,10 @@ use std::sync::mpsc::SendError;
 use thiserror::Error;
 
 use crate::models::{event::Event, event_types::EventName};
+use derivative::Derivative;
 
 // graph errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum GraphError {
     // Node errors
     #[error("{0}")]
@@ -18,7 +19,7 @@ pub enum GraphError {
 }
 
 // link errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum LinkError {
     #[error("Nodes {0} and {1} do not exist")]
     NonExistingNodes(i32, i32),
@@ -35,7 +36,7 @@ pub enum LinkError {
 }
 
 // link errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum NodeError {
     #[error("Node with id {0} already exists")]
     AlreadyExists(String),
@@ -49,10 +50,12 @@ pub enum NodeError {
     DetectorError(#[from] DetectorError),
     #[error("Node {0} not found in hashmap")]
     NodeNotFound(i32),
+    #[error("Process {0} is not authorized to release node")]
+    NotAuthorized(i32),
 }
 
 // cli errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum CliError {
     #[error("Input by the user was not valid")]
     NotValidInput(String),
@@ -63,18 +66,23 @@ pub enum CliError {
 }
 
 // simulation errors
-#[derive(Error, Debug)]
+#[derive(Derivative, Error, Debug)]
+#[derivative(PartialEq)]
 pub enum SimError {
     #[error("Input by the user was not valid")]
     NotValidInput(String),
     #[error("Missing arg argument: {0}")]
     MissingArgument(String),
     #[error("Error in sending event")]
-    ChannelSendError(#[from] SendError<Event>),
+    ChannelSendError {
+        #[from]
+        #[derivative(PartialEq = "ignore")]
+        source: SendError<Event>,
+    },
 }
 
 // entangled_pair errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum PairError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
@@ -91,7 +99,7 @@ pub enum PairError {
 }
 
 // process errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum ProcessError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
@@ -100,7 +108,7 @@ pub enum ProcessError {
 }
 
 // detector errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum DetectorError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
@@ -111,7 +119,7 @@ pub enum DetectorError {
 }
 
 // measurement errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum MeasurementError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
@@ -128,7 +136,7 @@ pub fn map_db_error(node_id: String, e: diesel::result::Error) -> NodeError {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum Error {
     // Link errors
     #[error("{0}")]
