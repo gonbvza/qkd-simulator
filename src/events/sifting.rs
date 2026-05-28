@@ -10,7 +10,6 @@ pub fn same_basis(
     state: &mut SimulationState,
     _handle: &EventLoopHandler,
 ) -> Result<(), Error> {
-    println!("Received same bassi");
     let EventPayload::SameBasis(args) = payload else {
         return Err(Error::WrongArgs());
     };
