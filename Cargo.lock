@@ -206,6 +206,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
 
 [[package]]
+name = "get-many-mut"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e1027d8e4b47b5b11577479d544a4054c29e692115c5c6e782c29f37066a2f7"
+
+[[package]]
 name = "getrandom"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -394,6 +400,7 @@ dependencies = [
  "diesel",
  "dotenv",
  "either",
+ "get-many-mut",
  "lazy_static",
  "rand",
  "thiserror",

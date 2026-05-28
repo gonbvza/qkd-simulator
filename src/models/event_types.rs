@@ -14,6 +14,7 @@ use derive_new::new;
 /// strings.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum EventName {
+    TestEvent,
     CreateNode,
     CreateLink,
     HandleQkdInit,
@@ -26,6 +27,7 @@ pub enum EventName {
 /// struct which expresses the exact arguments required by the handler.
 #[derive(Debug, Clone)]
 pub enum EventPayload {
+    TestEvent(),
     CreateNode(CreateNodePayload),
     CreateLink(CreateLinkPayload),
     HandleQkdInit(HandleQkdInitPayload),

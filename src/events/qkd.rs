@@ -44,14 +44,13 @@ pub fn handle_qkd_init(
 
     let (nodes, links, pairs) = state.split_nodes_links_pairs_mut();
 
-    let mut src_node: Node = nodes
-        .get(&args.src_node_id)
-        .cloned()
-        .ok_or_else(|| Error::Sim(SimError::MissingArgument("src_node_id".to_string())))?;
-    let mut dst_node: Node = nodes
-        .get(&args.dst_node_id)
-        .cloned()
-        .ok_or_else(|| Error::Sim(SimError::MissingArgument("dst_node_id".to_string())))?;
+    let [src_node, dst_node] = nodes
+        .get_disjoint_mut([&args.src_node_id, &args.dst_node_id])
+        .map(|item| item.ok_or(Error::Node(NodeError::NodeNotFound(1))));
+
+    let src_node = src_node?;
+    let dst_node = dst_node?;
+
     let src_epr_link = links
         .get(&args.src_epr_link_id)
         .ok_or_else(|| Error::Sim(SimError::MissingArgument("dst_node_id".to_string())))?;
@@ -123,7 +122,7 @@ pub fn emit_pair(
     // Create entangled pair
     let entangled_pair = NewEntangledPair::new(
         src_node_id,
-        src_node_id,
+        dst_node_id,
         pair_key.process_id,
         pair_key.qubit_nr,
         false,

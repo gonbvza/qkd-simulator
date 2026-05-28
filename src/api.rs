@@ -11,13 +11,11 @@ use crate::models::event_types::{
 use crate::models::links::Link;
 use crate::models::node::{Node, NodeKind};
 
-pub type Result<T> = std::result::Result<T, Error>;
-
 pub async fn create_node_api(
     name: String,
     node_type: NodeKind,
     handle: &EventLoopHandler,
-) -> Result<()> {
+) -> Result<(), Error> {
     let payload: CreateNodePayload = CreateNodePayload::new(name, node_type);
     let event = Event::new_now(EventName::CreateNode, EventPayload::CreateNode(payload));
     handle.push_event(event)?;
@@ -29,20 +27,20 @@ pub async fn create_link_api(
     dst_id: i32,
     distance: i64,
     handle: &EventLoopHandler,
-) -> Result<()> {
+) -> Result<(), Error> {
     let payload: CreateLinkPayload = CreateLinkPayload::new(src_id, dst_id, distance);
     let event = Event::new_now(EventName::CreateLink, EventPayload::CreateLink(payload));
     handle.push_event(event)?;
     Ok(())
 }
 
-pub async fn get_nodes_api() -> Result<Vec<Node>> {
+pub async fn get_nodes_api() -> Result<Vec<Node>, Error> {
     let mut conn = establish_connection();
     let nodes = get_all_nodes(&mut conn)?;
     Ok(nodes)
 }
 
-pub async fn get_links_api() -> Result<Vec<Link>> {
+pub async fn get_links_api() -> Result<Vec<Link>, Error> {
     let mut conn = establish_connection();
     let links = get_all_links(&mut conn)?;
     Ok(links)
@@ -65,7 +63,7 @@ pub async fn start_qkd(
     src_node_id: i32,
     dst_node_id: i32,
     handle: &EventLoopHandler,
-) -> Result<()> {
+) -> Result<(), Error> {
     // Get the nodes
     let mut conn = establish_connection();
     let src_node: Node = get_node_by_id(&mut conn, src_node_id)?;

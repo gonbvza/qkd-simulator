@@ -1,5 +1,5 @@
 use std::env;
-use std::sync::mpsc::{Receiver, Sender, channel};
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 use diesel::{Connection, PgConnection};
 use dotenv::dotenv;
@@ -39,22 +39,22 @@ pub fn run_loop(
 
     loop {
         while let Ok(event) = rx.try_recv() {
-            event_loop.push_event(event, event_loop.get_current_time());
+            event_loop.push_event(event);
         }
 
         let Some(scheduled_event) = event_loop.pop_next_event() else {
             match rx.recv() {
                 Ok(event) => {
-                    event_loop.push_event(event, event_loop.get_current_time());
+                    event_loop.push_event(event);
                     continue;
                 }
                 Err(_) => return Ok(()),
             }
         };
 
-        event_loop.set_new_timestamp(&scheduled_event.timestamp);
-        let event_name = scheduled_event.event.name.clone();
         let timestamp = scheduled_event.timestamp;
+        event_loop.set_new_timestamp(timestamp);
+        let event_name = scheduled_event.event.name.clone();
 
         if let Err(e) = registry.exec_event(scheduled_event, &handle) {
             eprintln!(

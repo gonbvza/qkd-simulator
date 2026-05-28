@@ -1,4 +1,6 @@
 use crate::models::event_types::{EventName, EventPayload};
+use derive_new::new;
+
 #[derive(Debug, Clone, Copy)]
 pub enum EventTime {
     At(i64),
@@ -21,7 +23,7 @@ pub struct Event {
     pub timestamp: EventTime, // Event timestamp in ps
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct ScheduledEvent {
     pub event: Event,
     pub timestamp: i64,

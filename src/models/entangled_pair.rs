@@ -1,6 +1,6 @@
 use crate::{error::PairError, models::measurement::Measurement};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Side {
     Source,
     Destination,
