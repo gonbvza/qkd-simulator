@@ -5,13 +5,14 @@ use crate::{
     models::node::{Node, NodeKind},
 };
 use diesel::prelude::*;
+use diesel::PgConnection;
 
-fn clean_db(conn: &mut crate::PgConnection) {
+fn clean_db(conn: &mut PgConnection) {
     diesel::delete(schema::links::table).execute(conn).unwrap();
     diesel::delete(schema::nodes::table).execute(conn).unwrap();
 }
 
-fn insert_detector(conn: &mut crate::PgConnection) -> i32 {
+fn insert_detector(conn: &mut PgConnection) -> i32 {
     diesel::insert_into(schema::detector::table)
         .values((
             schema::detector::resolution_ps.eq(0),

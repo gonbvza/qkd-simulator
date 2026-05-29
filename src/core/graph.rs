@@ -1,3 +1,8 @@
+//! Graph representation of current nodes and links.
+//!
+//! This module builds a graph representation of nodes
+//! and uses it to find commom epr nodes.
+
 use std::collections::{HashMap, HashSet};
 
 use crate::{
@@ -8,7 +13,7 @@ use crate::{
     models::node::{Node, NodeKind},
 };
 
-// Local NodeKind enum that servers as wrapper for nodes ids
+/// Local abstraction of a node used to build the graph
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum GraphNode {
     ClientNode(i32),
@@ -16,6 +21,7 @@ pub enum GraphNode {
 }
 
 impl GraphNode {
+    /// Create graph node based on the type of node
     fn new(id: i32, node_type: NodeKind) -> GraphNode {
         match node_type {
             NodeKind::ClientNode => GraphNode::ClientNode(id),
@@ -23,6 +29,7 @@ impl GraphNode {
         }
     }
 
+    /// Unwraps id from the graph node
     fn get_id(&self) -> i32 {
         match self {
             GraphNode::ClientNode(id) => *id,
@@ -45,6 +52,11 @@ impl Graph {
         Self::from_data(get_all_nodes(&mut conn)?, get_all_links(&mut conn)?)
     }
 
+    /// Builds the graph from a list of nodes and links.
+    ///
+    /// Inserts all nodes and bidirectional connections into the graph.
+    /// Returns a [`GraphError`] if a link references a node that doesn't exist
+    /// or a node has an unrecognized kind.
     pub fn from_data(curr_nodes: Vec<Node>, curr_links: Vec<Link>) -> Result<Graph, GraphError> {
         let mut graph: Graph = Graph {
             nodes: HashMap::new(),
@@ -87,16 +99,10 @@ impl Graph {
         Ok(graph)
     }
 
-    /// Function to find related epr node between two nodes.
+    /// Returns the ID of the shared EPR node between `src_id` and `dst_id`.
     ///
-    /// The epr node with the lowest id is chosen if they share any
-    ///
-    /// Arguments
-    /// * src_id - The node id of the first node
-    /// * dst_id - The node id of the second node
-    ///
-    /// Returns
-    /// * Node   - Instance of the epr node,
+    /// If multiple EPR nodes are shared, the one with the lowest ID is chosen.
+    /// Returns [`GraphError::NoCommonEpr`] if no shared EPR node exists.
     pub fn get_node_epr(&self, src_id: i32, dst_id: i32) -> Result<i32, GraphError> {
         let a_neighbors: &HashSet<GraphNode> = self
             .connections

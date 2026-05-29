@@ -2,6 +2,8 @@ use diesel::prelude::*;
 
 use crate::models::basis::Basis;
 
+/// Instance representing a measurement made by a node on a
+/// single qubit of the pair
 #[derive(Queryable, Selectable, Debug, Clone, Copy, PartialEq)]
 #[diesel(table_name = crate::schema::measurements)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -15,6 +17,7 @@ pub struct Measurement {
 }
 
 impl Measurement {
+    /// Create new measurement
     pub fn new(
         node_id: i32,
         qubit_nr: i32,
@@ -32,6 +35,10 @@ impl Measurement {
         }
     }
 
+    /// Set the measurement as accepted
+    ///
+    /// An accepted measurement means that both qubits
+    /// were received and measured correctly
     pub fn set_accepted(&mut self) {
         self.accepted = true;
     }

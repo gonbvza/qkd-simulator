@@ -2,33 +2,20 @@ use crate::{
     core::{
         event_loop::EventLoopHandler,
         measurement::measure_qubit,
+        pairs::emit_pair,
         process::Process,
         settings::QUBIT_AMOUNT,
         state::{PairKey, SimulationState},
     },
     error::{DetectorError, Error, NodeError, SimError},
-    models::{
-        detector::Detector,
-        entangled_pair::{NewEntangledPair, Side},
-        event::Event,
-        event_types::{EventName, EventPayload, ReceivePairPayload},
-        links::Link,
-        node::Node,
-    },
+    models::{detector::Detector, event_types::EventPayload},
 };
 
-// Initializes a QKD session.
-//
-// Ensures the source, destination, and EPR nodes are free before locking them for the session.
-// If any node is busy, the session is aborted. Once locked, the EPR node begins emitting
-// entangled pairs for key generation via `emit_next_pair()`.
-//
-// # Arguments
-// * `src_node` - Source node initiating the session
-// * `dst_node` - Destination node receiving the session
-// * `epr_node` - EPR node used for entanglement generation
-// * `src_epr_link` - Link between source and EPR node
-// * `dst_epr_link` - Link between destination and EPR node
+/// Initialises a QKD session between two nodes.
+///
+/// Locks the source and destination nodes for the session, then emits
+/// all entangled pairs via the EPR link. Returns [`NodeError::NodeInUse`]
+/// if either node is already occupied.
 pub fn handle_qkd_init(
     payload: EventPayload,
     current_time: i64,
@@ -83,91 +70,10 @@ pub fn handle_qkd_init(
     Ok(())
 }
 
-/// Creates one entangled pair and schedules its transmission to both client nodes.
+/// Simulates a qubit arriving at a detector.
 ///
-/// This function is the core pump of the QKD pipeline. It is first called by
-/// [`handle_qkd_init`] and then re-invoked after each successful pair measurement
-/// or timeout resolution, continuing until 1024 accepted pairs have been collected.
-///
-/// It performs three scheduling operations:
-///
-/// **1. EntangledPair creation:** Instantiates a new [`EntangledPair`] with the
-/// given destination nodes and an initial fidelity. The pair is stored in the
-/// repository and assigned a unique `pair_id`.
-///
-/// **2. PhotonTransmit events:** Schedule two qubit receival by creating qubit ref
-/// and sending one to each detector. Each event timestamp
-/// is calculated from the link's `next_available_time` and propagation delay:
-/// `t = max(current_time, link.next_available_time) + t_propagation`
-///
-/// **3. Timeout event:** Schedules one [`EventType::MeasurementTimeout`] event for
-/// this pair at:
-/// `t = max(t_send, link.next_available_time) + t_propagation + detector.cooldown_ps
-///      + detector.resolution_ps + SAFETY_MARGIN_PS`
-/// If this event fires before both measurements are recorded, the pair is considered
-/// lost and a new call to [`EprNode::emit_next_pair`] is triggered automatically.
-///
-/// # Arguments
-/// * `sender_id`   - The [`NodeId`] of the client node receiving the left qubit
-/// * `receiver_id` - The [`NodeId`] of the client node receiving the right qubit
-pub fn emit_pair(
-    src_node_id: i32,
-    dst_node_id: i32,
-    src_epr_link: Link,
-    dst_epr_link: Link,
-    pair_key: PairKey,
-    current_time: i64,
-    handle: &EventLoopHandler,
-) -> Result<NewEntangledPair, Error> {
-    // Create entangled pair
-    let entangled_pair = NewEntangledPair::new(
-        src_node_id,
-        dst_node_id,
-        pair_key.process_id,
-        pair_key.qubit_nr,
-        false,
-        current_time,
-    )?;
-    let src_detector_payload: ReceivePairPayload = ReceivePairPayload::new(
-        src_node_id,
-        Side::Source,
-        pair_key.qubit_nr,
-        pair_key.process_id,
-        src_epr_link.id,
-    );
-
-    let dst_detector_payload: ReceivePairPayload = ReceivePairPayload::new(
-        dst_node_id,
-        Side::Destination,
-        pair_key.qubit_nr,
-        pair_key.process_id,
-        dst_epr_link.id,
-    );
-
-    handle.push_event(Event::new_at(
-        EventName::ReceivePair,
-        EventPayload::ReceivePair(src_detector_payload),
-        current_time + (src_epr_link.propagation_delay_us() * pair_key.qubit_nr as i64),
-    ))?;
-    handle.push_event(Event::new_at(
-        EventName::ReceivePair,
-        EventPayload::ReceivePair(dst_detector_payload),
-        current_time + (dst_epr_link.propagation_delay_us() * pair_key.qubit_nr as i64),
-    ))?;
-    Ok(entangled_pair)
-}
-
-/// Simulates the receival of a qubit ref by a detector.
-///
-/// It will fist check if the current node is in use, if so, it will check
-/// the process hash against the current on going proces hash
-///
-/// If node is free, it sets node usage. Then it continues with the measurement
-///
-/// # Arguments
-/// * `qubit_ref`   - The [`qubit_ref`] of the entangled pair
-/// * `node`        - The node that receives the qubit ref
-/// * `link`        - The link through which the qubit was received
+/// Checks whether the detector is still cooling down and skips the measurement
+/// if so. Otherwise records the detection time and delegates to [`measure_qubit`].
 pub fn receive_pair(
     payload: EventPayload,
     current_time: i64,

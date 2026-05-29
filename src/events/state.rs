@@ -6,6 +6,9 @@ use crate::{
     models::node::Node,
 };
 
+/// Event to create the node and store it the the state
+///
+/// Creates the corresponding detector
 pub fn create_node(
     payload: EventPayload,
     _current_time: i64,
@@ -31,6 +34,7 @@ pub fn create_node(
     Ok(())
 }
 
+/// Event to create the link and store it the the state
 pub fn create_link(
     payload: EventPayload,
     _current_time: i64,

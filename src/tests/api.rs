@@ -14,13 +14,14 @@ use crate::{
     },
     schema,
 };
+use diesel::PgConnection;
 
-fn clean_db(conn: &mut crate::PgConnection) {
+fn clean_db(conn: &mut PgConnection) {
     diesel::delete(schema::links::table).execute(conn).unwrap();
     diesel::delete(schema::nodes::table).execute(conn).unwrap();
 }
 
-fn insert_detector(conn: &mut crate::PgConnection) -> i32 {
+fn insert_detector(conn: &mut PgConnection) -> i32 {
     diesel::insert_into(schema::detector::table)
         .values((
             schema::detector::resolution_ps.eq(0),
@@ -33,12 +34,12 @@ fn insert_detector(conn: &mut crate::PgConnection) -> i32 {
         .unwrap()
 }
 
-fn insert_node(conn: &mut crate::PgConnection, name: &str, kind: NodeKind) -> Node {
+fn insert_node(conn: &mut PgConnection, name: &str, kind: NodeKind) -> Node {
     let detector_id = insert_detector(conn);
     Node::new(conn, name.to_string(), kind.to_string(), detector_id).unwrap()
 }
 
-fn insert_link(conn: &mut crate::PgConnection, src_id: i32, dst_id: i32) -> Link {
+fn insert_link(conn: &mut PgConnection, src_id: i32, dst_id: i32) -> Link {
     Link::new(conn, 100, 0.4, 0.1, src_id, dst_id).unwrap()
 }
 

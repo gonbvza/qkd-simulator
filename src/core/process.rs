@@ -1,5 +1,6 @@
 use diesel::prelude::*;
 
+/// Represents an active QKD process, tracking its start time and accepted pairs.
 #[derive(Queryable, Selectable, Debug, Clone)]
 #[diesel(table_name = crate::schema::process)]
 #[diesel(check_for_backend(diesel::pg::Pg))]

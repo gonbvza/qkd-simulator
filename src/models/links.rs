@@ -1,11 +1,16 @@
 use std::fmt;
 
+use diesel::{dsl, prelude::*, select};
+
 use crate::{
     core::settings::LIGHT_SPEED_FIBER, database::link::create_link, error::LinkError,
     establish_connection, schema,
 };
-use diesel::{dsl, prelude::*, select};
 
+/// Instance to simulate physical link between two nodes in the network.
+///
+/// Stores optical properties (attenuation, error rate) and tracks
+/// when the link becomes available for the next transmission.
 #[derive(Queryable, Selectable, Debug, Clone)]
 #[diesel(table_name = crate::schema::links)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -20,6 +25,9 @@ pub struct Link {
 }
 
 impl Link {
+    /// Creates a new link in the database between two existing nodes.
+    ///
+    /// Returns [`LinkError::NonExistingNodes`] if either node does not exist.
     pub fn new(
         conn: &mut PgConnection,
         length: i64,
@@ -32,19 +40,17 @@ impl Link {
             schema::nodes::table.filter(schema::nodes::id.eq(src_id)),
         ))
         .get_result::<bool>(conn)?;
-
         let node_b_exists = select(dsl::exists(
             schema::nodes::table.filter(schema::nodes::id.eq(dst_id)),
         ))
         .get_result::<bool>(conn)?;
-
         if !node_a_exists || !node_b_exists {
             return Err(LinkError::NonExistingNodes(src_id, dst_id));
         }
-
         create_link(conn, length, attenuation, error_rate, src_id, dst_id)
     }
 
+    /// Fetches the link between two nodes from the database.
     pub fn get_link(node_a_id: i32, node_b_id: i32) -> Result<Link, LinkError> {
         let mut conn = establish_connection();
         let link: Link = schema::links::table
@@ -57,9 +63,10 @@ impl Link {
         Ok(link)
     }
 
+    /// Returns the one-way propagation delay of this link in microseconds.
     pub fn propagation_delay_us(&self) -> i64 {
         let seconds = self.length as f64 / LIGHT_SPEED_FIBER;
-        (seconds * 1e6) as i64 // Convert from m/s to m/us
+        (seconds * 1e6) as i64
     }
 }
 

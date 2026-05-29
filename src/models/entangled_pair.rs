@@ -6,6 +6,7 @@ pub enum Side {
     Destination,
 }
 
+/// Instance that simulates a pair of entangled qubits
 #[derive(Debug, Clone)]
 pub struct NewEntangledPair {
     pub src_id: i32,
@@ -21,6 +22,7 @@ pub struct NewEntangledPair {
 }
 
 impl NewEntangledPair {
+    /// Creates the pair with some default values
     pub fn new(
         src_id: i32,
         dst_id: i32,
@@ -45,6 +47,7 @@ impl NewEntangledPair {
         Ok(pair)
     }
 
+    /// Sets the measurement to the corresponding side
     pub fn set_measurement(&mut self, side: Side, measurement: Measurement) {
         match side {
             Side::Source => {
@@ -56,6 +59,7 @@ impl NewEntangledPair {
         }
     }
 
+    /// Gets the opposite measurement based on the second measurement side
     pub fn get_measurement(&mut self, side: Side) -> Result<Measurement, PairError> {
         match side {
             Side::Source => self.dst_measurement.ok_or(PairError::NotMeasured()),

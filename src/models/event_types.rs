@@ -1,17 +1,8 @@
-//! Strongly-typed event function identifiers and payload structs.
-//!
-//! This module defines the canonical set of event kinds (`EventFn`) and
-//! the corresponding typed payloads for each event.
-
 use crate::models::entangled_pair::Side;
 use crate::models::node::NodeKind;
 use derive_new::new;
 
-/// Canonical list of event functions the system can execute.
-///
-/// Keep this enum small and stable; add new variants only when introducing
-/// new runtime behaviors. Use these variants for dispatching instead of raw
-/// strings.
+/// List of event functions the system can execute.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum EventName {
     TestEvent,

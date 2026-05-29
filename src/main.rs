@@ -1,8 +1,4 @@
-use std::env;
 use std::sync::mpsc::{channel, Receiver, Sender};
-
-use diesel::{Connection, PgConnection};
-use dotenv::dotenv;
 
 use crate::cli::runner::run_cli;
 use crate::core::event_loop::{EventLoop, EventLoopHandler};
@@ -10,60 +6,19 @@ use crate::core::registry::Registry;
 use crate::error::Error;
 use crate::models::event::Event;
 
-mod api;
-mod cli;
-mod core;
-mod database;
-mod error;
-mod events;
-mod models;
-mod schema;
+pub use utility::establish_connection;
+
+pub mod api;
+pub mod cli;
+pub mod core;
+pub mod database;
+pub mod error;
+pub mod events;
+pub mod models;
+pub mod schema;
 #[cfg(test)]
-mod tests;
-mod utility;
-
-pub fn establish_connection() -> PgConnection {
-    dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
-}
-
-pub fn run_loop(
-    mut registry: Registry,
-    handle: EventLoopHandler,
-    rx: Receiver<Event>,
-) -> Result<(), Error> {
-    let mut event_loop = EventLoop::new();
-
-    loop {
-        while let Ok(event) = rx.try_recv() {
-            event_loop.push_event(event);
-        }
-
-        let Some(scheduled_event) = event_loop.pop_next_event() else {
-            match rx.recv() {
-                Ok(event) => {
-                    event_loop.push_event(event);
-                    continue;
-                }
-                Err(_) => return Ok(()),
-            }
-        };
-
-        let timestamp = scheduled_event.timestamp;
-        event_loop.set_new_timestamp(timestamp);
-        let event_name = scheduled_event.event.name.clone();
-
-        if let Err(e) = registry.exec_event(scheduled_event, &handle) {
-            eprintln!(
-                "Event {:?} at t={} failed; continuing loop: {}",
-                event_name, timestamp, e
-            );
-        }
-    }
-}
+pub mod tests;
+pub mod utility;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -82,6 +37,9 @@ async fn main() -> Result<(), Error> {
     // Create event loop and registry
     let registry = Registry::new();
 
-    run_loop(registry, sim_handler, rx)?;
+    // Create event loop that run events
+    let mut event_loop = EventLoop::new();
+    event_loop.run_loop(registry, sim_handler, rx)?;
+
     Ok(())
 }

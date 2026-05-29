@@ -14,12 +14,14 @@ use crate::{
     },
 };
 
+/// Representation of the event function types
 type EventFunction = Box<
     dyn Fn(EventPayload, i64, &mut SimulationState, &EventLoopHandler) -> Result<(), Error>
         + Send
         + Sync,
 >;
 
+/// Storage of callable functions and the simulation state
 pub struct Registry {
     pub funcs: HashMap<EventName, EventFunction>,
     state: SimulationState,
@@ -35,7 +37,7 @@ impl Registry {
         reg
     }
 
-    // Return all functions as (name, function pointer) tuples
+    /// Return all functions as (name, function pointer) tuples
     pub fn get_event_functions(&self) -> Vec<(EventName, EventFunction)> {
         vec![
             (EventName::HandleQkdInit, Box::new(handle_qkd_init)),
@@ -46,6 +48,9 @@ impl Registry {
         ]
     }
 
+    /// Registers an event handler function under the given event name.
+    ///
+    /// Used during the create of registry
     pub fn push_func<F>(&mut self, name: EventName, func: F)
     where
         F: Fn(EventPayload, i64, &mut SimulationState, &EventLoopHandler) -> Result<(), Error>
@@ -56,6 +61,7 @@ impl Registry {
         self.funcs.insert(name, Box::new(func));
     }
 
+    /// Registers all known event handlers into the registry.
     pub fn instantiate_functions(&mut self) {
         let funcs: Vec<(EventName, EventFunction)> = self.get_event_functions();
         for key in funcs {
@@ -63,6 +69,10 @@ impl Registry {
         }
     }
 
+    /// Dispatches a scheduled event to its registered handler.
+    ///
+    /// Returns [`Error::FunctionNotFound`] if no handler is registered
+    /// for the event's name.
     pub fn exec_event(
         &mut self,
         scheduled_event: ScheduledEvent,
@@ -80,6 +90,7 @@ impl Registry {
     }
 }
 
+/// Used to satisfy Clippy's lint warnings.
 impl Default for Registry {
     fn default() -> Self {
         Self::new()

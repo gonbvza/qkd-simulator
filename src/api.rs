@@ -1,3 +1,5 @@
+//! API layer bridging the CLI and web GUI to the core simulation logic.
+
 use crate::core::event_loop::EventLoopHandler;
 use crate::core::graph::Graph;
 use crate::database::link::{get_all_links, get_link};
@@ -11,6 +13,7 @@ use crate::models::event_types::{
 use crate::models::links::Link;
 use crate::models::node::{Node, NodeKind};
 
+/// Entry point to create a node
 pub async fn create_node_api(
     name: String,
     node_type: NodeKind,
@@ -22,6 +25,7 @@ pub async fn create_node_api(
     Ok(())
 }
 
+/// Entry point to create a link
 pub async fn create_link_api(
     src_id: i32,
     dst_id: i32,
@@ -34,12 +38,14 @@ pub async fn create_link_api(
     Ok(())
 }
 
+/// Entry point to get all nodes
 pub async fn get_nodes_api() -> Result<Vec<Node>, Error> {
     let mut conn = establish_connection();
     let nodes = get_all_nodes(&mut conn)?;
     Ok(nodes)
 }
 
+/// Entry point to get all links
 pub async fn get_links_api() -> Result<Vec<Link>, Error> {
     let mut conn = establish_connection();
     let links = get_all_links(&mut conn)?;
@@ -49,16 +55,7 @@ pub async fn get_links_api() -> Result<Vec<Link>, Error> {
 /// Initiates a QKD session between two client nodes via an EPR source.
 ///
 /// This is the top-level entry point for starting a key distribution session.
-/// It validates that the three nodes exist in the repository, retrieves the
-/// sender node, and delegates to [`Client::start_qkd`].
-///
-/// # Arguments
-/// * `sender_id`   - The [`NodeId`] of the client node initiating the session
-/// * `receiver_id` - The [`NodeId`] of the destination client node
-/// * `epr_id`      - The [`NodeId`] of the EPR node that will emit entangled pairs
-///
-/// # Errors
-/// Returns an error if any of the three node IDs are not found in the repository
+/// It validates that the three nodes exist and delegates to [`start_qkd`]
 pub async fn start_qkd(
     src_node_id: i32,
     dst_node_id: i32,

@@ -13,10 +13,7 @@ pub struct PairKey {
 
 /// Central in-memory state of the QKD simulation.
 ///
-/// IMPORTANT:
-/// - This struct MUST only be mutated by the EventLoop thread.
-/// - Do NOT share it across threads with Arc/Mutex.
-/// - CLI/API threads should only send events, not access this directly.
+/// This struct must only be mutated by the EventLoop thread.
 #[derive(Debug, Clone)]
 pub struct SimulationState {
     /// Active entangled pairs indexed by (process_id, qubit_nr)

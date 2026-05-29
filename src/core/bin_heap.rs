@@ -1,5 +1,6 @@
 use crate::models::event::ScheduledEvent;
 
+/// Implementation of a binary heap for event queueing
 pub struct BinHeap {
     pub arr: Vec<ScheduledEvent>,
 }
@@ -9,18 +10,22 @@ impl BinHeap {
         BinHeap { arr: Vec::new() }
     }
 
+    /// Get left child
     fn left(i: usize) -> usize {
         2 * i + 1
     }
 
+    /// Get right child
     fn right(i: usize) -> usize {
         2 * i + 2
     }
 
+    /// Get the parent of the node
     fn parent(i: usize) -> usize {
         (i - 1) / 2
     }
 
+    /// Insert item on the heap
     pub fn insert(&mut self, event: ScheduledEvent) {
         // Push at end
         self.arr.push(event);
@@ -40,7 +45,7 @@ impl BinHeap {
         }
     }
 
-    // Remove and return minimum element (root)
+    /// Remove and return minimum element (root)
     pub fn extract_min(&mut self) -> Option<ScheduledEvent> {
         if self.arr.is_empty() {
             return None;
@@ -60,10 +65,12 @@ impl BinHeap {
         Some(root)
     }
 
+    /// Returns a reference to the event with the lowest timestamp
     pub fn get_min(&self) -> Option<&ScheduledEvent> {
         self.arr.first()
     }
 
+    /// Update the event at `index` with `new_event` and restore heap order by bubbling up.
     pub fn decrease_key(&mut self, index: usize, new_event: ScheduledEvent) {
         if index >= self.arr.len() {
             return;
@@ -83,6 +90,7 @@ impl BinHeap {
         }
     }
 
+    /// Delete node from the heap
     pub fn delete_key(&mut self, index: usize) {
         if index >= self.arr.len() {
             return;
@@ -90,7 +98,6 @@ impl BinHeap {
         let last = self.arr.pop().unwrap();
         if index < self.arr.len() {
             self.arr[index] = last;
-            // Fix heap: try bubble up, otherwise heapify down
             let mut i = index;
             while i > 0 {
                 let p = Self::parent(i);
@@ -107,7 +114,7 @@ impl BinHeap {
         }
     }
 
-    // Heapify downward from index i
+    /// Heapify downward from index i
     fn min_heapify(&mut self, i: usize) {
         let n = self.arr.len();
         let l = Self::left(i);

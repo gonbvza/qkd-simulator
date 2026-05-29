@@ -1,9 +1,16 @@
 use std::fmt;
 
-use crate::database::nodes::create_node;
-use crate::error::{CliError, NodeError};
 use diesel::prelude::*;
 
+use crate::{
+    database::nodes::create_node,
+    error::{CliError, NodeError},
+};
+
+/// A network node, either a client or an EPR source.
+///
+/// Tracks which process currently holds the node via `locked_by`,
+/// enforcing that only one QKD session uses it at a time.
 #[derive(Queryable, Selectable, Clone, Debug)]
 #[diesel(table_name = crate::schema::nodes)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -15,10 +22,52 @@ pub struct Node {
     pub detector_id: i32,
 }
 
+/// Differs between client nodes and EPR source nodes.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NodeKind {
     ClientNode = 0,
     EprNode = 1,
+}
+
+impl Node {
+    /// Creates a new node in the database.
+    pub fn new(
+        conn: &mut PgConnection,
+        name: String,
+        node_type: String,
+        detector_id: i32,
+    ) -> Result<Node, NodeError> {
+        create_node(conn, &name, &node_type, detector_id)
+    }
+
+    /// Attempts to lock the node for the given process.
+    ///
+    /// Returns `true` if the node was free or already owned by the same process,
+    /// `false` if it is held by a different process.
+    pub fn try_acquire(&mut self, process_id: i32) -> bool {
+        match self.locked_by {
+            None => {
+                self.locked_by = Some(process_id);
+                true
+            }
+            Some(owner) if owner == process_id => true,
+            _ => false,
+        }
+    }
+
+    /// Releases the node lock held by the given process.
+    ///
+    /// Returns [`NodeError::NotAuthorized`] if the node is locked by a different process.
+    pub fn release(&mut self, process_id: i32) -> Result<(), NodeError> {
+        if self.locked_by == None {
+            return Ok(());
+        }
+        if self.locked_by != Some(process_id) {
+            return Err(NodeError::NotAuthorized(process_id));
+        }
+        self.locked_by = None;
+        Ok(())
+    }
 }
 
 impl std::str::FromStr for NodeKind {
@@ -33,50 +82,12 @@ impl std::str::FromStr for NodeKind {
     }
 }
 
-// Prefer parsing via `FromStr`/`parse()`; the older `TryFrom<&String>` was
-// redundant and less ergonomic.
-
 impl fmt::Display for NodeKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             NodeKind::ClientNode => write!(f, "0"),
             NodeKind::EprNode => write!(f, "1"),
         }
-    }
-}
-
-impl Node {
-    pub fn new(
-        conn: &mut PgConnection,
-        name: String,
-        node_type: String,
-        detector_id: i32,
-    ) -> Result<Node, NodeError> {
-        create_node(conn, &name, &node_type, detector_id)
-    }
-
-    pub fn try_acquire(&mut self, process_id: i32) -> bool {
-        match self.locked_by {
-            None => {
-                self.locked_by = Some(process_id);
-                true
-            }
-            Some(owner) if owner == process_id => true,
-            _ => false,
-        }
-    }
-
-    pub fn release(&mut self, process_id: i32) -> Result<(), NodeError> {
-        if self.locked_by == None {
-            return Ok(());
-        }
-
-        if self.locked_by != Some(process_id) {
-            return Err(NodeError::NotAuthorized(process_id));
-        }
-
-        self.locked_by = None;
-        Ok(())
     }
 }
 
@@ -87,10 +98,9 @@ impl fmt::Display for Node {
             .parse::<NodeKind>()
             .map(|k| k.to_string())
             .unwrap_or_else(|_| format!("Unknown ({})", self.node_type));
-        let owner = if let Some(owner) = self.locked_by {
-            format!("{}", owner)
-        } else {
-            "No".to_string()
+        let owner = match self.locked_by {
+            Some(owner) => format!("{}", owner),
+            None => "No".to_string(),
         };
         write!(
             f,

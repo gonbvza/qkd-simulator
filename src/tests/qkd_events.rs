@@ -2,10 +2,10 @@ use std::sync::mpsc::{channel, Receiver};
 
 use crate::{
     core::{
-        event_loop::EventLoopHandler, process::Process, settings::QUBIT_AMOUNT,
+        event_loop::EventLoopHandler, pairs::emit_pair, process::Process, settings::QUBIT_AMOUNT,
         state::SimulationState,
     },
-    events::qkd::{emit_pair, receive_pair},
+    events::qkd::receive_pair,
     models::{
         detector::Detector,
         entangled_pair::{NewEntangledPair, Side},
@@ -196,4 +196,3 @@ fn receive_pair_enqueues_same_basis_when_pair_completes() {
     let event = recv_event(&rx);
     assert_same_basis_event(&event, process_id);
 }
-
