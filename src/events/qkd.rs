@@ -33,7 +33,7 @@ pub fn handle_qkd_init(
 
     let [src_node, dst_node] = nodes
         .get_disjoint_mut([&args.src_node_id, &args.dst_node_id])
-        .map(|item| item.ok_or(Error::Node(NodeError::NodeNotFound(1))));
+        .map(|item| item.ok_or(Error::Node(NodeError::NodeNotFound(0))));
 
     let src_node = src_node?;
     let dst_node = dst_node?;
@@ -51,7 +51,6 @@ pub fn handle_qkd_init(
 
     // Remove pair array and change pair_hm name
     for qubit_nr in 1..QUBIT_AMOUNT {
-        println!("Sending pair {}", qubit_nr);
         let pair_key: PairKey = PairKey {
             qubit_nr,
             process_id,

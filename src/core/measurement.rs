@@ -120,7 +120,7 @@ pub fn second_measurement(
     }
 
     // Check if all pairs have been accepted
-    if process.accepted_pairs <= QUBIT_AMOUNT - 100 {
+    if process.accepted_pairs <= QUBIT_AMOUNT - 2 {
         return Ok(());
     }
 
@@ -137,6 +137,5 @@ pub fn second_measurement(
         EventPayload::SameBasis(payload),
     ))?;
 
-    println!("Finished qkd, starting classical sifting");
     Ok(())
 }

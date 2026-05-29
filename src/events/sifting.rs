@@ -1,7 +1,7 @@
 use crate::{
-    core::{event_loop::EventLoopHandler, state::SimulationState},
-    error::{Error, PairError},
-    models::event_types::EventPayload,
+    core::{event_loop::EventLoopHandler, sifting::perform_chsh, state::SimulationState},
+    error::Error,
+    models::{basis::Basis, entangled_pair::AcceptedPair, event_types::EventPayload},
 };
 
 pub fn same_basis(
@@ -15,26 +15,27 @@ pub fn same_basis(
     };
 
     let acc_pairs = state.get_accepted_measurements(args.process_id);
-    let mut same_basis_num = 0;
+    let mut same_basis: Vec<AcceptedPair> = Vec::new();
+    let mut diff_basis: Vec<AcceptedPair> = Vec::new();
 
     for pair in acc_pairs.clone() {
-        let Some(src_measurement) = pair.src_measurement else {
-            return Err(Error::Pair(PairError::NotMeasured()));
-        };
-        let Some(dst_measurement) = pair.dst_measurement else {
-            return Err(Error::Pair(PairError::NotMeasured()));
-        };
-
-        if src_measurement.basis == dst_measurement.basis {
-            same_basis_num += 1;
-            println!(
-                "Src: {}, Dst: {}",
-                src_measurement.value, dst_measurement.value
-            );
+        let accepted = pair.map_accepted()?;
+        if accepted.src_measurement.basis == accepted.dst_measurement.basis {
+            same_basis.push(accepted);
+            continue;
         }
+
+        // Do not use basis of 45 for chsh
+        if accepted.src_measurement.basis == Basis::Deg45
+            || accepted.dst_measurement.basis == Basis::Deg45
+        {
+            continue;
+        }
+
+        diff_basis.push(accepted);
     }
 
-    println!("Number of acepted pairs {}", acc_pairs.len());
-    println!("Number of acepted with same basis were {}", same_basis_num);
+    // Calculate CHSH
+    perform_chsh(diff_basis, args.process_id)?;
     Ok(())
 }

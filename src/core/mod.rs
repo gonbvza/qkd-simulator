@@ -7,4 +7,5 @@ pub mod pairs;
 pub mod process;
 pub mod registry;
 pub mod settings;
+pub mod sifting;
 pub mod state;

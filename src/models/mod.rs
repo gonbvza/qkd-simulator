@@ -1,4 +1,5 @@
 pub mod basis;
+pub mod chsh;
 pub mod detector;
 pub mod entangled_pair;
 pub mod event;

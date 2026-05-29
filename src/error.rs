@@ -2,7 +2,7 @@ use std::sync::mpsc::SendError;
 
 use thiserror::Error;
 
-use crate::models::{event::Event, event_types::EventName};
+use crate::models::{basis::Basis, event::Event, event_types::EventName};
 use derivative::Derivative;
 
 // graph errors
@@ -125,6 +125,15 @@ pub enum MeasurementError {
     Database(#[from] diesel::result::Error),
 }
 
+// sifting errors
+#[derive(Error, Debug, PartialEq)]
+pub enum SiftingError {
+    #[error("Mallory was detected with CHSH {0} in process {1}")]
+    MalloryDetected(f32, i32),
+    #[error("Unknown combination of pairs {0} and {1}")]
+    NotKnownCombination(Basis, Basis),
+}
+
 // TODO: Change this to macro
 pub fn map_db_error(node_id: String, e: diesel::result::Error) -> NodeError {
     match e {
@@ -165,6 +174,9 @@ pub enum Error {
     //Measurement error
     #[error("{0}")]
     Measurement(#[from] MeasurementError),
+    //Measurement error
+    #[error("{0}")]
+    Sifting(#[from] SiftingError),
 
     // Event loop error
     #[error("Function not found: {0:?}")]

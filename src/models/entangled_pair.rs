@@ -1,3 +1,5 @@
+use derive_new::new;
+
 use crate::{error::PairError, models::measurement::Measurement};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
@@ -19,6 +21,19 @@ pub struct NewEntangledPair {
     pub process_id: i32,
     pub qubit_nr: i32,
     pub accepted: bool,
+}
+
+/// Instance used to represent an accepted pair
+///
+/// Made to unwrap from Option<Measurement>
+#[derive(Debug, Clone, new)]
+pub struct AcceptedPair {
+    pub src_id: i32,
+    pub dst_id: i32,
+    pub src_measurement: Measurement,
+    pub dst_measurement: Measurement,
+    pub process_id: i32,
+    pub qubit_nr: i32,
 }
 
 impl NewEntangledPair {
@@ -65,5 +80,32 @@ impl NewEntangledPair {
             Side::Source => self.dst_measurement.ok_or(PairError::NotMeasured()),
             Side::Destination => self.src_measurement.ok_or(PairError::NotMeasured()),
         }
+    }
+
+    /// Function to obtain the accepted pair
+    pub fn map_accepted(&self) -> Result<AcceptedPair, PairError> {
+        let Some(src_measurement) = self.src_measurement else {
+            return Err(PairError::NotMeasured());
+        };
+        let Some(dst_measurement) = self.dst_measurement else {
+            return Err(PairError::NotMeasured());
+        };
+
+        Ok(AcceptedPair::new(
+            self.src_id,
+            self.dst_id,
+            src_measurement,
+            dst_measurement,
+            self.process_id,
+            self.qubit_nr,
+        ))
+    }
+}
+
+impl AcceptedPair {
+    /// Function to map measurement values of 0 to -1 for CHSH
+    pub fn map_values(&mut self) {
+        self.src_measurement.map_value();
+        self.dst_measurement.map_value();
     }
 }

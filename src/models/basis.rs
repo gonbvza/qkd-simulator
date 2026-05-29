@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::models::entangled_pair::Side;
 use diesel::{
     deserialize::{self, FromSql, FromSqlRow},
@@ -16,11 +18,11 @@ use diesel::{
 #[derive(Debug, Clone, Copy, PartialEq, AsExpression, FromSqlRow)]
 #[diesel(sql_type = Integer)]
 pub enum Basis {
-    Deg0 = 1,
-    DegNeg22_5 = 2,
-    Deg22_5 = 3,
+    Deg0 = 1,       // A0
+    DegNeg22_5 = 2, // B0
+    Deg22_5 = 3,    // B1
     Deg45 = 4,
-    Deg90 = 5,
+    Deg90 = 5, // A1
 }
 
 /// Bases available to the source node.
@@ -111,6 +113,18 @@ impl ToSql<Integer, Pg> for Basis {
             Basis::Deg22_5 => <i32 as ToSql<Integer, Pg>>::to_sql(&3, out),
             Basis::Deg45 => <i32 as ToSql<Integer, Pg>>::to_sql(&4, out),
             Basis::Deg90 => <i32 as ToSql<Integer, Pg>>::to_sql(&5, out),
+        }
+    }
+}
+
+impl fmt::Display for Basis {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Basis::Deg0 => write!(f, "Deg0"),
+            Basis::DegNeg22_5 => write!(f, "DegNeg22_5"),
+            Basis::Deg22_5 => write!(f, "Deg22_5"),
+            Basis::Deg45 => write!(f, "Deg45"),
+            Basis::Deg90 => write!(f, "Deg90"),
         }
     }
 }

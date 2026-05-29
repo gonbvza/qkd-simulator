@@ -42,4 +42,11 @@ impl Measurement {
     pub fn set_accepted(&mut self) {
         self.accepted = true;
     }
+
+    /// Function to map measurement values of 0 to -1 for CHSH
+    pub fn map_value(&mut self) {
+        if self.value == 0 {
+            self.value = -1
+        }
+    }
 }
