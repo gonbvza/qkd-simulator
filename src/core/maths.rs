@@ -30,7 +30,6 @@ pub fn calculate_basis_difference(basis_a: Basis, basis_b: Basis) -> f64 {
 /// Qubits measured under the same basis and high fidelity will have a
 /// high probability of returning same value.
 pub fn calculate_entanglement_prob(fidelity: f32, basis_diff: f64) -> f64 {
-    let depolarizing_noise = (1_f64 - fidelity as f64) * 0.5;
-    let angle = basis_diff.to_radians().cos();
-    (fidelity as f64 * angle.powi(2)) + depolarizing_noise
+    let angle = basis_diff.to_radians();
+    (angle / 2_f64).cos().powi(2)
 }

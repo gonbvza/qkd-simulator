@@ -59,10 +59,10 @@ impl CHSH {
     /// Function to push the pair into its corresponding group
     pub fn push_to_group(&mut self, pair: AcceptedPair) -> Result<(), SiftingError> {
         match (pair.src_measurement.basis, pair.dst_measurement.basis) {
-            (Basis::Deg0, Basis::DegNeg22_5) => Ok(self.a0b0.push_pair(pair)),
-            (Basis::Deg0, Basis::Deg22_5) => Ok(self.a0b1.push_pair(pair)),
-            (Basis::Deg90, Basis::DegNeg22_5) => Ok(self.a1b0.push_pair(pair)),
-            (Basis::Deg90, Basis::Deg22_5) => Ok(self.a1b1.push_pair(pair)),
+            (Basis::Deg0, Basis::Deg22_5) => Ok(self.a0b0.push_pair(pair)),
+            (Basis::Deg0, Basis::DegNeg22_5) => Ok(self.a0b1.push_pair(pair)),
+            (Basis::Deg45, Basis::Deg22_5) => Ok(self.a1b0.push_pair(pair)),
+            (Basis::Deg45, Basis::DegNeg22_5) => Ok(self.a1b1.push_pair(pair)),
             (_, _) => Err(SiftingError::NotKnownCombination(
                 pair.src_measurement.basis,
                 pair.dst_measurement.basis,

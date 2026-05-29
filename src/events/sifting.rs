@@ -26,8 +26,8 @@ pub fn same_basis(
         }
 
         // Do not use basis of 45 for chsh
-        if accepted.src_measurement.basis == Basis::Deg45
-            || accepted.dst_measurement.basis == Basis::Deg45
+        if accepted.src_measurement.basis == Basis::Deg90
+            || accepted.dst_measurement.basis == Basis::Deg90
         {
             continue;
         }

@@ -57,7 +57,7 @@ pub fn first_measurement(
     node: Node,
 ) -> Result<(), PairError> {
     let basis: Basis = Basis::get_random_basis(side);
-    let value = rand::random_range(0..2);
+    let value = if rand::random::<bool>() { 0 } else { 1 };
     let measurement = Measurement::new(
         node.id,
         entangled_pair.qubit_nr,
@@ -91,13 +91,15 @@ pub fn second_measurement(
 
     let basis: Basis = Basis::get_random_basis(side);
     let basis_diff = calculate_basis_difference(basis, first_measurement.basis);
-    let prob = calculate_entanglement_prob(fidelity, basis_diff);
+    let prob_same = calculate_entanglement_prob(fidelity, basis_diff);
 
     // Based on the probability calculate measurement
-    let rand_num = rand::random_range(0..11);
-    let value: i16 = if (rand_num as f64) < (prob * 10_f64) {
+    let r: f64 = rand::random::<f64>();
+    let value = if r < prob_same {
+        // correlated outcomes
         first_measurement.value
     } else {
+        // anti-correlated outcomes
         1 - first_measurement.value
     };
 

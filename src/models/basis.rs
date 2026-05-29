@@ -21,15 +21,15 @@ pub enum Basis {
     Deg0 = 1,       // A0
     DegNeg22_5 = 2, // B0
     Deg22_5 = 3,    // B1
-    Deg45 = 4,
-    Deg90 = 5, // A1
+    Deg45 = 4,      // A1
+    Deg90 = 5,
 }
 
 /// Bases available to the source node.
 pub const SRC_BASES: [Basis; 3] = [Basis::Deg0, Basis::Deg45, Basis::Deg90];
 
 /// Bases available to the destination node.
-pub const DST_BASES: [Basis; 3] = [Basis::DegNeg22_5, Basis::Deg22_5, Basis::Deg45];
+pub const DST_BASES: [Basis; 3] = [Basis::DegNeg22_5, Basis::Deg22_5, Basis::Deg90];
 
 impl Basis {
     /// Returns the angle of this basis in degrees.
