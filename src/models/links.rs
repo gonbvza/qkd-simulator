@@ -1,8 +1,16 @@
 use std::fmt;
 
-use crate::{core::settings::LIGHT_SPEED_FIBER, error::LinkError, establish_connection, schema};
-use diesel::{dsl, insert_into, prelude::*, select};
+use diesel::{dsl, prelude::*, select};
 
+use crate::{
+    core::settings::LIGHT_SPEED_FIBER, database::link::create_link, error::LinkError,
+    establish_connection, schema,
+};
+
+/// Instance to simulate physical link between two nodes in the network.
+///
+/// Stores optical properties (attenuation, error rate) and tracks
+/// when the link becomes available for the next transmission.
 #[derive(Queryable, Selectable, Debug, Clone)]
 #[diesel(table_name = crate::schema::links)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -17,44 +25,32 @@ pub struct Link {
 }
 
 impl Link {
+    /// Creates a new link in the database between two existing nodes.
+    ///
+    /// Returns [`LinkError::NonExistingNodes`] if either node does not exist.
     pub fn new(
+        conn: &mut PgConnection,
         length: i64,
         attenuation: f32,
         error_rate: f32,
         src_id: i32,
         dst_id: i32,
     ) -> Result<Link, LinkError> {
-        // TODO: FIX SRP!!!
-        let mut conn = establish_connection();
-
         let node_a_exists = select(dsl::exists(
             schema::nodes::table.filter(schema::nodes::id.eq(src_id)),
         ))
-        .get_result::<bool>(&mut conn)?;
-
+        .get_result::<bool>(conn)?;
         let node_b_exists = select(dsl::exists(
             schema::nodes::table.filter(schema::nodes::id.eq(dst_id)),
         ))
-        .get_result::<bool>(&mut conn)?;
-
+        .get_result::<bool>(conn)?;
         if !node_a_exists || !node_b_exists {
             return Err(LinkError::NonExistingNodes(src_id, dst_id));
         }
-
-        let link = insert_into(schema::links::table)
-            .values((
-                schema::links::length.eq(length),
-                schema::links::attenuation.eq(attenuation),
-                schema::links::error_rate.eq(error_rate),
-                schema::links::src_id.eq(src_id),
-                schema::links::dst_id.eq(dst_id),
-                schema::links::next_available_time.eq(0),
-            ))
-            .get_result(&mut conn)?;
-
-        Ok(link)
+        create_link(conn, length, attenuation, error_rate, src_id, dst_id)
     }
 
+    /// Fetches the link between two nodes from the database.
     pub fn get_link(node_a_id: i32, node_b_id: i32) -> Result<Link, LinkError> {
         let mut conn = establish_connection();
         let link: Link = schema::links::table
@@ -67,9 +63,10 @@ impl Link {
         Ok(link)
     }
 
+    /// Returns the one-way propagation delay of this link in microseconds.
     pub fn propagation_delay_us(&self) -> i64 {
-        let seconds = self.length as f64 / LIGHT_SPEED_FIBER.clone();
-        (seconds * 1e6) as i64 // Convert from m/s to m/us
+        let seconds = self.length as f64 / LIGHT_SPEED_FIBER;
+        (seconds * 1e6) as i64
     }
 }
 

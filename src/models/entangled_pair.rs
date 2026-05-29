@@ -1,70 +1,111 @@
-use std::sync::Arc;
+use derive_new::new;
 
-use diesel::{prelude::Queryable, Selectable};
+use crate::{error::PairError, models::measurement::Measurement};
 
-use crate::{
-    core::{event_loop::EventLoop, settings::TIMEOUT},
-    database::entangled_pair::{
-        change_dst_measurement, change_src_measurement, create_entangled_pair,
-    },
-    error::PairError,
-    establish_connection,
-    models::qubit_ref::QubitRefSide,
-};
+#[derive(PartialEq, Debug, Clone, Copy)]
+pub enum Side {
+    Source,
+    Destination,
+}
 
-#[derive(Queryable, Selectable, Debug, Clone)]
-#[diesel(table_name = crate::schema::entangled_pair)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct EntangledPair {
-    pub id: i32,
+/// Instance that simulates a pair of entangled qubits
+#[derive(Debug, Clone)]
+pub struct NewEntangledPair {
     pub src_id: i32,
     pub dst_id: i32,
     pub fidelity: f32,
     pub created_at: i64,
-    pub src_measured: Option<i16>,
-    pub dst_measured: Option<i16>,
+    pub src_measurement: Option<Measurement>,
+    pub dst_measurement: Option<Measurement>,
     pub timeout_timestamp: i64,
+    pub process_id: i32,
+    pub qubit_nr: i32,
+    pub accepted: bool,
+}
+
+/// Instance used to represent an accepted pair
+///
+/// Made to unwrap from Option<Measurement>
+#[derive(Debug, Clone, new)]
+pub struct AcceptedPair {
+    pub src_id: i32,
+    pub dst_id: i32,
+    pub src_measurement: Measurement,
+    pub dst_measurement: Measurement,
     pub process_id: i32,
     pub qubit_nr: i32,
 }
 
-impl EntangledPair {
+impl NewEntangledPair {
+    /// Creates the pair with some default values
     pub fn new(
         src_id: i32,
         dst_id: i32,
         process_id: i32,
         qubit_nr: i32,
-    ) -> Result<EntangledPair, PairError> {
-        let mut conn = establish_connection();
-        let current_time = {
-            let loop_pair = Arc::clone(&*EventLoop::instance());
-            let (event_loop, _) = &*loop_pair;
-
-            let mut guard = event_loop.lock().unwrap();
-            guard.get_current_time()
-        };
-        create_entangled_pair(
-            &mut conn,
+        _save: bool,
+        current_time: i64,
+    ) -> Result<NewEntangledPair, PairError> {
+        let pair = NewEntangledPair {
             src_id,
             dst_id,
-            current_time,
-            current_time + TIMEOUT.clone(),
+            fidelity: 1_f32,
+            created_at: current_time,
+            src_measurement: None,
+            dst_measurement: None,
+            timeout_timestamp: 0,
             process_id,
             qubit_nr,
-        )
+            accepted: false,
+        };
+
+        Ok(pair)
     }
 
-    pub fn set_measurement(&mut self, side: QubitRefSide, value: i16) {
-        let mut conn = establish_connection();
+    /// Sets the measurement to the corresponding side
+    pub fn set_measurement(&mut self, side: Side, measurement: Measurement) {
         match side {
-            QubitRefSide::Source => {
-                self.src_measured = Some(value);
-                change_src_measurement(&mut conn, self.id, value);
+            Side::Source => {
+                self.src_measurement = Some(measurement);
             }
-            QubitRefSide::Destination => {
-                self.dst_measured = Some(value);
-                change_dst_measurement(&mut conn, self.id, value);
+            Side::Destination => {
+                self.dst_measurement = Some(measurement);
             }
         }
+    }
+
+    /// Gets the opposite measurement based on the second measurement side
+    pub fn get_measurement(&mut self, side: Side) -> Result<Measurement, PairError> {
+        match side {
+            Side::Source => self.dst_measurement.ok_or(PairError::NotMeasured()),
+            Side::Destination => self.src_measurement.ok_or(PairError::NotMeasured()),
+        }
+    }
+
+    /// Function to obtain the accepted pair
+    pub fn map_accepted(&self) -> Result<AcceptedPair, PairError> {
+        let Some(src_measurement) = self.src_measurement else {
+            return Err(PairError::NotMeasured());
+        };
+        let Some(dst_measurement) = self.dst_measurement else {
+            return Err(PairError::NotMeasured());
+        };
+
+        Ok(AcceptedPair::new(
+            self.src_id,
+            self.dst_id,
+            src_measurement,
+            dst_measurement,
+            self.process_id,
+            self.qubit_nr,
+        ))
+    }
+}
+
+impl AcceptedPair {
+    /// Function to map measurement values of 0 to -1 for CHSH
+    pub fn map_values(&mut self) {
+        self.src_measurement.map_value();
+        self.dst_measurement.map_value();
     }
 }

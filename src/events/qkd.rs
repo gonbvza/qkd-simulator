@@ -1,177 +1,118 @@
-use std::{collections::HashMap, sync::Arc};
-
 use crate::{
     core::{
-        event_loop::EventLoop, measurement::measure_qubit, process::Process, settings::QUBIT_AMOUNT,
+        event_loop::EventLoopHandler,
+        measurement::measure_qubit,
+        pairs::emit_pair,
+        process::Process,
+        settings::QUBIT_AMOUNT,
+        state::{PairKey, SimulationState},
     },
-    database::detector::get_detector_by_id,
     error::{DetectorError, Error, NodeError, SimError},
-    establish_connection, get_link_arg, get_qubit_ref_arg,
-    models::{
-        args::EventArgs,
-        detector::Detector,
-        entangled_pair::EntangledPair,
-        links::Link,
-        qubit_ref::{QubitRef, QubitRefSide},
-    },
-    nodes::node::Node,
-    utility::get_node_arg,
+    models::{detector::Detector, event_types::EventPayload},
 };
 
-// Initializes a QKD session.
-//
-// Ensures the source, destination, and EPR nodes are free before locking them for the session.
-// If any node is busy, the session is aborted. Once locked, the EPR node begins emitting
-// entangled pairs for key generation via `emit_next_pair()`.
-//
-// # Arguments
-// * `src_node` - Source node initiating the session
-// * `dst_node` - Destination node receiving the session
-// * `epr_node` - EPR node used for entanglement generation
-// * `src_epr_link` - Link between source and EPR node
-// * `dst_epr_link` - Link between destination and EPR node
-pub fn handle_qkd_init(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
-    let mut src_node: Node = get_node_arg(args, "src_node")?;
-    let mut dst_node: Node = get_node_arg(args, "dst_node")?;
-    let epr_node: Node = get_node_arg(args, "epr_node")?;
-    let src_epr_link = get_link_arg!(args, "src_epr_link");
-    let dst_epr_link = get_link_arg!(args, "dst_epr_link");
+/// Initialises a QKD session between two nodes.
+///
+/// Locks the source and destination nodes for the session, then emits
+/// all entangled pairs via the EPR link. Returns [`NodeError::NodeInUse`]
+/// if either node is already occupied.
+pub fn handle_qkd_init(
+    payload: EventPayload,
+    current_time: i64,
+    state: &mut SimulationState,
+    handle: &EventLoopHandler,
+) -> Result<(), Error> {
+    let EventPayload::HandleQkdInit(args) = payload else {
+        return Err(Error::WrongArgs());
+    };
 
-    let process = Process::new()?;
+    let process = Process::new(current_time);
+    let process_id = state.push_process(process);
 
-    if !src_node.try_acquire(process.id) || !dst_node.try_acquire(process.id) {
+    let (nodes, links, pairs) = state.split_nodes_links_pairs_mut();
+
+    let [src_node, dst_node] = nodes
+        .get_disjoint_mut([&args.src_node_id, &args.dst_node_id])
+        .map(|item| item.ok_or(Error::Node(NodeError::NodeNotFound(0))));
+
+    let src_node = src_node?;
+    let dst_node = dst_node?;
+
+    let src_epr_link = links
+        .get(&args.src_epr_link_id)
+        .ok_or_else(|| Error::Sim(SimError::MissingArgument("dst_node_id".to_string())))?;
+    let dst_epr_link = links
+        .get(&args.dst_epr_link_id)
+        .ok_or_else(|| Error::Sim(SimError::MissingArgument("dst_node_id".to_string())))?;
+
+    if !src_node.try_acquire(process_id) || !dst_node.try_acquire(process_id) {
         return Err(Error::Node(NodeError::NodeInUse()));
     }
 
+    // Remove pair array and change pair_hm name
     for qubit_nr in 1..QUBIT_AMOUNT {
-        println!("Sending pair {}", qubit_nr);
-        emit_pair(
-            src_node.to_owned(),
-            dst_node.to_owned(),
-            epr_node.to_owned(),
+        let pair_key: PairKey = PairKey {
+            qubit_nr,
+            process_id,
+        };
+        let pair = emit_pair(
+            src_node.id,
+            dst_node.id,
             src_epr_link.to_owned(),
             dst_epr_link.to_owned(),
-            qubit_nr,
-            process.id,
+            pair_key,
+            current_time,
+            handle,
         )?;
+        pairs.insert((pair.process_id, pair.qubit_nr), pair);
     }
     Ok(())
 }
 
-/// Creates one entangled pair and schedules its transmission to both client nodes.
+/// Simulates a qubit arriving at a detector.
 ///
-/// This function is the core pump of the QKD pipeline. It is first called by
-/// [`handle_qkd_init`] and then re-invoked after each successful pair measurement
-/// or timeout resolution, continuing until 1024 accepted pairs have been collected.
-///
-/// It performs three scheduling operations:
-///
-/// **1. EntangledPair creation:** Instantiates a new [`EntangledPair`] with the
-/// given destination nodes and an initial fidelity. The pair is stored in the
-/// repository and assigned a unique `pair_id`.
-///
-/// **2. PhotonTransmit events:** Schedule two qubit receival by creating qubit ref
-/// and sending one to each detector. Each event timestamp
-/// is calculated from the link's `next_available_time` and propagation delay:
-/// `t = max(current_time, link.next_available_time) + t_propagation`
-///
-/// **3. Timeout event:** Schedules one [`EventType::MeasurementTimeout`] event for
-/// this pair at:
-/// `t = max(t_send, link.next_available_time) + t_propagation + detector.cooldown_ps
-///      + detector.resolution_ps + SAFETY_MARGIN_PS`
-/// If this event fires before both measurements are recorded, the pair is considered
-/// lost and a new call to [`EprNode::emit_next_pair`] is triggered automatically.
-///
-/// # Arguments
-/// * `sender_id`   - The [`NodeId`] of the client node receiving the left qubit
-/// * `receiver_id` - The [`NodeId`] of the client node receiving the right qubit
-pub fn emit_pair(
-    src_node: Node,
-    dst_node: Node,
-    epr_node: Node,
-    src_epr_link: Link,
-    dst_epr_link: Link,
-    qubit_nr: i32,
-    procces_id: i32,
+/// Checks whether the detector is still cooling down and skips the measurement
+/// if so. Otherwise records the detection time and delegates to [`measure_qubit`].
+pub fn receive_pair(
+    payload: EventPayload,
+    current_time: i64,
+    state: &mut SimulationState,
+    handle: &EventLoopHandler,
 ) -> Result<(), Error> {
-    // Create entangled pair
-    let entangled_pair = EntangledPair::new(src_node.id, src_node.id, procces_id, qubit_nr)?;
-    let current_time = {
-        let loop_pair = Arc::clone(&*EventLoop::instance());
-        let (event_loop, _) = &*loop_pair;
-
-        let mut guard = event_loop.lock().unwrap();
-        guard.get_current_time()
+    let (detectors, nodes, links) = state.split_detectors_nodes_links_mut();
+    let EventPayload::ReceivePair(args) = payload else {
+        return Err(Error::WrongArgs());
     };
-    // Create left qubit ref and event args
-    let src_qubit_ref: QubitRef = QubitRef::new(entangled_pair.id, QubitRefSide::Source);
-    let src_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("node"), EventArgs::Node(src_node.id)),
-        (
-            String::from("qubit_ref"),
-            EventArgs::QubitRef(src_qubit_ref),
-        ),
-        (String::from("link"), EventArgs::Link(src_epr_link.clone())),
-    ]);
-    // Create right qubit ref and event args
-    let dst_qubit_ref: QubitRef = QubitRef::new(entangled_pair.id, QubitRefSide::Destination);
-    let dst_detector_args: HashMap<String, EventArgs> = HashMap::from([
-        (String::from("node"), EventArgs::Node(dst_node.id)),
-        (
-            String::from("qubit_ref"),
-            EventArgs::QubitRef(dst_qubit_ref),
-        ),
-        (String::from("link"), EventArgs::Link(dst_epr_link.clone())),
-    ]);
-    EventLoop::new_and_push(
-        "receive_pair_event".to_string(),
-        "receive_pair".to_string(),
-        src_detector_args,
-        current_time + (src_epr_link.propagation_delay_us() * qubit_nr as i64),
-    );
-    EventLoop::new_and_push(
-        "receive_pair_event".to_string(),
-        "receive_pair".to_string(),
-        dst_detector_args,
-        current_time + (dst_epr_link.propagation_delay_us() * qubit_nr as i64),
-    );
-    Ok(())
-}
+    let (node_copy, link_length) = {
+        let node = nodes
+            .get_mut(&args.node_id)
+            .ok_or(NodeError::NodeNotFound(args.node_id.to_owned()))?;
+        let link = links
+            .get(&args.link_id)
+            .ok_or(NodeError::NodeNotFound(args.node_id.to_owned()))?;
 
-/// Simulates the receival of a qubit ref by a detector.
-///
-/// It will fist check if the current node is in use, if so, it will check
-/// the process hash against the current on going proces hash
-///
-/// If node is free, it sets node usage. Then it continues with the measurement
-///
-/// # Arguments
-/// * `qubit_ref`   - The [`qubit_ref`] of the entangled pair
-/// * `node`        - The node that receives the qubit ref
-/// * `link`        - The link through which the qubit was received
-pub fn receive_pair(args: &HashMap<String, EventArgs>) -> Result<(), Error> {
-    let mut conn = establish_connection();
-    let node: Node = get_node_arg(args, "node")?;
-    let link: &Link = get_link_arg!(args, "link");
-    let qubit_ref: &QubitRef = get_qubit_ref_arg!(args, "qubit_ref");
-    let mut detector: Detector = get_detector_by_id(&mut conn, node.detector_id)?;
-    let current_time = {
-        let loop_pair = Arc::clone(&*EventLoop::instance());
-        let (event_loop, _) = &*loop_pair;
+        let detector: &mut Detector = detectors
+            .get_mut(&node.detector_id)
+            .ok_or(DetectorError::NotFound(node.detector_id))?;
 
-        let mut guard = event_loop.lock().unwrap();
-        guard.get_current_time()
+        if detector.is_cooling(current_time) {
+            println!("Cooling down, skipped");
+            return Err(DetectorError::CoolingDown(detector.id).into());
+        }
+
+        detector.set_detection_time(current_time)?;
+        (node.to_owned(), link.length)
     };
-    if detector.is_cooling(current_time) {
-        println!("Cooling down, skipped");
-        return Err(DetectorError::CoolingDown(detector.id).into());
-    }
 
-    detector.set_detection_time(current_time)?;
-
-    // TODO: Think about the to_owned, maybe is good to change from macro to function and own the
-    // instance
-    measure_qubit(qubit_ref.to_owned(), node, link.length)?;
+    measure_qubit(
+        args.process_id,
+        args.qubit_nr,
+        args.side,
+        node_copy,
+        link_length,
+        state,
+        handle,
+    )?;
 
     Ok(())
 }

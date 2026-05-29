@@ -1,7 +1,8 @@
-use crate::models::event::Event;
+use crate::models::event::ScheduledEvent;
 
+/// Implementation of a binary heap for event queueing
 pub struct BinHeap {
-    pub arr: Vec<Event>,
+    pub arr: Vec<ScheduledEvent>,
 }
 
 impl BinHeap {
@@ -9,24 +10,23 @@ impl BinHeap {
         BinHeap { arr: Vec::new() }
     }
 
+    /// Get left child
     fn left(i: usize) -> usize {
         2 * i + 1
     }
 
+    /// Get right child
     fn right(i: usize) -> usize {
         2 * i + 2
     }
 
+    /// Get the parent of the node
     fn parent(i: usize) -> usize {
         (i - 1) / 2
     }
 
-    // Peek min
-    pub fn get_min(&self) -> Option<Event> {
-        self.arr.first().cloned()
-    }
-
-    pub fn insert(&mut self, event: Event) {
+    /// Insert item on the heap
+    pub fn insert(&mut self, event: ScheduledEvent) {
         // Push at end
         self.arr.push(event);
 
@@ -45,25 +45,8 @@ impl BinHeap {
         }
     }
 
-    // Decrease the key (time) at index i
-    pub fn decrease_key(&mut self, mut i: usize, new_event: Event) {
-        self.arr[i] = new_event;
-
-        // Bubble up
-        while i > 0 {
-            let p = Self::parent(i);
-
-            if self.arr[i].timestamp < self.arr[p].timestamp {
-                self.arr.swap(i, p);
-                i = p;
-            } else {
-                break;
-            }
-        }
-    }
-
-    // Remove and return minimum element (root)
-    pub fn extract_min(&mut self) -> Option<Event> {
+    /// Remove and return minimum element (root)
+    pub fn extract_min(&mut self) -> Option<ScheduledEvent> {
         if self.arr.is_empty() {
             return None;
         }
@@ -82,17 +65,56 @@ impl BinHeap {
         Some(root)
     }
 
-    // Delete element at index i
-    pub fn delete_key(&mut self, i: usize) {
-        // Create a "minus infinity" event
-        let mut min_event = self.arr[i].clone();
-        min_event.timestamp = i64::MIN;
-
-        self.decrease_key(i, min_event);
-        self.extract_min();
+    /// Returns a reference to the event with the lowest timestamp
+    pub fn get_min(&self) -> Option<&ScheduledEvent> {
+        self.arr.first()
     }
 
-    // Heapify downward from index i
+    /// Update the event at `index` with `new_event` and restore heap order by bubbling up.
+    pub fn decrease_key(&mut self, index: usize, new_event: ScheduledEvent) {
+        if index >= self.arr.len() {
+            return;
+        }
+        self.arr[index] = new_event;
+
+        // Bubble up
+        let mut i = index;
+        while i > 0 {
+            let p = Self::parent(i);
+            if self.arr[i].timestamp < self.arr[p].timestamp {
+                self.arr.swap(i, p);
+                i = p;
+            } else {
+                break;
+            }
+        }
+    }
+
+    /// Delete node from the heap
+    pub fn delete_key(&mut self, index: usize) {
+        if index >= self.arr.len() {
+            return;
+        }
+        let last = self.arr.pop().unwrap();
+        if index < self.arr.len() {
+            self.arr[index] = last;
+            let mut i = index;
+            while i > 0 {
+                let p = Self::parent(i);
+                if self.arr[i].timestamp < self.arr[p].timestamp {
+                    self.arr.swap(i, p);
+                    i = p;
+                } else {
+                    break;
+                }
+            }
+            if i == index {
+                self.min_heapify(index);
+            }
+        }
+    }
+
+    /// Heapify downward from index i
     fn min_heapify(&mut self, i: usize) {
         let n = self.arr.len();
         let l = Self::left(i);

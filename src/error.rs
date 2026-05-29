@@ -1,7 +1,12 @@
+use std::sync::mpsc::SendError;
+
 use thiserror::Error;
 
+use crate::models::{basis::Basis, event::Event, event_types::EventName};
+use derivative::Derivative;
+
 // graph errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum GraphError {
     // Node errors
     #[error("{0}")]
@@ -14,7 +19,7 @@ pub enum GraphError {
 }
 
 // link errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum LinkError {
     #[error("Nodes {0} and {1} do not exist")]
     NonExistingNodes(i32, i32),
@@ -31,7 +36,7 @@ pub enum LinkError {
 }
 
 // link errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum NodeError {
     #[error("Node with id {0} already exists")]
     AlreadyExists(String),
@@ -42,31 +47,42 @@ pub enum NodeError {
     #[error("Not valid node kind: {0}")]
     NotValidKind(String),
     #[error("Error while creating the detector")]
-    DetectorErro(#[from] DetectorError),
+    DetectorError(#[from] DetectorError),
+    #[error("Node {0} not found in hashmap")]
+    NodeNotFound(i32),
+    #[error("Process {0} is not authorized to release node")]
+    NotAuthorized(i32),
 }
 
 // cli errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum CliError {
     #[error("Input by the user was not valid")]
     NotValidInput(String),
     #[error("Command {0} is not valid")]
     NotValidCommand(String),
-    #[error("Not valid integer: {0}")]
-    NoValidInteger(#[from] std::num::ParseIntError),
+    #[error("Invalid integer: {0}")]
+    InvalidInteger(#[from] std::num::ParseIntError),
 }
 
 // simulation errors
-#[derive(Error, Debug)]
+#[derive(Derivative, Error, Debug)]
+#[derivative(PartialEq)]
 pub enum SimError {
     #[error("Input by the user was not valid")]
     NotValidInput(String),
     #[error("Missing arg argument: {0}")]
     MissingArgument(String),
+    #[error("Error in sending event")]
+    ChannelSendError {
+        #[from]
+        #[derivative(PartialEq = "ignore")]
+        source: SendError<Event>,
+    },
 }
 
 // entangled_pair errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum PairError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
@@ -74,29 +90,48 @@ pub enum PairError {
     Measurement(#[from] MeasurementError),
     #[error("Node error: {0}")]
     Node(#[from] NodeError),
+    #[error("Simulation error: {0}")]
+    Sim(#[from] SimError),
+    #[error("Entangled pair {0} not present")]
+    PairNotFound(i32),
+    #[error("Measurement missing")]
+    NotMeasured(),
 }
 
 // process errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum ProcessError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
+    #[error("Process missing")]
+    NotFound(),
 }
 
 // detector errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum DetectorError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
     #[error("Current detector {0} is busy cooling down")]
     CoolingDown(i32),
+    #[error("Detector for node {0} not found")]
+    NotFound(i32),
 }
 
 // measurement errors
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum MeasurementError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
+}
+
+// sifting errors
+#[derive(Error, Debug, PartialEq)]
+pub enum SiftingError {
+    #[error("Mallory was detected with CHSH {0} in process {1}")]
+    MalloryDetected(f32, i32),
+    #[error("Unknown combination of pairs {0} and {1}")]
+    NotKnownCombination(Basis, Basis),
 }
 
 // TODO: Change this to macro
@@ -110,7 +145,7 @@ pub fn map_db_error(node_id: String, e: diesel::result::Error) -> NodeError {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum Error {
     // Link errors
     #[error("{0}")]
@@ -139,8 +174,14 @@ pub enum Error {
     //Measurement error
     #[error("{0}")]
     Measurement(#[from] MeasurementError),
+    //Measurement error
+    #[error("{0}")]
+    Sifting(#[from] SiftingError),
 
     // Event loop error
-    #[error("Function {0} does not exist")]
-    NonExistantFunction(String),
+    #[error("Function not found: {0:?}")]
+    FunctionNotFound(EventName),
+
+    #[error("Wrong argument struct")]
+    WrongArgs(),
 }

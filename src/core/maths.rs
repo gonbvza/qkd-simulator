@@ -3,11 +3,15 @@ use crate::{
     models::basis::Basis,
 };
 
+/// Calculates the new fidelity after distance degradation by a
+/// constant factor.
 pub fn calculate_new_fidelity(fidelity: f32, distance: i64) -> f32 {
     let degradation = 1.0 - (distance as f32 * FIDELITY_DEGRADATION);
     fidelity * degradation
 }
 
+/// Returns the smallest angular difference in degrees between two bases,
+/// normalised to the range [0, 180].
 pub fn calculate_basis_difference(basis_a: Basis, basis_b: Basis) -> f64 {
     let difference: f64 = if basis_a.angle_deg() > basis_b.angle_deg() {
         basis_a.angle_deg() - basis_b.angle_deg()
@@ -20,9 +24,13 @@ pub fn calculate_basis_difference(basis_a: Basis, basis_b: Basis) -> f64 {
     difference
 }
 
+/// Calculates the entanglement probability based on degraded fidelity
+/// and basis difference.
+///
+/// Qubits measured under the same basis and high fidelity will have a
+/// high probability of returning same value.
 pub fn calculate_entanglement_prob(fidelity: f32, basis_diff: f64) -> f64 {
-    let depolarizing_noise = (1 as f64 - fidelity as f64) * 0.5;
-    let angle = basis_diff.cos();
-    let prob = (fidelity as f64 * angle.powi(2)) + depolarizing_noise;
-    return prob;
+    let depolarizing_noise = (1_f64 - fidelity as f64) * 0.5;
+    let angle = basis_diff.to_radians().cos();
+    (fidelity as f64 * angle.powi(2)) + depolarizing_noise
 }

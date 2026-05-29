@@ -1,95 +1,141 @@
+use std::collections::HashMap;
+
 use crate::{
     core::{
+        event_loop::EventLoopHandler,
         maths::{calculate_basis_difference, calculate_entanglement_prob, calculate_new_fidelity},
-        settings::KEY_LENGTH,
-    },
-    database::{
-        entangled_pair::get_pair_by_id,
-        measurement::{get_accepted_measurements, get_measurement_for_pair},
-        nodes::get_node_by_id,
+        process::Process,
+        settings::QUBIT_AMOUNT,
+        state::SimulationState,
     },
     error::PairError,
-    establish_connection,
-    models::{basis::Basis, measurement::Measurement, qubit_ref::QubitRef},
-    nodes::node::Node,
-    utility::{form_word, is_first},
+    models::node::Node,
+    models::{
+        basis::Basis,
+        entangled_pair::{NewEntangledPair, Side},
+        event::Event,
+        event_types::{EventName, EventPayload, SameBasisPayload},
+        measurement::Measurement,
+    },
+    utility::is_first,
 };
 
-pub fn measure_qubit(qubit_ref: QubitRef, node: Node, distance: i64) -> Result<(), PairError> {
-    match is_first(qubit_ref.entangled_pair_id, qubit_ref.side)? {
-        true => first_measurement(qubit_ref, node)?,
-        false => second_measurement(qubit_ref, node, distance)?,
+/// Entry point for the measurement process.
+///
+/// Checks if this qubit is the first or second measurement
+/// depending on the order logic will differ
+pub fn measure_qubit(
+    process_id: i32,
+    qubit_nr: i32,
+    side: Side,
+    node: Node,
+    distance: i64,
+    state: &mut SimulationState,
+    handle: &EventLoopHandler,
+) -> Result<(), PairError> {
+    let (pairs, processes, nodes) = state.split_pairs_processes_nodes_mut();
+    let entangled_pair = pairs
+        .get_mut(&(process_id, qubit_nr))
+        .ok_or(PairError::PairNotFound(qubit_nr))?;
+    let process = processes
+        .get_mut(&process_id)
+        .ok_or(PairError::NotMeasured())?;
+    match is_first(entangled_pair, side)? {
+        true => first_measurement(entangled_pair, side, node)?,
+        false => second_measurement(entangled_pair, side, node, distance, process, nodes, handle)?,
     };
     Ok(())
 }
 
-pub fn first_measurement(qubit_ref: QubitRef, node: Node) -> Result<(), PairError> {
-    let mut conn = establish_connection();
-    let mut entangled_pair = get_pair_by_id(&mut conn, qubit_ref.entangled_pair_id)?;
-    // 1. Chose random basis
-    let basis: Basis = Basis::get_random_basis(qubit_ref.side);
-    // 2. Calculate random number between {0,1}
+/// Logic for the first measurement.
+///
+/// The first measurement does not depend on anything
+/// so its free to chose the basis and value it measures
+pub fn first_measurement(
+    entangled_pair: &mut NewEntangledPair,
+    side: Side,
+    node: Node,
+) -> Result<(), PairError> {
+    let basis: Basis = Basis::get_random_basis(side);
     let value = rand::random_range(0..2);
-    let _ = Measurement::new(
+    let measurement = Measurement::new(
         node.id,
-        qubit_ref.entangled_pair_id,
+        entangled_pair.qubit_nr,
         basis,
         value,
         entangled_pair.process_id,
-    )?;
-    // 3. Store measurement in the entangled pair instance
-    entangled_pair.set_measurement(qubit_ref.side, value);
+    );
+    entangled_pair.set_measurement(side, measurement);
     Ok(())
 }
 
+/// Logic for the second measurement.
+///
+/// Calculates the measured value based on entanglement probability,
+/// which depends on the degraded fidelity and basis difference with
+/// the first measurement. Once all pairs are accepted, releases both
+/// nodes and triggers the classical sifting phase.
 pub fn second_measurement(
-    qubit_ref: QubitRef,
+    entangled_pair: &mut NewEntangledPair,
+    side: Side,
     mut node: Node,
     distance: i64,
+    process: &mut Process,
+    nodes: &mut HashMap<i32, Node>,
+    handle: &EventLoopHandler,
 ) -> Result<(), PairError> {
-    let mut conn = establish_connection();
-    let mut entangled_pair = get_pair_by_id(&mut conn, qubit_ref.entangled_pair_id)?;
-    let mut first_measurement = get_measurement_for_pair(&mut conn, qubit_ref.entangled_pair_id)?;
-    let mut first_node = get_node_by_id(&mut conn, first_measurement.node_id)?;
-    // 1. Get fidelity from entangled_pair
+    let first_measurement = entangled_pair.get_measurement(side)?;
     let mut fidelity: f32 = entangled_pair.fidelity;
-    // 2. Calculate new fidelity after distance degradation
+    // Calculate new fidelity after distance degradation
     fidelity = calculate_new_fidelity(fidelity, distance);
-    // 3. Chose random basis
-    let basis: Basis = Basis::get_random_basis(qubit_ref.side);
-    // 4. Calculate basis diference between both
+
+    let basis: Basis = Basis::get_random_basis(side);
     let basis_diff = calculate_basis_difference(basis, first_measurement.basis);
-    // 5. Calculate probability of entanglement
     let prob = calculate_entanglement_prob(fidelity, basis_diff);
-    // 6. Based on this probability calculate measuremen
+
+    // Based on the probability calculate measurement
     let rand_num = rand::random_range(0..11);
-    let value: i16 = if (rand_num as f64) < (prob * 10 as f64) {
+    let value: i16 = if (rand_num as f64) < (prob * 10_f64) {
         first_measurement.value
     } else {
         1 - first_measurement.value
     };
-    // 7. Store measuremtn in the vector
-    let mut curr_measurement = Measurement::new(
+
+    // Instantiate measurement
+    let curr_measurement = Measurement::new(
         node.id,
-        qubit_ref.entangled_pair_id,
+        entangled_pair.qubit_nr,
         basis,
         value,
         entangled_pair.process_id,
-    )?;
-    entangled_pair.set_measurement(qubit_ref.side, value);
-    // 8. Accept both measurements
-    first_measurement.set_accepted()?;
-    curr_measurement.set_accepted()?;
-    // 9. Check if process has finished
-    let accepted_measurements: Vec<Measurement> =
-        get_accepted_measurements(&mut conn, entangled_pair.process_id, node.id)?;
-    if accepted_measurements.len() != KEY_LENGTH {
+    );
+    entangled_pair.set_measurement(side, curr_measurement);
+
+    if entangled_pair.src_measurement.is_some()
+        && entangled_pair.dst_measurement.is_some()
+        && !entangled_pair.accepted
+    {
+        entangled_pair.accepted = true;
+        process.accepted_pairs += 1;
+    }
+
+    // Check if all pairs have been accepted
+    if process.accepted_pairs <= QUBIT_AMOUNT - 2 {
         return Ok(());
     }
-    // 10. If so, start classical sifting
+
+    // Start classical sifting
     node.release(entangled_pair.process_id)?;
+    let first_node = nodes
+        .get_mut(&first_measurement.node_id)
+        .ok_or(PairError::PairNotFound(first_measurement.node_id))?;
     first_node.release(entangled_pair.process_id)?;
 
-    println!("Finished qkd, starting classical sifting");
+    let payload: SameBasisPayload = SameBasisPayload::new(process.id);
+    handle.push_event(Event::new_now(
+        EventName::SameBasis,
+        EventPayload::SameBasis(payload),
+    ))?;
+
     Ok(())
 }

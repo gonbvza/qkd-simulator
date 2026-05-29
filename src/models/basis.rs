@@ -1,26 +1,93 @@
+use std::fmt;
+
+use crate::models::entangled_pair::Side;
 use diesel::{
     deserialize::{self, FromSql, FromSqlRow},
     expression::AsExpression,
     pg::Pg,
-    prelude::Queryable,
     serialize::{self, Output, ToSql},
     sql_types::Integer,
-    Selectable,
 };
 
-use rand::Rng;
-
-use crate::models::qubit_ref::QubitRefSide;
-
+/// Measurement basis used in the qkd protocol.
+///
+/// Each variant represents an angle in degrees. Source and
+/// destination nodes draw from different subsets; [`Deg45`] is the only
+/// angle shared between both sets, making it the overlap basis.
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, AsExpression, FromSqlRow)]
 #[diesel(sql_type = Integer)]
 pub enum Basis {
-    Deg0 = 1,
-    DegNeg22_5 = 2,
-    Deg22_5 = 3,
+    Deg0 = 1,       // A0
+    DegNeg22_5 = 2, // B0
+    Deg22_5 = 3,    // B1
     Deg45 = 4,
-    Deg90 = 5,
+    Deg90 = 5, // A1
+}
+
+/// Bases available to the source node.
+pub const SRC_BASES: [Basis; 3] = [Basis::Deg0, Basis::Deg45, Basis::Deg90];
+
+/// Bases available to the destination node.
+pub const DST_BASES: [Basis; 3] = [Basis::DegNeg22_5, Basis::Deg22_5, Basis::Deg45];
+
+impl Basis {
+    /// Returns the angle of this basis in degrees.
+    pub fn angle_deg(&self) -> f64 {
+        match self {
+            Basis::Deg0 => 0.0,
+            Basis::DegNeg22_5 => -22.5,
+            Basis::Deg22_5 => 22.5,
+            Basis::Deg45 => 45.0,
+            Basis::Deg90 => 90.0,
+        }
+    }
+
+    /// Returns the basis set for the source node.
+    pub fn src_bases() -> &'static [Basis; 3] {
+        &SRC_BASES
+    }
+
+    /// Returns the basis set for the destination node.
+    pub fn dst_bases() -> &'static [Basis; 3] {
+        &DST_BASES
+    }
+
+    /// Picks a random basis from the side-appropriate set.
+    pub fn get_random_basis(side: Side) -> Basis {
+        let random_number = rand::random_range(0..3);
+        match side {
+            Side::Source => Basis::src_bases()[random_number],
+            Side::Destination => Basis::dst_bases()[random_number],
+        }
+    }
+}
+
+impl TryFrom<i32> for Basis {
+    type Error = String;
+
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(Basis::Deg0),
+            2 => Ok(Basis::DegNeg22_5),
+            3 => Ok(Basis::Deg22_5),
+            4 => Ok(Basis::Deg45),
+            5 => Ok(Basis::Deg90),
+            v => Err(format!("Unknown Basis value: {}", v)),
+        }
+    }
+}
+
+impl From<Basis> for i32 {
+    fn from(b: Basis) -> Self {
+        match b {
+            Basis::Deg0 => 1,
+            Basis::DegNeg22_5 => 2,
+            Basis::Deg22_5 => 3,
+            Basis::Deg45 => 4,
+            Basis::Deg90 => 5,
+        }
+    }
 }
 
 impl FromSql<Integer, Pg> for Basis {
@@ -50,30 +117,14 @@ impl ToSql<Integer, Pg> for Basis {
     }
 }
 
-impl Basis {
-    pub fn angle_deg(&self) -> f64 {
+impl fmt::Display for Basis {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Basis::Deg0 => 0.0,
-            Basis::DegNeg22_5 => -22.5,
-            Basis::Deg22_5 => 22.5,
-            Basis::Deg45 => 45.0,
-            Basis::Deg90 => 90.0,
-        }
-    }
-
-    pub fn src_bases() -> [Basis; 3] {
-        [Basis::Deg0, Basis::Deg45, Basis::Deg90]
-    }
-
-    pub fn dst_bases() -> [Basis; 3] {
-        [Basis::DegNeg22_5, Basis::Deg22_5, Basis::Deg45]
-    }
-
-    pub fn get_random_basis(side: QubitRefSide) -> Basis {
-        let random_number = rand::random_range(0..3);
-        match side {
-            QubitRefSide::Source => Basis::src_bases()[random_number],
-            QubitRefSide::Destination => Basis::dst_bases()[random_number],
+            Basis::Deg0 => write!(f, "Deg0"),
+            Basis::DegNeg22_5 => write!(f, "DegNeg22_5"),
+            Basis::Deg22_5 => write!(f, "Deg22_5"),
+            Basis::Deg45 => write!(f, "Deg45"),
+            Basis::Deg90 => write!(f, "Deg90"),
         }
     }
 }

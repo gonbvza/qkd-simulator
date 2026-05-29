@@ -1,6 +1,11 @@
 pub mod api;
+pub mod basis;
 pub mod bin_heap;
 pub mod detectors;
+pub mod event_loop;
 pub mod graphs;
 pub mod links;
 pub mod nodes;
+pub mod qkd_events;
+pub mod qkd_handlers;
+pub mod registry;

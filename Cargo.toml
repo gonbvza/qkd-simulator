@@ -10,3 +10,7 @@ tokio = { version = "1.49", features = ["full"] }
 dotenv = "0.15.0"
 thiserror = "2.0.18"
 rand = "0.10.1"
+either = "1"
+derive-new = "0.5"
+derivative = "2.2.0"
+get-many-mut = "0.1.0"

@@ -4,14 +4,13 @@ mod tests {
     use crate::core::graph::{Graph, GraphNode};
     use crate::error::{GraphError, LinkError};
     use crate::models::links::Link;
-    use crate::nodes::node::{Node, NodeKind};
+    use crate::models::node::{Node, NodeKind};
 
     fn make_client(id: i32) -> Node {
         Node {
             id,
             name: format!("client_{}", id),
             locked_by: None,
-            measurements: 0,
             node_type: NodeKind::ClientNode.to_string(),
             detector_id: 0,
         }
@@ -22,7 +21,6 @@ mod tests {
             id,
             name: format!("epr_{}", id),
             locked_by: None,
-            measurements: 0,
             node_type: NodeKind::EprNode.to_string(),
             detector_id: 0,
         }
