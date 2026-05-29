@@ -1,5 +1,9 @@
 use crate::{
-    core::{event_loop::EventLoopHandler, sifting::perform_chsh, state::SimulationState},
+    core::{
+        event_loop::EventLoopHandler,
+        sifting::{compare_measurement_val, perform_chsh},
+        state::SimulationState,
+    },
     error::Error,
     models::{basis::Basis, entangled_pair::AcceptedPair, event_types::EventPayload},
 };
@@ -25,7 +29,8 @@ pub fn same_basis(
             continue;
         }
 
-        // Do not use basis of 45 for chsh
+        // Do not use basis of 90 for chsh
+        // TODO: FIX THIS BASIS SRP
         if accepted.src_measurement.basis == Basis::Deg90
             || accepted.dst_measurement.basis == Basis::Deg90
         {
