@@ -1,20 +1,20 @@
 use crate::{
     core::{
         event_loop::EventLoopHandler,
-        sifting::{compare_measurement_val, perform_chsh},
+        sifting::{cascade, perform_chsh},
         state::SimulationState,
     },
     error::Error,
     models::{basis::Basis, entangled_pair::AcceptedPair, event_types::EventPayload},
 };
 
-pub fn same_basis(
+pub fn post_process_key(
     payload: EventPayload,
     _current_time: i64,
     state: &mut SimulationState,
     _handle: &EventLoopHandler,
 ) -> Result<(), Error> {
-    let EventPayload::SameBasis(args) = payload else {
+    let EventPayload::PostProcess(args) = payload else {
         return Err(Error::WrongArgs());
     };
 
@@ -29,8 +29,6 @@ pub fn same_basis(
             continue;
         }
 
-        // Do not use basis of 90 for chsh
-        // TODO: FIX THIS BASIS SRP
         if accepted.src_measurement.basis == Basis::Deg90
             || accepted.dst_measurement.basis == Basis::Deg90
         {
@@ -42,5 +40,10 @@ pub fn same_basis(
 
     // Calculate CHSH
     perform_chsh(diff_basis, args.process_id)?;
+
+    // CHSH correct, correct key error
+    let (src_qubits, dst_qubits) = AcceptedPair::get_qubits(same_basis);
+    cascade(src_qubits, dst_qubits)?;
+
     Ok(())
 }

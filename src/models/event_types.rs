@@ -11,7 +11,7 @@ pub enum EventName {
     HandleQkdInit,
     ReceivePair,
     MeasurementTimeout,
-    SameBasis,
+    PostProcess,
 }
 
 /// Strongly-typed payloads for events. Each enum variant carries a dedicated
@@ -24,7 +24,7 @@ pub enum EventPayload {
     HandleQkdInit(HandleQkdInitPayload),
     ReceivePair(ReceivePairPayload),
     MeasurementTimeout(MeasurementTimeoutPayload),
-    SameBasis(SameBasisPayload),
+    PostProcess(PostProcessPayload),
 }
 
 /// Arguments for the `create_node` event.
@@ -71,6 +71,6 @@ pub struct MeasurementTimeoutPayload {
 
 /// Arguments for sifting / same-basis evaluation.
 #[derive(Debug, Clone, new)]
-pub struct SameBasisPayload {
+pub struct PostProcessPayload {
     pub process_id: i32,
 }

@@ -4,8 +4,8 @@ use crate::{
     core::{event_loop::EventLoopHandler, state::SimulationState},
     error::Error,
     events::{
+        classical::post_process_key,
         qkd::{handle_qkd_init, receive_pair},
-        sifting::same_basis,
         state::{create_link, create_node},
     },
     models::{
@@ -44,7 +44,7 @@ impl Registry {
             (EventName::ReceivePair, Box::new(receive_pair)),
             (EventName::CreateNode, Box::new(create_node)),
             (EventName::CreateLink, Box::new(create_link)),
-            (EventName::SameBasis, Box::new(same_basis)),
+            (EventName::PostProcess, Box::new(post_process_key)),
         ]
     }
 

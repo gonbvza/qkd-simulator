@@ -36,3 +36,13 @@ pub fn perform_chsh(pairs: Vec<AcceptedPair>, process_id: i32) -> Result<(), Sif
     println!("CSHSH Valuie is {}", chsh_val);
     Ok(())
 }
+
+/// Function to perform the cascade error correction algorithm
+pub fn cascade(src_qubits: [u8; 1024], dst_qubits: [u8; 1024]) -> Result<(), SiftingError> {
+    // loop
+    // Divide string into i + 2 blocks
+    // Perform binary on each block
+    // calculate hash
+    //  If same, stop
+    Ok(())
+}
