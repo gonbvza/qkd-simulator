@@ -8,7 +8,7 @@ use crate::{
 /// the same.
 ///
 /// This function will be used solely for logging and debuging
-pub fn compare_measurement_val(pairs: Vec<AcceptedPair>) -> Result<f32, Error> {
+pub fn compare_measurement_val(pairs: Vec<AcceptedPair>) -> f32 {
     let mut same_val = 0;
     for pair in pairs.clone() {
         if pair.src_measurement.value == pair.dst_measurement.value {
@@ -16,7 +16,7 @@ pub fn compare_measurement_val(pairs: Vec<AcceptedPair>) -> Result<f32, Error> {
         }
     }
 
-    Ok((same_val as f32 / pairs.len() as f32) * 100_f32)
+    (same_val as f32 / pairs.len() as f32) * 100_f32
 }
 
 /// Function to perform CHSH validation logic
@@ -32,5 +32,7 @@ pub fn perform_chsh(pairs: Vec<AcceptedPair>, process_id: i32) -> Result<(), Sif
     if chsh_val < CHSH_THRESHOLD {
         return Err(SiftingError::MalloryDetected(chsh_val, process_id));
     }
+
+    println!("CSHSH Valuie is {}", chsh_val);
     Ok(())
 }
