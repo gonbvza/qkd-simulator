@@ -9,15 +9,20 @@ use crate::{
 /// the same.
 ///
 /// This function will be used solely for logging and debuging
-pub fn compare_measurement_val(src_qubits: Vec<u8>, dst_qubits: Vec<u8>) -> f32 {
-    let mut same_val = 0;
-    for n in 0..src_qubits.len() {
-        if src_qubits[n] == dst_qubits[n] {
-            same_val += 1;
-        }
+pub fn compare_measurement_val(src_qubits: &[u8], dst_qubits: &[u8]) -> f32 {
+    let len = src_qubits.len().min(dst_qubits.len());
+    if len == 0 {
+        return 0.0;
     }
 
-    (same_val as f32 / src_qubits.len() as f32) * 100_f32
+    let same_val = src_qubits
+        .iter()
+        .zip(dst_qubits.iter())
+        .take(len)
+        .filter(|(a, b)| a == b)
+        .count();
+
+    (same_val as f32 / len as f32) * 100_f32
 }
 
 /// Function to perform CHSH validation logic

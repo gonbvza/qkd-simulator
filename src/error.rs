@@ -1,4 +1,4 @@
-use std::sync::mpsc::SendError;
+use std::{num::ParseIntError, str::ParseBoolError, sync::mpsc::SendError};
 
 use thiserror::Error;
 
@@ -62,7 +62,9 @@ pub enum CliError {
     #[error("Command {0} is not valid")]
     NotValidCommand(String),
     #[error("Invalid integer: {0}")]
-    InvalidInteger(#[from] std::num::ParseIntError),
+    InvalidInteger(#[from] ParseIntError),
+    #[error("Invalid integer: {0}")]
+    InvalidBoolean(#[from] ParseBoolError),
 }
 
 // simulation errors

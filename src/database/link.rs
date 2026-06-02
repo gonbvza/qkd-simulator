@@ -13,6 +13,7 @@ pub fn create_link(
     error_rate: f32,
     src_id: i32,
     dst_id: i32,
+    is_secure: bool,
 ) -> Result<Link, LinkError> {
     let link = insert_into(schema::links::table)
         .values((
@@ -22,6 +23,7 @@ pub fn create_link(
             schema::links::src_id.eq(src_id),
             schema::links::dst_id.eq(dst_id),
             schema::links::next_available_time.eq(0),
+            schema::links::is_secure.eq(is_secure),
         ))
         .get_result(conn)?;
     Ok(link)

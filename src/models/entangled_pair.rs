@@ -88,10 +88,18 @@ impl NewEntangledPair {
     }
 
     /// Gets the opposite measurement based on the second measurement side
-    pub fn get_measurement(&mut self, side: Side) -> Option<Measurement> {
+    pub fn get_measurement(&self, side: Side) -> Option<&Measurement> {
         match side {
-            Side::Source => self.src_measurement,
-            Side::Destination => self.dst_measurement,
+            Side::Source => self.src_measurement.as_ref(),
+            Side::Destination => self.dst_measurement.as_ref(),
+        }
+    }
+
+    /// Mutable getter for a measurement
+    pub fn get_measurement_mut(&mut self, side: Side) -> Option<&mut Measurement> {
+        match side {
+            Side::Source => self.src_measurement.as_mut(),
+            Side::Destination => self.dst_measurement.as_mut(),
         }
     }
 
@@ -138,13 +146,13 @@ impl AcceptedPair {
         (src_qubits, dst_qubits)
     }
 
-    /// Function to get two list of measured qubits as a list of bytes
-    pub fn get_qubits_bytes(pairs: Vec<AcceptedPair>) -> ([u8; 1024], [u8; 1024]) {
-        let mut src_qubits: [u8; 1024] = [0; 1024];
-        let mut dst_qubits: [u8; 1024] = [0; 1024];
-        for i in 0..1024 {
-            src_qubits[i] = pairs[i].src_measurement.value as u8;
-            dst_qubits[i] = pairs[i].dst_measurement.value as u8;
+    /// Function to get two lists of measured qubits as vectors of bytes
+    pub fn get_qubits_bytes(pairs: Vec<AcceptedPair>) -> (Vec<u8>, Vec<u8>) {
+        let mut src_qubits = Vec::with_capacity(pairs.len());
+        let mut dst_qubits = Vec::with_capacity(pairs.len());
+        for pair in pairs {
+            src_qubits.push(pair.src_measurement.value as u8);
+            dst_qubits.push(pair.dst_measurement.value as u8);
         }
         (src_qubits, dst_qubits)
     }

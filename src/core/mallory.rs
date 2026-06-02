@@ -14,7 +14,7 @@ use crate::{
         entangled_pair::{NewEntangledPair, Side},
         event::Event,
         event_types::{EventName, EventPayload, PostProcessPayload},
-        measurement::{ClientValue, Measurement},
+        measurement::{MalloryValue, Measurement},
         node::Node,
     },
     utility::is_first,
@@ -24,7 +24,7 @@ use crate::{
 ///
 /// Checks if this qubit is the first or second measurement
 /// depending on the order logic will differ
-pub fn measure_qubit(
+pub fn mallory_measure_qubit(
     process_id: i32,
     qubit_nr: i32,
     side: Side,
@@ -41,17 +41,25 @@ pub fn measure_qubit(
         .get_mut(&process_id)
         .ok_or(PairError::NotMeasured())?;
     match is_first(entangled_pair, side)? {
-        true => first_measurement(entangled_pair, side, node)?,
-        false => second_measurement(entangled_pair, side, node, distance, process, nodes, handle)?,
+        true => mallory_first_measurement(entangled_pair, side, node)?,
+        false => mallory_second_measurement(
+            entangled_pair,
+            side,
+            node,
+            distance,
+            process,
+            nodes,
+            handle,
+        )?,
     };
     Ok(())
 }
 
-/// Logic for the first measurement.
+/// Logic if mallory measures the first qubit.
 ///
 /// The first measurement does not depend on anything
 /// so its free to chose the basis and value it measures
-pub fn first_measurement(
+pub fn mallory_first_measurement(
     entangled_pair: &mut NewEntangledPair,
     side: Side,
     node: Node,
@@ -61,11 +69,11 @@ pub fn first_measurement(
 
     // Get or create measurement
     if let Some(measurement) = entangled_pair.get_measurement_mut(side) {
-        measurement.client_value = Some(ClientValue::new(basis, value));
+        measurement.mallory_value = Some(MalloryValue::new(basis, value));
     } else {
         let mut measurement =
             Measurement::new(node.id, entangled_pair.qubit_nr, entangled_pair.process_id);
-        measurement.client_value = Some(ClientValue::new(basis, value));
+        measurement.mallory_value = Some(MalloryValue::new(basis, value));
         entangled_pair.set_measurement(side, measurement);
     }
     Ok(())
@@ -77,7 +85,7 @@ pub fn first_measurement(
 /// which depends on the degraded fidelity and basis difference with
 /// the first measurement. Once all pairs are accepted, releases both
 /// nodes and triggers the classical sifting phase.
-pub fn second_measurement(
+pub fn mallory_second_measurement(
     entangled_pair: &mut NewEntangledPair,
     side: Side,
     mut node: Node,
@@ -113,11 +121,11 @@ pub fn second_measurement(
 
     // Instantiate or update measurement
     if let Some(measurement) = entangled_pair.get_measurement_mut(side) {
-        measurement.client_value = Some(ClientValue::new(basis, value));
+        measurement.mallory_value = Some(MalloryValue::new(basis, value));
     } else {
         let mut measurement =
             Measurement::new(node.id, entangled_pair.qubit_nr, entangled_pair.process_id);
-        measurement.client_value = Some(ClientValue::new(basis, value));
+        measurement.mallory_value = Some(MalloryValue::new(basis, value));
         entangled_pair.set_measurement(side, measurement);
     }
 
@@ -130,7 +138,7 @@ pub fn second_measurement(
     }
 
     // Check if all pairs have been accepted
-    if process.accepted_pairs <= QUBIT_AMOUNT - 2 {
+    if process.accepted_pairs <= QUBIT_AMOUNT - 1 {
         return Ok(());
     }
 

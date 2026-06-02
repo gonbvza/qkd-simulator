@@ -23,7 +23,9 @@ pub async fn create_link_cli(handle: &EventLoopHandler) -> Result<(), Error> {
     let dst_id = read_line().trim().parse::<i32>().map_err(CliError::from)?;
     println!("Enter distance in meters:");
     let distance = read_line().trim().parse::<i64>().map_err(CliError::from)?;
-    create_link_api(src_id, dst_id, distance, handle).await?;
+    println!("Is secure:");
+    let is_secure: bool = read_line().trim().parse::<bool>().map_err(CliError::from)?;
+    create_link_api(src_id, dst_id, distance, is_secure, handle).await?;
     Ok(())
 }
 
