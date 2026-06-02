@@ -35,6 +35,7 @@ mod tests {
             src_id,
             dst_id,
             next_available_time: 2,
+            is_secure: true,
         }
     }
 
