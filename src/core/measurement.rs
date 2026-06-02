@@ -14,7 +14,7 @@ use crate::{
         basis::Basis,
         entangled_pair::{NewEntangledPair, Side},
         event::Event,
-        event_types::{EventName, EventPayload, SameBasisPayload},
+        event_types::{EventName, EventPayload, PostProcessPayload},
         measurement::Measurement,
     },
     utility::is_first,
@@ -133,10 +133,10 @@ pub fn second_measurement(
         .ok_or(PairError::PairNotFound(first_measurement.node_id))?;
     first_node.release(entangled_pair.process_id)?;
 
-    let payload: SameBasisPayload = SameBasisPayload::new(process.id);
+    let payload: PostProcessPayload = PostProcessPayload::new(process.id);
     handle.push_event(Event::new_now(
-        EventName::SameBasis,
-        EventPayload::SameBasis(payload),
+        EventName::PostProcess,
+        EventPayload::PostProcess(payload),
     ))?;
 
     Ok(())

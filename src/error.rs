@@ -103,8 +103,8 @@ pub enum PairError {
 pub enum ProcessError {
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
-    #[error("Process missing")]
-    NotFound(),
+    #[error("Process {0} missing")]
+    NotFound(i32),
 }
 
 // detector errors
@@ -132,6 +132,8 @@ pub enum SiftingError {
     MalloryDetected(f32, i32),
     #[error("Unknown combination of pairs {0} and {1}")]
     NotKnownCombination(Basis, Basis),
+    #[error("Vector length is not a multiple of 2")]
+    BadLength,
 }
 
 // TODO: Change this to macro

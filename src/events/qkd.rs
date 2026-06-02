@@ -29,6 +29,8 @@ pub fn handle_qkd_init(
     let process = Process::new(current_time);
     let process_id = state.push_process(process);
 
+    println!("Starting process {}", process_id);
+
     let (nodes, links, pairs) = state.split_nodes_links_pairs_mut();
 
     let [src_node, dst_node] = nodes

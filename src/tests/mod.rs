@@ -1,6 +1,7 @@
 pub mod api;
 pub mod basis;
 pub mod bin_heap;
+pub mod cascade;
 pub mod detectors;
 pub mod event_loop;
 pub mod graphs;

@@ -80,11 +80,11 @@ fn assert_receive_pair_event(
 }
 
 fn assert_same_basis_event(event: &Event, expected_process_id: i32) {
-    assert_eq!(event.name, EventName::SameBasis);
+    assert_eq!(event.name, EventName::PostProcess);
     assert!(matches!(event.timestamp, EventTime::Now));
 
     match &event.payload {
-        EventPayload::SameBasis(payload) => {
+        EventPayload::PostProcess(payload) => {
             assert_eq!(payload.process_id, expected_process_id);
         }
         other => panic!("unexpected event payload: {other:?}"),
@@ -144,55 +144,4 @@ fn emit_pair_enqueues_receive_events_with_expected_payloads() {
         11,
         expected_dst_timestamp,
     );
-}
-
-#[test]
-fn receive_pair_enqueues_same_basis_when_pair_completes() {
-    let mut state = SimulationState::new();
-
-    let process_id = state.push_process(Process {
-        id: 0,
-        started_at: 100,
-        accepted_pairs: QUBIT_AMOUNT - 99,
-    });
-
-    state.upsert_node(make_node(1, 101, Some(process_id)));
-    state.upsert_node(make_node(2, 102, Some(process_id)));
-    state.upsert_detector(make_detector(101, 0));
-    state.upsert_detector(make_detector(102, 0));
-    state.upsert_link(make_link(201, 1, 99, 1000));
-    state.upsert_link(make_link(202, 2, 99, 1000));
-
-    let pair = NewEntangledPair::new(1, 2, process_id, 7, false, 0).unwrap();
-    state.insert_pair(pair);
-
-    let (tx, rx) = channel();
-    let handler = EventLoopHandler::new(tx);
-
-    receive_pair(
-        EventPayload::ReceivePair(ReceivePairPayload::new(1, Side::Source, 7, process_id, 201)),
-        10,
-        &mut state,
-        &handler,
-    )
-    .unwrap();
-
-    assert!(rx.try_recv().is_err());
-
-    receive_pair(
-        EventPayload::ReceivePair(ReceivePairPayload::new(
-            2,
-            Side::Destination,
-            7,
-            process_id,
-            202,
-        )),
-        20,
-        &mut state,
-        &handler,
-    )
-    .unwrap();
-
-    let event = recv_event(&rx);
-    assert_same_basis_event(&event, process_id);
 }

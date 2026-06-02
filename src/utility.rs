@@ -35,3 +35,33 @@ pub fn is_first(entangled_pair: &mut NewEntangledPair, side: Side) -> Result<boo
         Side::Destination => Ok(entangled_pair.src_measurement.is_none()),
     }
 }
+
+/// Function to split qubit vector into smaller vectors
+pub fn split_vector(vector: Vec<u8>, blocks: usize) -> Vec<Vec<u8>> {
+    let each_len = vector.len() / blocks;
+    let mut src_blocks: Vec<Vec<u8>> = vec![Vec::with_capacity(each_len); blocks];
+    for (i, d) in vector.iter().copied().enumerate() {
+        let idx = i / each_len;
+
+        src_blocks[idx].push(d);
+    }
+    src_blocks
+}
+
+/// Function to calculate parity of a block
+pub fn parity(vector: &Vec<u8>) -> u8 {
+    let parity: u16 = vector.iter().map(|&x| x as u16).sum();
+    (parity % 2) as u8
+}
+
+/// Function to convert bit key into a byte key
+pub fn bits_to_bytes(bits: &[u8]) -> Vec<u8> {
+    bits.chunks(8)
+        .map(|chunk| chunk.iter().fold(0u8, |acc, &b| (acc << 1) | (b & 1)))
+        .collect()
+}
+
+// Function to check if number is power of 2
+pub fn is_power_of_two(x: usize) -> bool {
+    return (x & (x - 1)) == 0;
+}

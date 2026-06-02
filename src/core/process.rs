@@ -8,6 +8,7 @@ pub struct Process {
     pub id: i32,
     pub started_at: i64,
     pub accepted_pairs: i32,
+    pub key: Option<String>,
 }
 
 impl Process {
@@ -16,6 +17,7 @@ impl Process {
             id: 0,
             started_at: current_time,
             accepted_pairs: 0,
+            key: None,
         }
     }
 }
