@@ -30,9 +30,10 @@ pub async fn create_link_api(
     src_id: i32,
     dst_id: i32,
     distance: i64,
+    is_secure: bool,
     handle: &EventLoopHandler,
 ) -> Result<(), Error> {
-    let payload: CreateLinkPayload = CreateLinkPayload::new(src_id, dst_id, distance);
+    let payload: CreateLinkPayload = CreateLinkPayload::new(src_id, dst_id, distance, is_secure);
     let event = Event::new_now(EventName::CreateLink, EventPayload::CreateLink(payload));
     handle.push_event(event)?;
     Ok(())

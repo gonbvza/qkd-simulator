@@ -34,6 +34,7 @@ diesel::table! {
         src_id -> Int4,
         dst_id -> Int4,
         next_available_time -> Int8,
+        is_secure -> Bool,
     }
 }
 

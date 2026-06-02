@@ -25,6 +25,7 @@ fn make_link(id: i32, src_id: i32, dst_id: i32, length: i64) -> Link {
         src_id,
         dst_id,
         next_available_time: 0,
+        is_secure: true,
     }
 }
 

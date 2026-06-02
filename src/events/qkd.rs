@@ -1,6 +1,7 @@
 use crate::{
     core::{
         event_loop::EventLoopHandler,
+        mallory::mallory_measure_qubit,
         measurement::measure_qubit,
         pairs::emit_pair,
         process::Process,
@@ -85,7 +86,7 @@ pub fn receive_pair(
     let EventPayload::ReceivePair(args) = payload else {
         return Err(Error::WrongArgs());
     };
-    let (node_copy, link_length) = {
+    let (node, distance, is_secure) = {
         let node = nodes
             .get_mut(&args.node_id)
             .ok_or(NodeError::NodeNotFound(args.node_id.to_owned()))?;
@@ -103,15 +104,30 @@ pub fn receive_pair(
         }
 
         detector.set_detection_time(current_time)?;
-        (node.to_owned(), link.length)
+        // Fix cloning this node as you cant change it
+        (node.to_owned(), link.length, link.is_secure)
     };
+
+    if !is_secure {
+        // Channel is not secure, mallory should measure first
+        mallory_measure_qubit(
+            args.process_id,
+            args.qubit_nr,
+            args.side,
+            // TODO: FIX cloning this node
+            node.clone(),
+            distance,
+            state,
+            handle,
+        )?;
+    }
 
     measure_qubit(
         args.process_id,
         args.qubit_nr,
         args.side,
-        node_copy,
-        link_length,
+        node,
+        distance,
         state,
         handle,
     )?;

@@ -20,6 +20,7 @@ fn make_link(id: i32, src_id: i32, dst_id: i32, length: i64) -> Link {
         src_id,
         dst_id,
         next_available_time: 0,
+        is_secure: true,
     }
 }
 
@@ -105,4 +106,3 @@ fn handle_qkd_init_aborts_when_one_node_is_busy() {
 
     assert!(rx.try_recv().is_err());
 }
-

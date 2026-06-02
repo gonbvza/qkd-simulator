@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 
 """Drive the interactive QKD simulator and create a sample topology.
@@ -28,6 +29,9 @@ PROMPT_SECURE = "Is secure:"
 PROMPT_START_SRC = "Enter source id:"
 PROMPT_START_DST = "Enter destination id:"
 DISTANCE="100000"
+IS_SECURE_FIRST="false"
+IS_SECURE_SECOND="true"
+
 
 LOG_FILE = "log_file.txt"
 
@@ -175,7 +179,7 @@ def main() -> int:
         read_until(master_fd, PROMPT_DISTANCE)
         send_line(master_fd, DISTANCE)
         read_until(master_fd, PROMPT_SECURE)
-        send_line(master_fd, "true")
+        send_line(master_fd, IS_SECURE_FIRST)
         time.sleep(0.5)
 
         read_until(master_fd, PROMPT_MAIN)
@@ -187,7 +191,7 @@ def main() -> int:
         read_until(master_fd, PROMPT_DISTANCE)
         send_line(master_fd, DISTANCE)
         read_until(master_fd, PROMPT_SECURE)
-        send_line(master_fd, "true")
+        send_line(master_fd, IS_SECURE_SECOND)
         time.sleep(0.5)
 
         read_until(master_fd, PROMPT_MAIN)

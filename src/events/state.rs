@@ -46,7 +46,15 @@ pub fn create_link(
         return Err(Error::WrongArgs());
     };
 
-    let link = Link::new(&mut conn, args.distance, 0.4, 0.1, args.src_id, args.dst_id)?;
+    let link = Link::new(
+        &mut conn,
+        args.distance,
+        0.4,
+        0.1,
+        args.src_id,
+        args.dst_id,
+        args.is_secure,
+    )?;
 
     // Create in local state
     state.upsert_link(link);

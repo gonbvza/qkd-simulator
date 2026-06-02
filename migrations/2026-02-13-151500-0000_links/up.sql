@@ -41,7 +41,8 @@ CREATE TABLE links (
   error_rate REAL NOT NULL,
   src_id INT NOT NULL REFERENCES nodes(id),
   dst_id INT NOT NULL REFERENCES nodes(id),
-  next_available_time BIGINT NOT NULL
+  next_available_time BIGINT NOT NULL,
+  is_secure BOOLEAN NOT NULL DEFAULT False
 );
 
 -- Table for the entangled pair

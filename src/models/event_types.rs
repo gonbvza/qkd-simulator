@@ -40,6 +40,7 @@ pub struct CreateLinkPayload {
     pub src_id: i32,
     pub dst_id: i32,
     pub distance: i64,
+    pub is_secure: bool,
 }
 
 /// Arguments for the high-level QKD initialization event.

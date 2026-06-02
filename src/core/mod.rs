@@ -1,6 +1,7 @@
 pub mod bin_heap;
 pub mod event_loop;
 pub mod graph;
+pub mod mallory;
 pub mod maths;
 pub mod measurement;
 pub mod pairs;

@@ -27,6 +27,7 @@ pub struct Node {
 pub enum NodeKind {
     ClientNode = 0,
     EprNode = 1,
+    Mallory = 2,
 }
 
 impl Node {
@@ -77,6 +78,7 @@ impl std::str::FromStr for NodeKind {
         match s.trim() {
             "0" => Ok(NodeKind::ClientNode),
             "1" => Ok(NodeKind::EprNode),
+            "2" => Ok(NodeKind::Mallory),
             _ => Err(CliError::NotValidInput(s.to_string())),
         }
     }
@@ -87,6 +89,7 @@ impl fmt::Display for NodeKind {
         match self {
             NodeKind::ClientNode => write!(f, "0"),
             NodeKind::EprNode => write!(f, "1"),
+            NodeKind::Mallory => write!(f, "2"),
         }
     }
 }

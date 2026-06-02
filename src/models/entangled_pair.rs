@@ -1,6 +1,9 @@
 use derive_new::new;
 
-use crate::{error::PairError, models::measurement::Measurement};
+use crate::{
+    error::PairError,
+    models::measurement::{AcceptedMeasurement, Measurement},
+};
 
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Side {
@@ -30,10 +33,20 @@ pub struct NewEntangledPair {
 pub struct AcceptedPair {
     pub src_id: i32,
     pub dst_id: i32,
-    pub src_measurement: Measurement,
-    pub dst_measurement: Measurement,
+    pub src_measurement: AcceptedMeasurement,
+    pub dst_measurement: AcceptedMeasurement,
     pub process_id: i32,
     pub qubit_nr: i32,
+}
+
+impl Side {
+    /// Get opposite side
+    pub fn opposite(self) -> Side {
+        match self {
+            Side::Source => Side::Destination,
+            Side::Destination => Side::Source,
+        }
+    }
 }
 
 impl NewEntangledPair {
@@ -75,27 +88,40 @@ impl NewEntangledPair {
     }
 
     /// Gets the opposite measurement based on the second measurement side
-    pub fn get_measurement(&mut self, side: Side) -> Result<Measurement, PairError> {
+    pub fn get_measurement(&self, side: Side) -> Option<&Measurement> {
         match side {
-            Side::Source => self.dst_measurement.ok_or(PairError::NotMeasured()),
-            Side::Destination => self.src_measurement.ok_or(PairError::NotMeasured()),
+            Side::Source => self.src_measurement.as_ref(),
+            Side::Destination => self.dst_measurement.as_ref(),
+        }
+    }
+
+    /// Mutable getter for a measurement
+    pub fn get_measurement_mut(&mut self, side: Side) -> Option<&mut Measurement> {
+        match side {
+            Side::Source => self.src_measurement.as_mut(),
+            Side::Destination => self.dst_measurement.as_mut(),
         }
     }
 
     /// Function to obtain the accepted pair
     pub fn map_accepted(&self) -> Result<AcceptedPair, PairError> {
-        let Some(src_measurement) = self.src_measurement else {
-            return Err(PairError::NotMeasured());
-        };
-        let Some(dst_measurement) = self.dst_measurement else {
-            return Err(PairError::NotMeasured());
-        };
+        let src_measurement = self
+            .src_measurement
+            .as_ref()
+            .and_then(|m| m.client_value.as_ref())
+            .ok_or(PairError::NotMeasured())?;
+
+        let dst_measurement = self
+            .dst_measurement
+            .as_ref()
+            .and_then(|m| m.client_value.as_ref())
+            .ok_or(PairError::NotMeasured())?;
 
         Ok(AcceptedPair::new(
             self.src_id,
             self.dst_id,
-            src_measurement,
-            dst_measurement,
+            AcceptedMeasurement::new(src_measurement.basis, src_measurement.value),
+            AcceptedMeasurement::new(dst_measurement.basis, dst_measurement.value),
             self.process_id,
             self.qubit_nr,
         ))
@@ -120,13 +146,13 @@ impl AcceptedPair {
         (src_qubits, dst_qubits)
     }
 
-    /// Function to get two list of measured qubits as a list of bytes
-    pub fn get_qubits_bytes(pairs: Vec<AcceptedPair>) -> ([u8; 1024], [u8; 1024]) {
-        let mut src_qubits: [u8; 1024] = [0; 1024];
-        let mut dst_qubits: [u8; 1024] = [0; 1024];
-        for i in 0..1024 {
-            src_qubits[i] = pairs[i].src_measurement.value as u8;
-            dst_qubits[i] = pairs[i].dst_measurement.value as u8;
+    /// Function to get two lists of measured qubits as vectors of bytes
+    pub fn get_qubits_bytes(pairs: Vec<AcceptedPair>) -> (Vec<u8>, Vec<u8>) {
+        let mut src_qubits = Vec::with_capacity(pairs.len());
+        let mut dst_qubits = Vec::with_capacity(pairs.len());
+        for pair in pairs {
+            src_qubits.push(pair.src_measurement.value as u8);
+            dst_qubits.push(pair.dst_measurement.value as u8);
         }
         (src_qubits, dst_qubits)
     }

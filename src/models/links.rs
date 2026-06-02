@@ -22,6 +22,7 @@ pub struct Link {
     pub src_id: i32,
     pub dst_id: i32,
     pub next_available_time: i64,
+    pub is_secure: bool,
 }
 
 impl Link {
@@ -35,6 +36,7 @@ impl Link {
         error_rate: f32,
         src_id: i32,
         dst_id: i32,
+        is_secure: bool,
     ) -> Result<Link, LinkError> {
         let node_a_exists = select(dsl::exists(
             schema::nodes::table.filter(schema::nodes::id.eq(src_id)),
@@ -47,7 +49,15 @@ impl Link {
         if !node_a_exists || !node_b_exists {
             return Err(LinkError::NonExistingNodes(src_id, dst_id));
         }
-        create_link(conn, length, attenuation, error_rate, src_id, dst_id)
+        create_link(
+            conn,
+            length,
+            attenuation,
+            error_rate,
+            src_id,
+            dst_id,
+            is_secure,
+        )
     }
 
     /// Fetches the link between two nodes from the database.

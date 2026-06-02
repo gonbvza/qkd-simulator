@@ -40,7 +40,7 @@ fn insert_node(conn: &mut PgConnection, name: &str, kind: NodeKind) -> Node {
 }
 
 fn insert_link(conn: &mut PgConnection, src_id: i32, dst_id: i32) -> Link {
-    Link::new(conn, 100, 0.4, 0.1, src_id, dst_id).unwrap()
+    Link::new(conn, 100, 0.4, 0.1, src_id, dst_id, true).unwrap()
 }
 
 fn recv_event(rx: &Receiver<Event>) -> Event {
@@ -132,7 +132,7 @@ async fn test_create_link_api_enqueues_link_event() {
     let (tx, rx) = channel();
     let handler = EventLoopHandler::new(tx);
 
-    create_link_api(12, 34, 100, &handler).await.unwrap();
+    create_link_api(12, 34, 100, true, &handler).await.unwrap();
 
     let event = recv_event(&rx);
     assert_create_link_event(event, 12, 34, 100);
