@@ -106,6 +106,9 @@ pub fn receive_pair(
         (node.to_owned(), link.length)
     };
 
+    // If link is unsecure
+    //
+
     measure_qubit(
         args.process_id,
         args.qubit_nr,

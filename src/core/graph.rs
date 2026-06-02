@@ -5,6 +5,8 @@
 
 use std::collections::{HashMap, HashSet};
 
+use derive_new::new;
+
 use crate::{
     database::{link::get_all_links, nodes::get_all_nodes},
     error::{GraphError, LinkError, NodeError},
@@ -18,6 +20,7 @@ use crate::{
 pub enum GraphNode {
     ClientNode(i32),
     EprNode(i32),
+    Mallory(i32),
 }
 
 impl GraphNode {
@@ -26,6 +29,7 @@ impl GraphNode {
         match node_type {
             NodeKind::ClientNode => GraphNode::ClientNode(id),
             NodeKind::EprNode => GraphNode::EprNode(id),
+            NodeKind::Mallory => GraphNode::Mallory(id),
         }
     }
 
@@ -34,15 +38,30 @@ impl GraphNode {
         match self {
             GraphNode::ClientNode(id) => *id,
             GraphNode::EprNode(id) => *id,
+            GraphNode::Mallory(id) => *id,
         }
     }
+}
+
+/// Local abstraction of a link used to build the graph
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, new)]
+pub struct GraphLink {
+    // Graphnode of the link
+    pub node: GraphNode,
+
+    // Attibute that shows if mallory is observing link
+    #[new(value = "true")]
+    pub is_secure: bool,
 }
 
 // Graph blueprint easily navigate through the
 // connection of the nodes
 #[derive(Debug)]
 pub struct Graph {
+    // Hashmap of nodes in the graph blueprint
     pub nodes: HashMap<i32, GraphNode>,
+
+    // Hashmap of available connections for each node
     pub connections: HashMap<i32, HashSet<GraphNode>>,
 }
 
@@ -95,6 +114,7 @@ impl Graph {
                 .get_mut(&link.dst_id)
                 .ok_or(LinkError::MissingNode(link.dst_id))?
                 .insert(src_id.clone());
+            // If
         }
         Ok(graph)
     }

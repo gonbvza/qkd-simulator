@@ -33,6 +33,8 @@ pub fn perform_chsh(pairs: Vec<AcceptedPair>, process_id: i32) -> Result<(), Sif
     if chsh_val < CHSH_THRESHOLD {
         return Err(SiftingError::MalloryDetected(chsh_val, process_id));
     }
+
+    println!("CHSH val is {}", chsh_val);
     Ok(())
 }
 

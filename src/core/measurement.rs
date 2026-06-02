@@ -9,13 +9,13 @@ use crate::{
         state::SimulationState,
     },
     error::PairError,
-    models::node::Node,
     models::{
         basis::Basis,
         entangled_pair::{NewEntangledPair, Side},
         event::Event,
         event_types::{EventName, EventPayload, PostProcessPayload},
-        measurement::Measurement,
+        measurement::{ClientValue, Measurement},
+        node::Node,
     },
     utility::is_first,
 };
@@ -58,13 +58,17 @@ pub fn first_measurement(
 ) -> Result<(), PairError> {
     let basis: Basis = Basis::get_random_basis(side);
     let value = if rand::random::<bool>() { 0 } else { 1 };
-    let measurement = Measurement::new(
-        node.id,
-        entangled_pair.qubit_nr,
-        basis,
-        value,
-        entangled_pair.process_id,
-    );
+
+    // Get or create measurement
+    let mut measurement: Measurement =
+        if let Some(measurement) = entangled_pair.get_measurement(side) {
+            // Mallory measured qubit first so measurement exists
+            measurement
+        } else {
+            Measurement::new(node.id, entangled_pair.qubit_nr, entangled_pair.process_id)
+        };
+
+    measurement.client_value = Some(ClientValue::new(basis, value));
     entangled_pair.set_measurement(side, measurement);
     Ok(())
 }
@@ -84,34 +88,37 @@ pub fn second_measurement(
     nodes: &mut HashMap<i32, Node>,
     handle: &EventLoopHandler,
 ) -> Result<(), PairError> {
-    let first_measurement = entangled_pair.get_measurement(side)?;
+    let first_measurement = entangled_pair
+        .get_measurement(side.opposite())
+        .ok_or(PairError::NotMeasured())?;
     let mut fidelity: f32 = entangled_pair.fidelity;
     // Calculate new fidelity after distance degradation
     fidelity = calculate_new_fidelity(fidelity, distance);
 
     let basis: Basis = Basis::get_random_basis(side);
-    let basis_diff = calculate_basis_difference(basis, first_measurement.basis);
+    let basis_diff = calculate_basis_difference(basis, first_measurement.get_basis()?);
     let prob_same = calculate_entanglement_prob(fidelity, basis_diff);
 
     // Based on the probability calculate measurement
     let r: f64 = rand::random::<f64>();
     let value = if r < prob_same {
         // correlated outcomes
-        first_measurement.value
+        first_measurement.get_value()?
     } else {
         // anti-correlated outcomes
-        1 - first_measurement.value
+        1 - first_measurement.get_value()?
     };
 
     // Instantiate measurement
-    let curr_measurement = Measurement::new(
-        node.id,
-        entangled_pair.qubit_nr,
-        basis,
-        value,
-        entangled_pair.process_id,
-    );
-    entangled_pair.set_measurement(side, curr_measurement);
+    let mut measurement: Measurement =
+        if let Some(measurement) = entangled_pair.get_measurement(side) {
+            // Mallory measured qubit first so measurement exists
+            measurement
+        } else {
+            Measurement::new(node.id, entangled_pair.qubit_nr, entangled_pair.process_id)
+        };
+    measurement.client_value = Some(ClientValue::new(basis, value));
+    entangled_pair.set_measurement(side, measurement);
 
     if entangled_pair.src_measurement.is_some()
         && entangled_pair.dst_measurement.is_some()
