@@ -51,9 +51,6 @@ pub fn post_process_key(
 
     // If CHSH test passes, correct key discrepancies.
     let (src_qubits, dst_qubits) = AcceptedPair::get_qubits_vec(same_basis_pairs);
-    if src_qubits == dst_qubits {
-        return Ok(());
-    }
 
     // Perfom error correction with cascade
     let corrected_key = cascade(src_qubits.clone(), dst_qubits.clone())?;
