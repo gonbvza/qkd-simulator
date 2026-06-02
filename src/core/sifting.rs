@@ -2,7 +2,7 @@ use crate::{
     core::settings::CHSH_THRESHOLD,
     error::SiftingError,
     models::{chsh::CHSH, entangled_pair::AcceptedPair},
-    utility::{parity, split_vector},
+    utility::{is_power_of_two, parity, split_vector},
 };
 
 /// Function to calculate the ratio of measurements that were
@@ -49,7 +49,7 @@ pub fn cascade(mut src_qubits: Vec<u8>, mut dst_qubits: Vec<u8>) -> Result<Vec<u
     }
 
     // Ensure vectors are multiple of 2
-    if src_qubits.len() % 2 != 0 || dst_qubits.len() % 2 != 0 {
+    if !is_power_of_two(src_qubits.len()) || !is_power_of_two(dst_qubits.len()) {
         return Err(SiftingError::BadLength);
     }
 

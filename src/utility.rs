@@ -60,3 +60,8 @@ pub fn bits_to_bytes(bits: &[u8]) -> Vec<u8> {
         .map(|chunk| chunk.iter().fold(0u8, |acc, &b| (acc << 1) | (b & 1)))
         .collect()
 }
+
+// Function to check if number is power of 2
+pub fn is_power_of_two(x: usize) -> bool {
+    return (x & (x - 1)) == 0;
+}
