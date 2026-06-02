@@ -109,14 +109,25 @@ impl AcceptedPair {
         self.dst_measurement.map_value();
     }
 
-    /// Function to get two list of measured qubits
-    pub fn get_qubits(pairs: Vec<AcceptedPair>) -> ([u8; 1024], [u8; 1024]) {
+    /// Function to get two vectors of measured qubits
+    pub fn get_qubits_vec(pairs: Vec<AcceptedPair>) -> (Vec<u8>, Vec<u8>) {
+        let mut src_qubits = Vec::new();
+        let mut dst_qubits = Vec::new();
+        for pair in pairs {
+            src_qubits.push(pair.src_measurement.value as u8);
+            dst_qubits.push(pair.dst_measurement.value as u8);
+        }
+        (src_qubits, dst_qubits)
+    }
+
+    /// Function to get two list of measured qubits as a list of bytes
+    pub fn get_qubits_bytes(pairs: Vec<AcceptedPair>) -> ([u8; 1024], [u8; 1024]) {
         let mut src_qubits: [u8; 1024] = [0; 1024];
         let mut dst_qubits: [u8; 1024] = [0; 1024];
         for i in 0..1024 {
             src_qubits[i] = pairs[i].src_measurement.value as u8;
             dst_qubits[i] = pairs[i].dst_measurement.value as u8;
         }
-        (src_qubits, src_qubits)
+        (src_qubits, dst_qubits)
     }
 }

@@ -76,6 +76,8 @@ diesel::table! {
         id -> Int4,
         started_at -> Int8,
         accepted_pairs -> Int4,
+        #[max_length = 256]
+        key -> Nullable<Varchar>,
     }
 }
 

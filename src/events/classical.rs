@@ -1,11 +1,14 @@
 use crate::{
     core::{
         event_loop::EventLoopHandler,
+        process::Process,
+        settings::KEY_LENGTH,
         sifting::{cascade, perform_chsh},
         state::SimulationState,
     },
-    error::Error,
+    error::{Error, ProcessError},
     models::{basis::Basis, entangled_pair::AcceptedPair, event_types::EventPayload},
+    utility::bits_to_bytes,
 };
 
 pub fn post_process_key(
@@ -19,13 +22,18 @@ pub fn post_process_key(
     };
 
     let acc_pairs = state.get_accepted_measurements(args.process_id);
-    let mut same_basis: Vec<AcceptedPair> = Vec::new();
-    let mut diff_basis: Vec<AcceptedPair> = Vec::new();
+    let mut same_basis_pairs = Vec::new();
+    let mut diff_basis_pairs = Vec::new();
 
-    for pair in acc_pairs.clone() {
+    for pair in acc_pairs {
         let accepted = pair.map_accepted()?;
-        if accepted.src_measurement.basis == accepted.dst_measurement.basis {
-            same_basis.push(accepted);
+
+        let is_same_basis = accepted.src_measurement.basis == accepted.dst_measurement.basis;
+
+        if is_same_basis {
+            if same_basis_pairs.len() < KEY_LENGTH {
+                same_basis_pairs.push(accepted);
+            }
             continue;
         }
 
@@ -35,15 +43,26 @@ pub fn post_process_key(
             continue;
         }
 
-        diff_basis.push(accepted);
+        diff_basis_pairs.push(accepted);
     }
 
-    // Calculate CHSH
-    perform_chsh(diff_basis, args.process_id)?;
+    // Use mismatched basis measurements to evaluate the CHSH parameter.
+    perform_chsh(diff_basis_pairs, args.process_id)?;
 
-    // CHSH correct, correct key error
-    let (src_qubits, dst_qubits) = AcceptedPair::get_qubits(same_basis);
-    cascade(src_qubits, dst_qubits)?;
+    // If CHSH test passes, correct key discrepancies.
+    let (src_qubits, dst_qubits) = AcceptedPair::get_qubits_vec(same_basis_pairs);
+    if src_qubits == dst_qubits {
+        return Ok(());
+    }
+
+    // Perfom error correction with cascade
+    let corrected_key = cascade(src_qubits.clone(), dst_qubits.clone())?;
+
+    // Store key in process
+    let process: &mut Process = state
+        .get_process_mut(args.process_id)
+        .ok_or(ProcessError::NotFound(args.process_id))?;
+    process.key = Some(hex::encode(bits_to_bytes(&corrected_key)));
 
     Ok(())
 }

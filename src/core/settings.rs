@@ -8,7 +8,7 @@ lazy_static! {
 /// Timeout used for pair events retry
 pub const TIMEOUT: i64 = 1000;
 /// Desired key length after qkd process
-pub const KEY_LENGTH: i32 = 1024;
+pub const KEY_LENGTH: usize = 1024;
 /// Amounts of qubit sent by the epr node
 pub const QUBIT_AMOUNT: i32 = 10000;
 /// Default resolution for the detector

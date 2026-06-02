@@ -11,7 +11,8 @@ CREATE TABLE detector (
 CREATE TABLE process (
   id SERIAL PRIMARY KEY,
   started_at BIGINT NOT NULL,
-  accepted_pairs INT NOT NULL
+  accepted_pairs INT NOT NULL,
+  key VARCHAR(256) 
 );
 
 -- Table for the nodes
