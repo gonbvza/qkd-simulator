@@ -1,0 +1,27 @@
+\section{Introduction}\label{s:intro}
+
+The secure transmission of sensitive data is one of the key challenges of the modern digital era. Classical cryptographic algorithms such as RSA \cite{rivest1978rsa} face a significant threat from the emergence of quantum computers, as their security relies on the assumption that no efficient algorithm exists to invert the encryption using publicly available information. Quantum Key Distribution (QKD) has emerged as a provably secure alternative, grounded in the laws of quantum physics rather than computational complexity.
+
+Many QKD protocols exist \cite{aliro2025bbm92, sujay2023bb84, fujiwara2015e91} that enable the generation of secure keys by exploiting the principles of quantum mechanics. This thesis focuses on implementing the E91 protocol due to its use of entangled qubits and Bell-state verification.
+
+Transitioning these theoretical protocols into scalable real-world networks presents significant engineering challenges. For this reason, quantum network simulators such as SeQUeNCe \cite{wu2021sequence} and QKDNetSim \cite{mehic2022qkdnetsim} are valuable tools, as they enable controlled testing of new protocols. Nevertheless, the development of such simulators introduces additional challenges, including the accurate modeling of entanglement and distance-dependent fidelity degradation. Due to these limitations and the lack of consensus among existing models, several assumptions were made, which are discussed later in this thesis.
+
+This thesis addresses the following research question:
+\textit{How can we design and implement an event-driven quantum network simulator capable of evaluating the performance, error-correction overhead, and adversarial resilience of the E91 protocol under realistic hardware imperfections?}
+
+To answer this question, we present the design and implementation of a modular, high-performance quantum network simulator written in Rust \cite{gonbvza2025qkdsimulator}. Rust was chosen for its memory safety, high performance, and concurrency support without the overhead of a garbage collector. The core architecture is based on a discrete event-driven simulation engine that uses a priority queue to process events at picosecond resolution ($ps$). The platform models realistic quantum channels, including distance-dependent entanglement degradation, optical fiber attenuation, and detector cooldown states. It also implements a complete classical post-processing pipeline, including basis reconciliation, CHSH inequality testing, and Cascade error correction. Furthermore, a reactive web interface built with Leptos and compiled to WebAssembly provides interactive real-time visualization of network topologies.
+
+Through targeted simulation scenarios, we evaluate the performance of the E91 protocol over distances of up to approximately 150 km, assuming a 0.14\% fidelity degradation per km based on \cite{sena2025entanglement}. To validate the security subsystem, we introduce an active eavesdropper model ("Mallory") performing interception attacks on transmitted qubits. The simulator demonstrates that such interference destroys quantum correlations, reducing the CHSH parameter $S$ below the classical bound ($S < 2$) and triggering protocol termination.
+
+The main contributions of this thesis are as follows:
+
+\case{Event-Driven Simulation Engine:}
+We design and implement a high-performance discrete-event simulation engine in Rust using a priority queue. The engine resolves events at picosecond resolution, accurately modeling asynchronous node behavior, qubit propagation delays, and detector cooldown dynamics.
+
+\case{Realistic Quantum Channel and Device Modeling:}
+We implement detailed abstractions of optical channels and quantum devices, including transmission probability $P_{a} = e^{-aL}$, distance-dependent fidelity degradation, detector cooldwn, and Poisson-distributed dark counts.
+
+\case{End-to-End E91 Post-Processing and Security Verification:}
+We construct a complete pipeline for key sifting, CHSH inequality testing, and multi-round Cascade error correction. The simulator reliably detects eavesdropping attempts through degradation of the Bell parameter ($S < 2$).
+
+The remainder of this thesis is organized as follows: Section~\ref{s:background} introduces quantum entanglement, the E91 protocol, and the Cascade error correction algorithm. Section~\ref{s:design} describes the simulator architecture and development challenges. Section~\ref{s:evaluation} presents simulation results and their relevance to real-world scenarios. Finally, Section~\ref{s:related} compares the proposed simulator with existing tools before the concluding section.
