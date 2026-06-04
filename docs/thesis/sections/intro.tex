@@ -15,13 +15,13 @@ Through targeted simulation scenarios, we evaluate the performance of the E91 pr
 
 The main contributions of this thesis are as follows:
 
-\case{Event-Driven Simulation Engine:}
+\textbf{Event-Driven Simulation Engine:}
 We design and implement a high-performance discrete-event simulation engine in Rust using a priority queue. The engine resolves events at picosecond resolution, accurately modeling asynchronous node behavior, qubit propagation delays, and detector cooldown dynamics.
 
-\case{Realistic Quantum Channel and Device Modeling:}
-We implement detailed abstractions of optical channels and quantum devices, including transmission probability $P_{a} = e^{-aL}$, distance-dependent fidelity degradation, detector cooldwn, and Poisson-distributed dark counts.
+\textbf{Realistic Quantum Channel and Device Modeling:}
+We implement detailed abstractions of optical channels and quantum devices, including distance-dependent fidelity degradation, detector cooldwn, and Poisson-distributed dark counts.
 
-\case{End-to-End E91 Post-Processing and Security Verification:}
+\textbf{End-to-End E91 Post-Processing and Security Verification:}
 We construct a complete pipeline for key sifting, CHSH inequality testing, and multi-round Cascade error correction. The simulator reliably detects eavesdropping attempts through degradation of the Bell parameter ($S < 2$).
 
 The remainder of this thesis is organized as follows: Section~\ref{s:background} introduces quantum entanglement, the E91 protocol, and the Cascade error correction algorithm. Section~\ref{s:design} describes the simulator architecture and development challenges. Section~\ref{s:evaluation} presents simulation results and their relevance to real-world scenarios. Finally, Section~\ref{s:related} compares the proposed simulator with existing tools before the concluding section.
