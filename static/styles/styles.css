@@ -1,0 +1,62 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Page base */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #f7f8fa;
+  color: #1f2937;
+}
+
+/* Layout */
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+/* Sidebar (20%) */
+#sidebar {
+  width: 20%;
+  min-width: 220px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+/* Sidebar title */
+#sidebar h2 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #374151;
+}
+
+/* Logs */
+#logs {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #4b5563;
+  white-space: pre-wrap;
+}
+
+/* Main area (80%) */
+#main {
+  flex: 1;
+  background: #ffffff;
+  position: relative;
+}
+
+/* Cytoscape canvas */
+#graph {
+  width: 100%;
+  height: 100%;
+}

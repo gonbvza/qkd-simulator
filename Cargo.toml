@@ -15,3 +15,6 @@ derive-new = "0.5"
 derivative = "2.2.0"
 get-many-mut = "0.1.0"
 hex = "0.4.3"
+axum = "0.8"
+tower-http = { version = "0.5", features = ["fs"] }
+serde = { version = "1.0", features = ["derive"] }

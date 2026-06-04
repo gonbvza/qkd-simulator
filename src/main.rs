@@ -5,6 +5,7 @@ use crate::core::event_loop::{EventLoop, EventLoopHandler};
 use crate::core::registry::Registry;
 use crate::error::Error;
 use crate::models::event::Event;
+use crate::ui::main::start_server;
 
 pub use utility::establish_connection;
 
@@ -18,6 +19,7 @@ pub mod models;
 pub mod schema;
 #[cfg(test)]
 pub mod tests;
+pub mod ui;
 pub mod utility;
 
 #[tokio::main]
@@ -25,6 +27,11 @@ async fn main() -> Result<(), Error> {
     let (tx, rx): (Sender<Event>, Receiver<Event>) = channel();
     let handler: EventLoopHandler = EventLoopHandler::new(tx.clone());
     let sim_handler: EventLoopHandler = EventLoopHandler::new(tx.clone());
+
+    // Spawn web application (async)
+    tokio::spawn(async {
+        start_server().await;
+    });
 
     // Spawn CLI (async)
     tokio::spawn(async move {
