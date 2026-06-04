@@ -13,17 +13,69 @@
 <body>
   <div id="app">
 
-    <!-- Sidebar (20%) -->
+    <!-- Left sidebar -->
     <aside id="sidebar">
       <h2>Logs</h2>
       <div id="logs"></div>
     </aside>
 
-    <!-- Main graph area (80%) -->
+    <!-- Graph -->
     <main id="main">
       <div id="graph"></div>
     </main>
 
+    <!-- Right panel -->
+    <aside id="node-panel">
+      <h2>Inspector</h2>
+
+      <!-- Node section -->
+      <div id="node-section">
+        <h3>Node</h3>
+        <div class="field" id="field-node-id">
+          <strong>Temp ID:</strong>
+          <span id="node-temp-id">-</span>
+        </div>
+        <div class="field" id="field-node-type">
+          <label>
+            Type:
+            <select id="node-type-input">
+              <option value="0">ClientNode</option>
+              <option value="1">EprNode</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <hr />
+
+      <!-- Link section -->
+      <div id="link-section">
+        <h3>Link</h3>
+        <div class="field" id="field-link-from">
+          <strong>From:</strong>
+          <span id="link-from">-</span>
+        </div>
+        <div class="field" id="field-link-to">
+          <strong>To:</strong>
+          <span id="link-to">-</span>
+        </div>
+        <div class="field" id="field-link-distance">
+          <label>
+            Distance:
+            <input id="link-distance-input" type="number" />
+          </label>
+        </div>
+        <div class="field" id="field-link-secure">
+          <label>
+            Secure:
+            <input id="link-secure-input" type="checkbox" />
+          </label>
+        </div>
+      </div>
+
+      <button id="save-btn">Save</button>
+      <button id="close-panel">Close</button>
+    </aside>
   </div>
 
   <script src="static/js/js-requests.js"></script>

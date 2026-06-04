@@ -1,6 +1,7 @@
 use std::fmt;
 
 use diesel::prelude::*;
+use serde::Serialize;
 
 use crate::{
     database::nodes::create_node,
@@ -23,7 +24,7 @@ pub struct Node {
 }
 
 /// Differs between client nodes and EPR source nodes.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
 pub enum NodeKind {
     ClientNode = 0,
     EprNode = 1,

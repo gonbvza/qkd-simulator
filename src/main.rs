@@ -27,10 +27,11 @@ async fn main() -> Result<(), Error> {
     let (tx, rx): (Sender<Event>, Receiver<Event>) = channel();
     let handler: EventLoopHandler = EventLoopHandler::new(tx.clone());
     let sim_handler: EventLoopHandler = EventLoopHandler::new(tx.clone());
+    let server_handler: EventLoopHandler = EventLoopHandler::new(tx.clone());
 
     // Spawn web application (async)
-    tokio::spawn(async {
-        start_server().await;
+    tokio::spawn(async move {
+        start_server(server_handler).await;
     });
 
     // Spawn CLI (async)
