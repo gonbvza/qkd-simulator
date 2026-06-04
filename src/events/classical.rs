@@ -61,5 +61,9 @@ pub fn post_process_key(
         .ok_or(ProcessError::NotFound(args.process_id))?;
     process.key = Some(hex::encode(bits_to_bytes(&corrected_key)));
 
+    println!("Src: {}", hex::encode(bits_to_bytes(&corrected_key)));
+    println!();
+    println!("Dst: {}", hex::encode(bits_to_bytes(&dst_qubits)));
+
     Ok(())
 }
