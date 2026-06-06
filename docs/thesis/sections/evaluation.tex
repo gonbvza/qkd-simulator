@@ -111,7 +111,52 @@ Additionally, the greater variance in the measurement outcomes suggests increase
 In addition to this, we can see that the simulator displays the following error:
 
 \begin{quote}
-Mallory was detected with CHSH 0.380 in process 0
+'Mallory was detected with CHSH 0.380 in process 0'
 \end{quote}
 
 The results confirm that the system operates as intended in the presence of insecure channels. All 10 runs produced a CHSH $S$ value below the classical bound of 2. As expected, all runs were halted due to the detection of Mallory.
+
+\subsection{Relationship Between CHSH Value and Distance}
+
+This experiment evaluates the behavior of the CHSH value when we alter the distance between communicating nodes. The expected outcome is a decrease in the CHSH value as the distance increases, due to the progressive degradation of entanglement fidelity.
+
+% TODO: Add topology figure once the web interface is finalized.
+The simulation consists of two client nodes, denoted as \texttt{src} and \texttt{dst}, connected to a shared EPR source through a secure channel. Measurements will be performed at five different distances: 1 km, 50 km, 100 km, 200 km, and 400 km. At 1 km, fidelity degradation is expected to be negligible, and therefore the CHSH value should remain close to its theoretical maximum of approximately 2.8.
+
+The experiment will be considered successful if the measured CHSH parameter, \(S\), exhibits a decreasing trend as the distance between the nodes increases.
+
+Since the CHSH parameter is not deterministic, two independent runs will be performed for each distance. 
+
+\begin{table}[ht]
+\centering
+\caption{CHSH values obtained over 10 simulations at different distances.}
+\label{tab:chsh_distance_runs}
+\begin{tabular}{c c c c c c}
+\toprule
+\textbf{Run} & \textbf{1 km} & \textbf{50 km} & \textbf{100 km} & \textbf{200 km} & \textbf{400 km} \\
+\midrule
+1  & 2.841 & 2.573 & 2.543 & 2.001 & 1.159 \\
+2  & 2.778 & 2.641 & 2.493 & 2.057 & 1.149 \\
+\midrule
+\textbf{AVG} & 2.810 & 2.607 & 2.518 & 2.029 & 1.154 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.45\textwidth]{../figures/chart_grey.png}
+    \caption{Diagram showing the relation of chsh and distance}
+    \label{fig:chsh_chart}
+\end{figure}
+
+
+The results confirm that the system behaves as expected when node distances vary. As the distnaec increases, the measured CHSH \(S\) value decreases, falling from an average of \(2.810\) at 1 km (fidelity degradation is negligible) to \(1.154\) at 400 km. This trend is consistent with the expected degradation of entanglement fidelity over longer distances. As expected, the CHSH value remains above the classical bound of 2 for shorter distances and eventually falls below this threshold at 400 km due to increased channel noise.
+
+From Figure~\ref{fig:chsh_chart}, we observe that the relationship between the CHSH value and distance is approximately linear. This is expected, as the fidelity degradation per km was simulated as a constant factor.
+
+\subsection{Scalability of the system}
+
+This experiment shows the scalability of the system by measuring its performance under increasing key sizes. We investigate how the system behaves as the number of qubits grows from 100 qubits to  100{,}000 qubits. 
+
+For each configuration, we measure the total simulation execution time, memory usage, and protocol success rate. The system is expected to exhibit a near-linear increase in execution time with respect to the number of qubits.
