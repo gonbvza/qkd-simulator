@@ -60,3 +60,22 @@ pub fn create_link(
     state.upsert_link(link);
     Ok(())
 }
+
+pub fn store_socket(
+    payload: EventPayload,
+    _current_time: i64,
+    state: &mut SimulationState,
+    _handle: &EventLoopHandler,
+) -> Result<(), Error> {
+    let EventPayload::StoreSocket(args) = payload else {
+        return Err(Error::WrongArgs());
+    };
+
+    if let Some(_) = state.get_socket() {
+        return Ok(());
+    }
+
+    state.set_socket(args.socket);
+
+    Ok(())
+}

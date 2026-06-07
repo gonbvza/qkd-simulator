@@ -1,4 +1,9 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
+
+use axum::extract::ws::WebSocket;
 
 use crate::{
     core::process::Process,
@@ -14,8 +19,11 @@ pub struct PairKey {
 /// Central in-memory state of the QKD simulation.
 ///
 /// This struct must only be mutated by the EventLoop thread.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct SimulationState {
+    /// Socket for gui
+    socket: Option<Arc<Mutex<WebSocket>>>,
+
     /// Active entangled pairs indexed by (process_id, qubit_nr)
     pairs: HashMap<(i32, i32), NewEntangledPair>,
 
@@ -41,6 +49,7 @@ impl SimulationState {
             processes: HashMap::new(),
             detectors: HashMap::new(),
             links: HashMap::new(),
+            socket: None,
         }
     }
 
@@ -146,6 +155,26 @@ impl SimulationState {
         self.nodes.clear();
         self.detectors.clear();
         self.links.clear();
+    }
+
+    /// Socket getter
+    pub fn get_socket(&self) -> &Option<Arc<Mutex<WebSocket>>> {
+        &self.socket
+    }
+
+    /// Socket setter
+    pub fn set_socket(&mut self, socket: Arc<Mutex<WebSocket>>) {
+        self.socket = Some(socket);
+    }
+
+    /// Socke message sender
+    /// TODO: MOVE THIS TO ANOTHER STRUCT FOR SEP OF CONCERN
+    pub fn send_ws_msg(&mut self, msg: String) {
+        if self.socket.is_none() {
+            return;
+        }
+
+        self.socket.clone().lock().send();
     }
 }
 

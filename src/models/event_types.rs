@@ -1,5 +1,8 @@
+use std::sync::{Arc, Mutex};
+
 use crate::models::entangled_pair::Side;
 use crate::models::node::NodeKind;
+use axum::extract::ws::WebSocket;
 use derive_new::new;
 
 /// List of event functions the system can execute.
@@ -12,6 +15,7 @@ pub enum EventName {
     ReceivePair,
     MeasurementTimeout,
     PostProcess,
+    StoreSocket,
 }
 
 /// Strongly-typed payloads for events. Each enum variant carries a dedicated
@@ -25,6 +29,7 @@ pub enum EventPayload {
     ReceivePair(ReceivePairPayload),
     MeasurementTimeout(MeasurementTimeoutPayload),
     PostProcess(PostProcessPayload),
+    StoreSocket(StoreSocketPayload),
 }
 
 /// Arguments for the `create_node` event.
@@ -74,4 +79,10 @@ pub struct MeasurementTimeoutPayload {
 #[derive(Debug, Clone, new)]
 pub struct PostProcessPayload {
     pub process_id: i32,
+}
+
+/// Arguments for storing socket.
+#[derive(Debug, Clone, new)]
+pub struct StoreSocketPayload {
+    pub socket: Arc<Mutex<WebSocket>>,
 }

@@ -6,7 +6,7 @@ use crate::{
     events::{
         classical::post_process_key,
         qkd::{handle_qkd_init, receive_pair},
-        state::{create_link, create_node},
+        state::{create_link, create_node, store_socket},
     },
     models::{
         event::ScheduledEvent,
@@ -45,6 +45,7 @@ impl Registry {
             (EventName::CreateNode, Box::new(create_node)),
             (EventName::CreateLink, Box::new(create_link)),
             (EventName::PostProcess, Box::new(post_process_key)),
+            (EventName::StoreSocket, Box::new(store_socket)),
         ]
     }
 
