@@ -13,9 +13,7 @@ To evaluate the performance and correctness of the system, we will conduct the f
 
   \item \textbf{3. Relationship between CHSH values and distance}: This test examines the impact of distance on fidelity degradation and, consequently, on the CHSH value. Since fidelity degradation is expected to increase with distance, the measured CHSH value should decrease accordingly.
 
-  \item \textbf{4. Scalability of the system}: This test evaluates the system's ability to handle simulations of varying sizes, ranging from small-scale runs involving 100 qubits to large-scale runs involving 100{,}000 qubits.
-
-  \item \textbf{5. Impact of dark counts on simulation time}: This test investigates how detector dark counts affect detector cooldown periods and, consequently, the total time required to complete a simulation run. An increase in the dark count rate is expected to increase the overall simulation time.
+  \item \textbf{4. Impact of dark counts on simulation time}: This test investigates how detector dark counts affect detector cooldown periods and, consequently, the total time required to complete a simulation run. An increase in the dark count rate is expected to increase the overall simulation time.
 \end{itemize}
 
 \subsection{Simulation run with two client nodes and an EPR source}
@@ -155,8 +153,37 @@ The results confirm that the system behaves as expected when node distances vary
 
 From Figure~\ref{fig:chsh_chart}, we observe that the relationship between the CHSH value and distance is approximately linear. This is expected, as the fidelity degradation per km was simulated as a constant factor.
 
-\subsection{Scalability of the system}
+\subsection{Impact of dark counts on simulation time}
 
-This experiment shows the scalability of the system by measuring its performance under increasing key sizes. We investigate how the system behaves as the number of qubits grows from 100 qubits to  100{,}000 qubits. 
+This experiment evaluates how detector dark counts affect the total execution time of the simulation. Dark counts introduce random detection events, which increase measurement time due to additional events that increase the detector cooldown.
 
-For each configuration, we measure the total simulation execution time, memory usage, and protocol success rate. The system is expected to exhibit a near-linear increase in execution time with respect to the number of qubits.
+The expected outcome is that higher dark count rates increase runtime, since more entangled-pair generation attempts are required to achieve the target key length under increased noise conditions.
+
+Since the time to perform the run is non-deterministic, three independent runs will be performed for each dark count. 
+
+
+\begin{table}[ht]
+\centering
+\caption{Execution times over 3 runs with different count rates.}
+\label{tab:execution_times}
+\begin{tabular}{c c c c}
+\toprule
+\textbf{Run} & \textbf{10} & \textbf{100000} & \textbf{10000000}  \\
+\midrule
+1  & 15.7 s & 17.9 s & 18.5 s \\
+2  & 12.9 s & 16.5 s & 16.3 s \\
+3  & 14.9 s & 14.9 s & 18.8 s \\
+\midrule
+\textbf{AVG} & 14.5 s & 16.4 s & 17.8 s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.45\textwidth]{../figures/exec_time_chart_1.png}
+    \caption{Diagram showing the relation of time and dark count rate}
+    \label{fig:chsh_chart}
+\end{figure}
+
+The results show that increasing dark count rates lead to longer simulation times. This happens because more events cause additional detector cooldowns n. 
