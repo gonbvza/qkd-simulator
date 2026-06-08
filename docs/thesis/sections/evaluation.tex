@@ -21,7 +21,14 @@ To evaluate the performance and correctness of the system, we will conduct the f
 This experiment validates the basic functionality of the system under normal operating conditions. The objective is to verify that entanglement distribution, CHSH-based security verification, and key generation are performed correctly.
 
 % TODO: MAKE PICTURE OF TOPOLOGY ONCE WEB IS FINISHED
-The simulation consists of two client nodes, denoted as \texttt{src} and \texttt{dst}, connected to a shared EPR source through secure links. Each client is connected to the EPR node via a channel of 100\,000 meters (100 km). Figure~\ref{...} illustrates the network topology used in this experiment.
+The simulation consists of two client nodes, denoted as \texttt{src} and \texttt{dst}, connected to a shared EPR source through secure links. Each client is connected to the EPR node via a channel of 100\,000 meters (100 km). Figure~\ref{fig:secured_topology} illustrates the network topology used in this experiment.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.45\textwidth]{../figures/secure_topology.png}
+    \caption{Diagram showing the used topology}
+    \label{fig:secured_topology}
+\end{figure}
 
 For the protocol to be considered successful, the measured CHSH \(S\) parameter must be greater than 2, demonstrating the presence of quantum correlations, and both client nodes must generate identical secret keys.
 
@@ -70,8 +77,14 @@ The results confirm that the system operates correctly. All 10 runs produced a C
 
 This experiment validates the basic functionality of insecure channels. The objective is to verify that CHSH-based security verification and mallory actuation are performed correctly.
 
-% TODO: MAKE PICTURE OF TOPOLOGY ONCE WEB IS FINISHED
-The simulation consists of two client nodes, denoted as \texttt{src} and \texttt{dst}, connected to a shared EPR source through a secure and insecure link respectively. Each client is connected to the EPR node via a channel of 100\,000 meters (100 km). Figure~\ref{...} illustrates the network topology used in this experiment.
+The simulation consists of two client nodes, denoted as \texttt{src} and \texttt{dst}, connected to a shared EPR source through a secure and insecure link respectively. Each client is connected to the EPR node via a channel of 100\,000 meters (100 km). Figure~\ref{insecured_topology} illustrates the network topology used in this experiment.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.45\textwidth]{../figures/insecure_topology.png}
+    \caption{Diagram showing the used topology}
+    \label{fig:insecured_topology}
+\end{figure}
 
 For the protocol to be considered successful, the measured CHSH \(S\) parameter must be below 2, demonstrating the presence of a third person that breaks quantum correlations, and the simulation run must be stopped.
 
