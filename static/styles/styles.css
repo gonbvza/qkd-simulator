@@ -59,6 +59,49 @@ body {
 }
 
 /* =========================
+   Legend (NEW)
+   ========================= */
+
+#legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  background: rgba(17, 24, 39, 0.85);
+  color: white;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(6px);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot.client {
+  background: #2F80ED;
+}
+
+.dot.epr {
+  background: #9B51E0;
+}
+
+/* =========================
    Right inspector panel
    ========================= */
 

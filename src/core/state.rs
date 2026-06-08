@@ -173,8 +173,6 @@ impl SimulationState {
         if self.socket.is_none() {
             return;
         }
-
-        self.socket.clone().lock().send();
     }
 }
 

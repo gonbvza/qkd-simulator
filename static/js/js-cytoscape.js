@@ -27,6 +27,7 @@ function showField(id) {
 async function init() {
   const state = await getState();
 
+  console.log(state);
   cy = cytoscape({
     container: document.getElementById('graph'),
 
@@ -40,12 +41,14 @@ async function init() {
           id: `${e.src_id}-${e.dst_id}`,
           source: e.src_id,
           target: e.dst_id,
-          distance: e.distance
+          distance: e.distance,
+          is_secure: String(e.is_secure)
         }
       }))
     ],
 
     style: [
+      // ================= Nodes =================
       {
         selector: 'node',
         style: {
@@ -56,16 +59,40 @@ async function init() {
       },
       { selector: '.ClientNode', style: { 'background-color': '#2F80ED' } },
       { selector: '.EprNode', style: { 'background-color': '#9B51E0' } },
+
+      // ================= Edges (base style) =================
       {
         selector: 'edge',
         style: {
           width: 3,
-          'line-color': '#bbb',
-          'target-arrow-color': '#bbb',
           'curve-style': 'bezier',
-          'target-arrow-shape': 'none'
+          'target-arrow-shape': 'none',
+
+          label: 'data(distance)',
+          'font-size': 10,
+          'text-rotation': 'autorotate',
+          'text-margin-y': -10,
+
+          color: '#333',
+          'text-background-color': '#ffffff',
+          'text-background-opacity': 0.7,
+          'text-background-padding': '2px',
+
+          'line-color': '#bbb',
+          'target-arrow-color': '#bbb'
         }
       },
+
+      // ================= Insecure edges (RED) =================
+      {
+        selector: 'edge[is_secure = "false"]',
+        style: {
+          'line-color': '#ef4444',
+          'target-arrow-color': '#ef4444'
+        }
+      },
+
+      // ================= Link selection highlight =================
       {
         selector: '.link-source',
         style: {
@@ -80,7 +107,9 @@ async function init() {
   });
 
   cy.on('dragstart', 'node', () => { isDragging = true; });
-  cy.on('dragstop', 'node', () => { setTimeout(() => { isDragging = false; }, 100); });
+  cy.on('dragstop', 'node', () => {
+    setTimeout(() => { isDragging = false; }, 100);
+  });
 
   /* -------------------------
      Canvas tap → create node
@@ -99,7 +128,6 @@ async function init() {
       position: { x: pos.x, y: pos.y }
     });
 
-    // Prevent the newly added node from being grabbed immediately
     node.lock();
     setTimeout(() => node.unlock(), 300);
 
@@ -138,24 +166,31 @@ async function init() {
       }
 
       const tempEdgeId = `temp-edge-${Date.now()}`;
+
       cy.add({
         group: 'edges',
         data: {
           id: tempEdgeId,
           source: linkStartNode.id(),
           target: node.id(),
-          distance: 1
+          distance: 1,
+          is_secure: true
         }
       });
 
-      pendingLink = { id: tempEdgeId, from: linkStartNode.id(), to: node.id() };
+      pendingLink = {
+        id: tempEdgeId,
+        from: linkStartNode.id(),
+        to: node.id()
+      };
+
       pendingNode = null;
 
       hideAllFields();
       document.getElementById('link-from').textContent = linkStartNode.id();
       document.getElementById('link-to').textContent = node.id();
       document.getElementById('link-distance-input').value = 1;
-      document.getElementById('link-secure-input').value = true;
+      document.getElementById('link-secure-input').checked = true;
 
       showField('field-link-from');
       showField('field-link-to');
@@ -168,7 +203,7 @@ async function init() {
       return;
     }
 
-    /* Normal click: inspect */
+    /* Normal click */
     if (linkStartNode) {
       linkStartNode.removeClass('link-source');
       linkStartNode = null;
@@ -197,19 +232,24 @@ async function init() {
       from: edge.source().id(),
       to: edge.target().id()
     };
+
     pendingNode = null;
 
     hideAllFields();
     document.getElementById('link-from').textContent = edge.source().id();
     document.getElementById('link-to').textContent = edge.target().id();
     document.getElementById('link-distance-input').value = edge.data('distance') ?? 1;
+    document.getElementById('link-secure-input').checked = edge.data('is_secure');
+
     showField('field-link-from');
     showField('field-link-to');
     showField('field-link-distance');
+    showField('field-link-secure');
     openPanel();
   });
 
-  document.getElementById('close-panel').addEventListener('click', closePanel);
+  document.getElementById('close-panel')
+    .addEventListener('click', closePanel);
 
   /* -------------------------
      Save
@@ -218,12 +258,7 @@ async function init() {
 
     if (pendingNode && pendingNode.id().startsWith('temp-node-')) {
       const nodeType = document.getElementById('node-type-input').value;
-      await createNode(
-        nodeType
-      );
-      // pendingNode.data('id', data.id);
-      // pendingNode.data('node_type', data.node_type);
-      // pendingNode.classes(data.node_type);
+      await createNode(nodeType);
       pendingNode = null;
     }
 
@@ -232,7 +267,11 @@ async function init() {
       const is_secure = document.getElementById('link-secure-input').checked;
 
       await createLink(pendingLink.from, pendingLink.to, distance, is_secure);
-      cy.getElementById(pendingLink.id).data('distance', distance);
+
+      const edge = cy.getElementById(pendingLink.id);
+      edge.data('distance', distance);
+      edge.data('is_secure', is_secure);
+
       pendingLink = null;
     }
 
