@@ -9,7 +9,6 @@ mod tests {
             id: 1,
             resolution_ps: 100,
             cooldown_ps,
-            dark_count_rate: 0,
             last_detection_time,
         }
     }

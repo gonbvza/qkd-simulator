@@ -3,7 +3,6 @@ CREATE TABLE detector (
   id SERIAL PRIMARY KEY, 
   resolution_ps BIGINT NOT NULL, 
   cooldown_ps BIGINT NOT NULL, 
-  dark_count_rate INT NOT NULL, 
   last_detection_time BIGINT NOT NULL
 );
 

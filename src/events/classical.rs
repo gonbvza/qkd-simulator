@@ -1,25 +1,35 @@
 use crate::{
     core::{
         event_loop::EventLoopHandler,
-        process::Process,
         settings::KEY_LENGTH,
         sifting::{cascade, perform_chsh},
         state::SimulationState,
     },
     error::{Error, ProcessError},
-    models::{basis::Basis, entangled_pair::AcceptedPair, event_types::EventPayload},
+    models::{
+        basis::Basis, entangled_pair::AcceptedPair, event_types::EventPayload, process::Process,
+    },
     utility::bits_to_bytes,
 };
 
 pub fn post_process_key(
     payload: EventPayload,
-    _current_time: i64,
+    current_time: i64,
     state: &mut SimulationState,
     _handle: &EventLoopHandler,
 ) -> Result<(), Error> {
     let EventPayload::PostProcess(args) = payload else {
         return Err(Error::WrongArgs());
     };
+
+    let Some(process) = state.get_process(args.process_id) else {
+        return Err(ProcessError::NotFound(args.process_id).into());
+    };
+
+    if !process.key.is_none() {
+        // Key was already calculated
+        return Ok(());
+    }
 
     let acc_pairs = state.get_accepted_measurements(args.process_id);
     let mut same_basis_pairs = Vec::new();
@@ -61,5 +71,6 @@ pub fn post_process_key(
         .ok_or(ProcessError::NotFound(args.process_id))?;
     process.key = Some(hex::encode(bits_to_bytes(&corrected_key)));
 
+    println!("Process finished at {}", current_time);
     Ok(())
 }

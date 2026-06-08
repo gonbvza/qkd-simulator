@@ -31,6 +31,8 @@ pub enum LinkError {
     CapacityExceeded,
     #[error("Link does not exist between {0} and {1}")]
     NotExistingLink(i32, i32),
+    #[error("Link not found: {0}")]
+    NotFound(i32),
     #[error("Database error: {0}")]
     Database(#[from] diesel::result::Error),
 }

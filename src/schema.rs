@@ -5,7 +5,6 @@ diesel::table! {
         id -> Int4,
         resolution_ps -> Int8,
         cooldown_ps -> Int8,
-        dark_count_rate -> Int4,
         last_detection_time -> Int8,
     }
 }

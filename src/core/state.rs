@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use crate::{
-    core::process::Process,
     models::node::Node,
-    models::{detector::Detector, entangled_pair::NewEntangledPair, links::Link},
+    models::{detector::Detector, entangled_pair::NewEntangledPair, links::Link, process::Process},
 };
 
+#[derive(Debug, Clone)]
 pub struct PairKey {
     pub qubit_nr: i32,
     pub process_id: i32,
@@ -84,8 +84,18 @@ impl SimulationState {
     }
 
     /// Get proces
+    pub fn get_process(&self, process_id: i32) -> Option<&Process> {
+        self.processes.get(&process_id)
+    }
+
+    /// Get mutable detector
     pub fn get_detector_mut(&mut self, detector_id: i32) -> Option<&mut Detector> {
         self.detectors.get_mut(&detector_id)
+    }
+
+    /// Get proces
+    pub fn get_detector(&self, detector_id: i32) -> Option<&Detector> {
+        self.detectors.get(&detector_id)
     }
 
     pub fn push_process(&mut self, mut process: Process) -> i32 {
@@ -108,14 +118,20 @@ impl SimulationState {
     /// Borrow nodes, links and pairs mutably at the same time.
     ///
     /// This keeps fields private while still supporting multi-map event handlers.
-    pub fn split_nodes_links_pairs_mut(
+    pub fn split_nodes_links_pairs_detector_mut(
         &mut self,
     ) -> (
         &mut HashMap<i32, Node>,
         &mut HashMap<i32, Link>,
         &mut HashMap<(i32, i32), NewEntangledPair>,
+        &mut HashMap<i32, Detector>,
     ) {
-        (&mut self.nodes, &mut self.links, &mut self.pairs)
+        (
+            &mut self.nodes,
+            &mut self.links,
+            &mut self.pairs,
+            &mut self.detectors,
+        )
     }
 
     /// Borrow detectors, nodes and links mutably at the same time.

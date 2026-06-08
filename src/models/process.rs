@@ -20,4 +20,8 @@ impl Process {
             key: None,
         }
     }
+
+    pub fn is_complete(&self, expected_pairs: i32) -> bool {
+        self.accepted_pairs >= expected_pairs
+    }
 }

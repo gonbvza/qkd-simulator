@@ -54,7 +54,7 @@ fn handle_qkd_init_creates_process_locks_nodes_and_starts_pair_emission() {
     .unwrap();
 
     {
-        let (nodes, _, pairs) = state.split_nodes_links_pairs_mut();
+        let (nodes, _, pairs, _) = state.split_nodes_links_pairs_detector_mut();
         assert_eq!(nodes.get(&1).unwrap().locked_by, Some(0));
         assert_eq!(nodes.get(&2).unwrap().locked_by, Some(0));
 
@@ -98,7 +98,7 @@ fn handle_qkd_init_aborts_when_one_node_is_busy() {
     assert_eq!(result.unwrap_err(), Error::Node(NodeError::NodeInUse()));
 
     {
-        let (nodes, _, pairs) = state.split_nodes_links_pairs_mut();
+        let (nodes, _, pairs, _) = state.split_nodes_links_pairs_detector_mut();
         assert_eq!(nodes.get(&1).unwrap().locked_by, Some(999));
         assert_eq!(nodes.get(&2).unwrap().locked_by, None);
         assert!(pairs.is_empty());

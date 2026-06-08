@@ -1,16 +1,19 @@
 use crate::{
     core::{
+        dark_count::schedule_dark_counts,
         event_loop::EventLoopHandler,
         mallory::mallory_measure_qubit,
         measurement::measure_qubit,
-        pairs::emit_pair,
-        process::Process,
+        pairs::{emit_pair, schedule_pair_event, schedule_pair_timeout},
         settings::QUBIT_AMOUNT,
         state::{PairKey, SimulationState},
     },
-    error::{DetectorError, Error, NodeError, SimError},
-    models::{detector::Detector, event_types::EventPayload},
+    error::{DetectorError, Error, LinkError, NodeError, PairError, SimError},
+    models::{
+        detector::Detector, entangled_pair::Side, event_types::EventPayload, process::Process,
+    },
 };
+use std::cmp::max;
 
 /// Initialises a QKD session between two nodes.
 ///
@@ -30,9 +33,7 @@ pub fn handle_qkd_init(
     let process = Process::new(current_time);
     let process_id = state.push_process(process);
 
-    println!("Starting process {}", process_id);
-
-    let (nodes, links, pairs) = state.split_nodes_links_pairs_mut();
+    let (nodes, links, pairs, detectors) = state.split_nodes_links_pairs_detector_mut();
 
     let [src_node, dst_node] = nodes
         .get_disjoint_mut([&args.src_node_id, &args.dst_node_id])
@@ -52,6 +53,17 @@ pub fn handle_qkd_init(
         return Err(Error::Node(NodeError::NodeInUse()));
     }
 
+    // Schedule dark count events
+    let src_detector = detectors
+        .get(&src_node.detector_id)
+        .ok_or(DetectorError::NotFound(src_node.detector_id))?;
+    let dst_detector = detectors
+        .get(&dst_node.detector_id)
+        .ok_or(DetectorError::NotFound(dst_node.detector_id))?;
+
+    schedule_dark_counts(src_detector, current_time, handle)?;
+    schedule_dark_counts(dst_detector, current_time, handle)?;
+
     // Remove pair array and change pair_hm name
     for qubit_nr in 1..QUBIT_AMOUNT {
         let pair_key: PairKey = PairKey {
@@ -69,6 +81,11 @@ pub fn handle_qkd_init(
         )?;
         pairs.insert((pair.process_id, pair.qubit_nr), pair);
     }
+
+    println!(
+        "Starting process {} at timestamp {}",
+        process_id, current_time
+    );
     Ok(())
 }
 
@@ -86,7 +103,7 @@ pub fn receive_pair(
     let EventPayload::ReceivePair(args) = payload else {
         return Err(Error::WrongArgs());
     };
-    let (node, distance, is_secure) = {
+    let (node, distance, is_secure, detector) = {
         let node = nodes
             .get_mut(&args.node_id)
             .ok_or(NodeError::NodeNotFound(args.node_id.to_owned()))?;
@@ -98,15 +115,17 @@ pub fn receive_pair(
             .get_mut(&node.detector_id)
             .ok_or(DetectorError::NotFound(node.detector_id))?;
 
-        if detector.is_cooling(current_time) {
-            println!("Cooling down, skipped");
-            return Err(DetectorError::CoolingDown(detector.id).into());
-        }
-
-        detector.set_detection_time(current_time)?;
         // Fix cloning this node as you cant change it
-        (node.to_owned(), link.length, link.is_secure)
+        (node.to_owned(), link.length, link.is_secure, detector)
     };
+
+    if detector.is_cooling(current_time) {
+        // Cooling should not rais an error, just stop
+        println!("COOLING");
+        return Ok(());
+    };
+
+    detector.set_detection_time(current_time)?;
 
     if !is_secure {
         // Channel is not secure, mallory should measure first
@@ -132,5 +151,64 @@ pub fn receive_pair(
         handle,
     )?;
 
+    Ok(())
+}
+
+/// Function to resend a pair if this one was dropped
+///
+/// If the pair was accepted, then it does nothing
+pub fn pair_timeout(
+    payload: EventPayload,
+    current_time: i64,
+    state: &mut SimulationState,
+    handle: &EventLoopHandler,
+) -> Result<(), Error> {
+    let EventPayload::PairTimeout(args) = payload else {
+        return Err(Error::WrongArgs());
+    };
+
+    let (_, links, pairs, _) = state.split_nodes_links_pairs_detector_mut();
+
+    let Some(pair) = pairs.get(&(args.pair_key.process_id, args.pair_key.qubit_nr)) else {
+        return Err(PairError::PairNotFound(args.pair_key.process_id).into());
+    };
+
+    // Check if pair was accepted
+    if pair.accepted {
+        return Ok(());
+    }
+
+    // Resending
+    let src_link = links
+        .get(&args.src_link)
+        .ok_or(LinkError::NotFound(args.src_link))?;
+    let dst_link = links
+        .get(&args.dst_link)
+        .ok_or(LinkError::NotFound(args.dst_link))?;
+
+    let src_pair_ts = schedule_pair_event(
+        pair.src_id,
+        Side::Source,
+        &src_link,
+        &args.pair_key,
+        current_time,
+        handle,
+    )?;
+    let dst_pair_ts = schedule_pair_event(
+        pair.dst_id,
+        Side::Destination,
+        &dst_link,
+        &args.pair_key,
+        current_time,
+        handle,
+    )?;
+
+    schedule_pair_timeout(
+        &src_link,
+        &dst_link,
+        args.pair_key,
+        max(src_pair_ts, dst_pair_ts),
+        handle,
+    )?;
     Ok(())
 }

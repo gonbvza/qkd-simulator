@@ -10,7 +10,6 @@ pub struct Detector {
     pub id: i32,
     pub resolution_ps: i64,
     pub cooldown_ps: i64,
-    pub dark_count_rate: i32,
     pub last_detection_time: i64,
 }
 

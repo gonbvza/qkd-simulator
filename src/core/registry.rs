@@ -5,7 +5,8 @@ use crate::{
     error::Error,
     events::{
         classical::post_process_key,
-        qkd::{handle_qkd_init, receive_pair},
+        dark_count::dark_count,
+        qkd::{handle_qkd_init, pair_timeout, receive_pair},
         state::{create_link, create_node},
     },
     models::{
@@ -45,6 +46,8 @@ impl Registry {
             (EventName::CreateNode, Box::new(create_node)),
             (EventName::CreateLink, Box::new(create_link)),
             (EventName::PostProcess, Box::new(post_process_key)),
+            (EventName::DarkCount, Box::new(dark_count)),
+            (EventName::PairTimeout, Box::new(pair_timeout)),
         ]
     }
 

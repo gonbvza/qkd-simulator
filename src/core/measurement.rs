@@ -4,7 +4,6 @@ use crate::{
     core::{
         event_loop::EventLoopHandler,
         maths::{calculate_basis_difference, calculate_entanglement_prob, calculate_new_fidelity},
-        process::Process,
         settings::QUBIT_AMOUNT,
         state::SimulationState,
     },
@@ -16,6 +15,7 @@ use crate::{
         event_types::{EventName, EventPayload, PostProcessPayload},
         measurement::{ClientValue, Measurement},
         node::Node,
+        process::Process,
     },
     utility::is_first,
 };
@@ -130,7 +130,7 @@ pub fn second_measurement(
     }
 
     // Check if all pairs have been accepted
-    if process.accepted_pairs <= QUBIT_AMOUNT - 2 {
+    if !process.is_complete(QUBIT_AMOUNT - 1) {
         return Ok(());
     }
 

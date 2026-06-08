@@ -1,11 +1,11 @@
 pub mod bin_heap;
+pub mod dark_count;
 pub mod event_loop;
 pub mod graph;
 pub mod mallory;
 pub mod maths;
 pub mod measurement;
 pub mod pairs;
-pub mod process;
 pub mod registry;
 pub mod settings;
 pub mod sifting;

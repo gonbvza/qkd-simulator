@@ -1,3 +1,4 @@
+use crate::core::state::PairKey;
 use crate::models::entangled_pair::Side;
 use crate::models::node::NodeKind;
 use derive_new::new;
@@ -10,8 +11,9 @@ pub enum EventName {
     CreateLink,
     HandleQkdInit,
     ReceivePair,
-    MeasurementTimeout,
+    PairTimeout,
     PostProcess,
+    DarkCount,
 }
 
 /// Strongly-typed payloads for events. Each enum variant carries a dedicated
@@ -23,8 +25,9 @@ pub enum EventPayload {
     CreateLink(CreateLinkPayload),
     HandleQkdInit(HandleQkdInitPayload),
     ReceivePair(ReceivePairPayload),
-    MeasurementTimeout(MeasurementTimeoutPayload),
+    PairTimeout(PairTimeoutPayload),
     PostProcess(PostProcessPayload),
+    DarkCount(DarkCountPayload),
 }
 
 /// Arguments for the `create_node` event.
@@ -65,13 +68,20 @@ pub struct ReceivePairPayload {
 
 /// Arguments for a measurement timeout event.
 #[derive(Debug, Clone, new)]
-pub struct MeasurementTimeoutPayload {
-    pub process_id: i32,
-    pub qubit_nr: i32,
+pub struct PairTimeoutPayload {
+    pub pair_key: PairKey,
+    pub src_link: i32,
+    pub dst_link: i32,
 }
 
 /// Arguments for sifting / same-basis evaluation.
 #[derive(Debug, Clone, new)]
 pub struct PostProcessPayload {
     pub process_id: i32,
+}
+
+/// Arguments for dark count simulation.
+#[derive(Debug, Clone, new)]
+pub struct DarkCountPayload {
+    pub detector_id: i32,
 }

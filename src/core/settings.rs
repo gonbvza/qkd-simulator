@@ -12,15 +12,18 @@ pub const KEY_LENGTH: usize = 1024;
 /// Amounts of qubit sent by the epr node
 pub const QUBIT_AMOUNT: i32 = 10000;
 /// Default resolution for the detector
-pub const DETECTOR_RESOLUTION: i64 = 100;
+pub const DETECTOR_RESOLUTION: i64 = 10;
 /// Default cooldown for the detector
-pub const DETECTOR_COOLDOWN_US: i64 = 0;
+pub const DETECTOR_COOLDOWN_US: i64 = 10;
 /// Default cooldown rate for the detector
-pub const DETECTOR_DARK_COUNT_RATE: i32 = 10;
+pub const DARK_COUNT_RATE: f64 = 100000.0;
 /// Speed of light in fiber
 pub const LIGHT_SPEED_FIBER: f64 = 2e8;
 /// Constant for fidelity degradation in fiber
 pub const FIDELITY_DEGRADATION: f32 = 14.0 / 10_000_000.0;
+/// Time conversions
+pub const SECONDS_TO_MICROSECONDS: i64 = 1_000_000;
+pub const SECONDS_TO_MILISECONDS: i64 = 1_000;
 /// Constant used for CHSH validation
 pub const CHSH_THRESHOLD: f32 = 2_f32;
 /// Constants used for basis mathematics

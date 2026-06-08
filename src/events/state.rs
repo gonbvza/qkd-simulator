@@ -31,6 +31,7 @@ pub fn create_node(
     // Create in local state
     state.upsert_node(node);
     state.upsert_detector(detector);
+
     Ok(())
 }
 
