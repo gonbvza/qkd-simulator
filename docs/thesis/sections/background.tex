@@ -15,7 +15,7 @@ Using Born’s rule, the state of a qubit can be expressed as a linear combinati
 \]
 where $\alpha, \beta \in \mathbb{C}$ and satisfy the probability condition $|\alpha|^2 + |\beta|^2 = 1$.
 
-To operate on qubits, we can use a set of quantum gates analogous to logic gates in classical computing. One example is the \textbf{Hadamard (H)} gate, which creates superposition states and is represented by the following matrix:
+To operate on qubits, we can use a set of quantum gates, same as  logic gates in classical computing. One example is the \textbf{Hadamard (H)} gate, which creates superposition states and is represented by the following matrix:
 \[
 H = \frac{1}{\sqrt{2}}
 \begin{pmatrix}
@@ -72,7 +72,7 @@ H\ket{0}
 \]
 
 
-\textbf{Entanglement}, a key aspect of the E91 protocol, occurs when two qubits are prepared in a quantum state such that their measurement outcomes exhibit correlations, regardless of distance. These entangled two-qubit states are known as Bell states, named after physicist John Bell, who developed Bell’s theorem to test the non-classical nature of such correlations.
+\textbf{Entanglement}, a key aspect of the E91 protocol, occurs when two qubits are prepared in a quantum state such that their measurement outcomes show correlations, regardless of distance. These entangled two-qubit states are known as Bell states, named after physicist John Bell, who developed Bell’s theorem to test the non-classical nature of such correlations.
 
 One of the four maximally entangled two-qubit Bell states is defined as:
 \[
@@ -165,4 +165,4 @@ If after calculating the S parameter, we get $\left|S\right| < 2$, we can assume
 % Explain Cascade error correction
 The Cascade protocol functions as a multi-pass block-parity check designed to reconcile bit errors between Alice and Bob caused by fidelity loss. In the first pass, the sifted bit strings are divided into equal-sized blocks ($k_1$), and Alice transmits the parity of each block to Bob. For any block where parities disagree—signaling an odd number of errors—the parties execute the BINARY subprotocol. This subprotocol bisects the block and compares the parities of the halves until the exact position of a single erroneous bit is isolated and corrected by Bob, leaving all remaining blocks with an even number of errors.
 
-In subsequent passes ($i > 1$), the block size increases ($k_i$) and a new mapping function shuffles the bits into different groups. Alice and Bob exchange parities for these new blocks to identify remaining discrepancies. Correcting an error in a later pass alters the parity of the bits in earlier passes, triggering a feedback loop; the protocol identifies the smallest blocks from previous passes that now have odd errors and recursively runs BINARY to correct them. For this simulator, this framework will run for exactly four rounds of cascade to ensure identical keys before proceeding to hash-based verification.
+In subsequent passes ($i > 1$), the block size increases ($k_i$). Alice and Bob exchange parities for these new blocks to identify remaining errors. Correcting an error in a later pass alters the parity of the bits in earlier passes, triggering a recursive loop.

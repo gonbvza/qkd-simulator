@@ -4,7 +4,7 @@ In this thesis, we presented the design, implementation, and evaluation of a mod
 
 The experimental results validate that our simulator successfully models distance-dependent entanglement degradation and non-deterministic detector properties, such as dark count rates driven by Poisson processes and detector cooldown periods. Through our test scenarios, the simulator demonstrated a strong violation of the classical CHSH inequality threshold ($S > 2$) over channel lengths up to 100~km, yielding an average Bell parameter $S = 2.449$. This reduction from the theoretical maximum correctly reflects the 0.14\% fidelity degradation per kilometer modeled from real-world empirical data. Furthermore, the integration of an active third person (Mallory) confirmed the simulator's security robustness. The eavesdropper's interception attempts successfully destroys quantum correlations, collapsing the CHSH parameter well below the classical bound ($S = 0.491$) and accurately triggering immediate protocol termination.
 
-The architecture’s performance evaluation proved the scalability of our approach. By transitioning from a persistent database state to an in-memory HashMap-based architecture managed directly by the main execution loop, we mitigated thread-locking overhead and reduced simulation times exponentially, achieving a near-linear growth model suitable for large-scale runs up to $10^5$ qubits.
+The architecture’s performance evaluation proved the scalability of our approach. By transitioning from a persistent database state to an in-memory HashMap-based architecture managed directly by the main execution loop, we mitigated thread-locking overhead and reduced simulation times exponentially.
 
 \subsection{Future Work}
 While the current implementation offers an end-to-end framework for evaluating the E91 protocol, several avenues remain for future research and enhancement:
@@ -12,4 +12,5 @@ While the current implementation offers an end-to-end framework for evaluating t
     \item \textbf{Protocol Diversification:} The current architectural scope is restricted to the E91 protocol. Future iterations should introduce generalized abstraction layers to support other foundational protocols such as BB84, BBM92.
     \item \textbf{Advanced Physical Noise Frameworks:} To overcome the limitation of modeling channel noise as a constant linear degradation factor, the physical-layer simulation can be extended to incorporate complex time-varying decoherence, polarization mode dispersion, and non-Markovian noise models.
 \end{itemize}
-In summary, this work provides a reliable, secure, and computationally efficient foundation for quantum netw
+
+In summary, this work provides a reliable, secure, and computationally efficient foundation for quantum networks

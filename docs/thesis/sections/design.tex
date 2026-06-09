@@ -22,7 +22,7 @@ Both interfaces comply with the same function signatures and data models, ensuri
 
 \textbf{3. Channel}: As the simulation engine and the entry points run on different threads, a communication channel must exist between them in order for user requests to be executed by the simulation.
 
-This channel is a single-writer single-reader channel. Instead of sharing state between both layers, which would require locking due to Rust's mutable ownership rules, the entry point threads send event requests that are received by the main loop.
+This channel is a multiple-writer single-reader channel. Instead of sharing state between both layers, which would require locking due to Rust's mutable ownership rules, the entry point thread send event requests that are received by the main loop.
 
 \textbf{4. Main Loop}: This loop is responsible for both receiving requests from the channel and executing the events processed by the event loop.
 
@@ -56,7 +56,7 @@ $$
 
 the qubit is dropped.
 
-\textbf{Dark count rate}: The dark count rate is a constant property of the detector. As this rate increases, the average interval between dark count events decreases. Since these intervals should not be fixed but instead occur randomly in time, the process is modeled as a Poisson process. In a Poisson process, the time between consecutive events follows an exponential distribution. 
+\textbf{Dark count rate}: The dark count rate is a constant property of the simulator. As this rate increases, the average interval between dark count events decreases. Since these intervals should not be fixed but instead occur randomly in time, the process is modeled as a Poisson process. In a Poisson process, the time between consecutive events follows an exponential distribution. 
 
 \begin{figure}[ht]
     \centering

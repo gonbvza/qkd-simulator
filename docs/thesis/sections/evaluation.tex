@@ -1,6 +1,6 @@
 \section{Evaluation}\label{s:evaluation}
 
-This section evaluates the correctness, security, and performance of the proposed system. The experiments are designed to verify that the protocol behaves as expected under both normal and adverse conditions, while also assessing its scalability and sensitivity to physical-layer parameters.
+This section evaluates the correctness, security, and performance of the proposed system. The experiments are designed to verify that the protocol behaves as expected under both normal and adverse conditions, while also assessing its sensitivity to dark counts.
 
 For each experiment, we define the simulation setup, the metrics collected, and the expected outcome. The primary metrics considered throughout this evaluation are the CHSH \(S\) parameter, key correctness, simulation execution time, and protocol termination behavior. 
 
@@ -18,7 +18,7 @@ To evaluate the performance and correctness of the system, we will conduct the f
 
 \subsection{Simulation run with two client nodes and an EPR source}
 
-This experiment validates the basic functionality of the system under normal operating conditions. The objective is to verify that entanglement distribution, CHSH-based security verification, and key generation are performed correctly.
+This experiment validates the basic functionality of the system under normal operating conditions. The aim is to verify that entanglement distribution, CHSH-based security verification, and key generation are performed correctly.
 
 % TODO: MAKE PICTURE OF TOPOLOGY ONCE WEB IS FINISHED
 The simulation consists of two client nodes, denoted as \texttt{src} and \texttt{dst}, connected to a shared EPR source through secure links. Each client is connected to the EPR node via a channel of 100\,000 meters (100 km). Figure~\ref{fig:secured_topology} illustrates the network topology used in this experiment.
@@ -75,9 +75,9 @@ The results confirm that the system operates correctly. All 10 runs produced a C
 
 \subsection{Simulation run over an insecure channel}
 
-This experiment validates the basic functionality of insecure channels. The objective is to verify that CHSH-based security verification and mallory actuation are performed correctly.
+This experiment validates the basic functionality of insecure channels. The aim is to verify that CHSH-based security verification and mallory actuation are performed correctly.
 
-The simulation consists of two client nodes, denoted as \texttt{src} and \texttt{dst}, connected to a shared EPR source through a secure and insecure link respectively. Each client is connected to the EPR node via a channel of 100\,000 meters (100 km). Figure~\ref{insecured_topology} illustrates the network topology used in this experiment.
+The simulation consists of two client nodes, denoted as \texttt{src} and \texttt{dst}, connected to a shared EPR source through a secure and insecure link respectively. Each client is connected to the EPR node via a channel of 100\,000 meters (100 km). Figure~\ref{fig:insecured_topology} illustrates the network topology used in this experiment.
 
 \begin{figure}[ht]
     \centering
@@ -162,7 +162,9 @@ Since the CHSH parameter is not deterministic, two independent runs will be perf
 \end{figure}
 
 
-The results confirm that the system behaves as expected when node distances vary. As the distnaec increases, the measured CHSH \(S\) value decreases, falling from an average of \(2.810\) at 1 km (fidelity degradation is negligible) to \(1.154\) at 400 km. This trend is consistent with the expected degradation of entanglement fidelity over longer distances. As expected, the CHSH value remains above the classical bound of 2 for shorter distances and eventually falls below this threshold at 400 km due to increased channel noise.
+The results confirm that the system behaves as expected when node distances vary. As the distance increases, the measured CHSH \(S\) value decreases, falling from an average of \(2.810\) at 1 km (fidelity degradation is negligible) to \(1.154\) at 400 km. 
+
+This trend is consistent with the expected degradation of entanglement fidelity over longer distances. As expected, the CHSH value remains above the classical bound of 2 for shorter distances and eventually falls below this threshold at 400 km due to increased channel noise.
 
 From Figure~\ref{fig:chsh_chart}, we observe that the relationship between the CHSH value and distance is approximately linear. This is expected, as the fidelity degradation per km was simulated as a constant factor.
 
@@ -171,6 +173,8 @@ From Figure~\ref{fig:chsh_chart}, we observe that the relationship between the C
 This experiment evaluates how detector dark counts affect the total execution time of the simulation. Dark counts introduce random detection events, which increase measurement time due to additional events that increase the detector cooldown.
 
 The expected outcome is that higher dark count rates increase runtime, since more entangled-pair generation attempts are required to achieve the target key length under increased noise conditions.
+
+Note that the execution time reported here is the simulated time (in microseconds) rather than the actual wall-clock time of the simulation.
 
 Since the time to perform the run is non-deterministic, three independent runs will be performed for each dark count. 
 
@@ -199,4 +203,4 @@ Since the time to perform the run is non-deterministic, three independent runs w
     \label{fig:chsh_chart}
 \end{figure}
 
-The results show that increasing dark count rates lead to longer simulation times. This happens because more events cause additional detector cooldowns n. 
+The results of table~\ref{tab:execution_times} show that increasing dark count rates lead to longer simulation times. This happens because more events cause additional detector cooldowns. 
