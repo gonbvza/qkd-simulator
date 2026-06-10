@@ -6,18 +6,20 @@ Implementation errors and bugs in the simulator may pose a threat to internal va
 
 The main area of concern is the implementation of Mallory. While the observed CHSH value is below the classical threshold, this alone does not guarantee that Mallory has been modeled accurately. In particular, any process introducing sufficient randomness into the measurements may lead to a CHSH value below 2, regardless of whether the attack is correctly implemented.
 
+A CHSH value below 2 does not directly indicate the presence of a third party in the communication. Instead, it indicates that the measured correlations are compatible with a local realistic model, meaning that the outcomes are uncorrelated. Other factors, such as low entanglement fidelity between qubit pairs, can also lead to reduced CHSH values. Therefore, any implementation error or inconsistency that increases randomness between the measurements of both nodes may result in a CHSH value below 2, in which case the key generation process is aborted.
+
 \subsection{External Validity}
 
 Even though E91 QKD network topologies can be tested with this simulator, allowing the exploration of optimal distances and relevant system parameters, the simulator cannot be fully generalized to real-world scenarios for several reasons.
 
-First, the scope of the simulator is limited to a single protocol, E91. As a result, other quantum key distribution protocols cannot be evaluated using the current framework. Future work will be done to extend the simulator to improve its flexibility.
+First, the scope of the simulator is limited to a single protocol, E91 key distribution protocol. As a result, other quantum key distribution protocols cannot be evaluated using the current framework. Future work will be done to extend the simulator to improve its flexibility.
 
 In addition, due to time constraints and the scope of the project, physical effects such as fidelity degradation over distance are modeled in a simplified manner. Instead of simulating a combination of physical factors, fidelity is represented using a constant degradation factor. In real-world scenarios, however, fidelity is influenced by multiple variables, including fiber attenuation, environmental conditions, and hardware imperfections. Therefore, modeling it as a constant factor does not fully capture the complexity of real quantum communication systems.
 
 \subsection{Construct Validity}
 
-Construct validity of this simulator is threatened by many assumptions made during the developemnt. Apart from the before mentioned fidelity degradation, using the CHSH value as the only metric for correctness does not take into account other metrics such as key rate. 
+Construct validity of this simulator is threatened by many assumptions made during the development. Apart from the before mentioned fidelity degradation, using the CHSH value as the only metric for correctness does not take into account other metrics such as key rate. 
 
 \subsection{Conclusion Validity}
 
-The conclusions drawn from the experimental results are supported by the observed data and are consistent across multiple simulation runs. The measured CHSH values, key agreement outcomes, and observed trends with respect to distance all align with the expected theoretical behavior of the E91 protocol. 
+The conclusions drawn from the experimental results are supported by the observed data and are consistent across multiple simulation runs. The measured CHSH values, key agreement outcomes, and observed trends with respect to distance all align with the expected theoretical behavior of the E91 key distribution protocol. 

@@ -1,5 +1,9 @@
 \section{Design}\label{s:design}
 
+To evaluate the E91 key distribution protocol under different network topologies , a discrete-event simulator was developed in Rust. This was done because a simulator allows the protocol to be tested under controlled and repeatable conditions, where network parameters such as topologies can be altered without the constraints of a physical quantum communication setup.
+
+The simulator models the main components of a quantum network, including nodes, communication links, entangled-pair generation, and measurement processes. It also incorporates relevant sources of noise, such as detector dark counts, allowing the behavior of the protocol to be studied under more realistic conditions.
+
 \subsection{Modularized Design}
 To support future adaptations and scalability, the code was structured into layers, each with  defined responsibilities and behavior.
 
@@ -10,25 +14,36 @@ To support future adaptations and scalability, the code was structured into laye
     \label{fig:layers}
 \end{figure}
 
+
+Figure~\ref{fig:layers} illustrates the different layers that make up the simulator. The layers highlighted in red are responsible for receiving user input through the available interfaces. Once the input has been processed and translated into a command, it is forwarded through the communication channel to the simulation engine.
+
+The main loop is then responsible for processing incoming requests, scheduling events, and executing them. These events can range from entangled-pair generation and qubit transmission to measurement operations and the classical post-processing required to generate shared keys.
+
+The responsibilities of each layer are described in more detail below.
+
 \textbf{1. CLI and Web}: These components serve as the primary user interfaces of the simulator. They run on separate threads and provide users with the ability to create nodes, establish links, start simulation runs, and perform many other management tasks.
 
-The CLI operates in a loop that receives commands from the terminal and parses them accordingly. Rust enums provide type safety for commands, while the implementation of the `From` trait enables efficient conversion between user input and the corresponding command type.
+The CLI operates in a loop that receives commands from the terminal and parses them accordingly. Rust provides constructs such as enums, which represent a fixed set of possible values, allowing user input to be mapped to a command type. This approach ensures that only valid commands can exist within the system, thereby preventing invalid or unexpected inputs from being executed. 
 
-The Web interface runs on an Axum server and serves static HTML content upon request. Once initialized, the JavaScript `Cytoscape` library enables the visualization and creation of nodes and links within the graph. HTTP is used for standard requests, while WebSockets provide fast communication during simulation runs.
+The Web interface runs on a server and serves static content upon request. Once initialized, a JavaScript library is used that enables the visualization and creation of nodes and links within the graph. The motivation behind this design is that it allows for an interactive and more intuitive way to visualize the simulation as it runs.
 
-\textbf{2. API}: This layers serves as a bridge between both the CLI/WEB and the channel. It exposes a unified set of functions that translate user requests into events executed int the simulation. 
+\textbf{2. API}: This layers serves as a bridge between both the CLI/WEB and the channel. It exposes a unified set of functions that translate user requests into events executed in the simulation. 
 
-Both interfaces comply with the same function signatures and data models, ensuring consistent behavior without direct coupling between them.
+Both interfaces comply with the same function signatures and data models, ensuring consistent behavior without direct coupling between them. A shared entry point for both input layers allows code reuse and reduces coupling between components.
 
 \textbf{3. Channel}: As the simulation engine and the entry points run on different threads, a communication channel must exist between them in order for user requests to be executed by the simulation.
 
-This channel is a multiple-writer single-reader channel. Instead of sharing state between both layers, which would require locking due to Rust's mutable ownership rules, the entry point thread send event requests that are received by the main loop.
+This channel is a multiple-writer single-reader channel. Instead of sharing state between both layers, which would require locking due to Rust's mutable ownership rules, the entry point threads send event requests that are received by the main loop.
+
+The main idea behind using a channel was to ensure a single owner of the simulation state. Rather than sharing mutable state between the input thread and the main loop, the main loop retains ownership of the state while listening on the channel for requests that require state modifications.
 
 \textbf{4. Main Loop}: This loop is responsible for both receiving requests from the channel and executing the events processed by the event loop.
 
 The loop first checks whether there are any pending events in the channel. If so, the channel is drained until no more events remain. It then checks whether there are any events in the EventLoop; if an event is present, it executes it.
 
 After processing the event, the loop restarts. If no events are present either in the channel or in the event loop, it blocks the thread while waiting for new events to arrive on the channel. This is intended behavior, as new events can only be triggered by user requests and therefore appear in the channel.
+
+As previously mentioned, this thread owns the simulation state. Therefore, this layer, which has access to the channel, must listen to incoming messages from the channel rather than solely executing events.
 
 \textbf{5. Event Loop}: This is the event loop responsible for ordering events based on the timestamp at which they must be executed.
 
@@ -38,7 +53,7 @@ It uses a binary heap. A binary heap is a data structure that provides $O(1)$ co
 
 It uses multiple HashMaps to store objects such as nodes, links, and measurements. A HashMap provides $O(1)$ complexity for data access and $O(1)$ complexity for data insertion.
 
-As explained later, transitioning from fully persistent storage to an in-memory state resulted in a significant performance improvement.
+The main motivation for using HashMaps as the simulation’s in-memory state was to achieve faster access compared to persistent databases. As explained later, transitioning from fully persistent storage to an in-memory state resulted in a significant performance improvement.
 
 \textbf{7. Persistent storage}: This is the storage used to persist data that must be shared across simulations. It stores information such as node and link data, generated keys, and other relevant simulation data.
 
@@ -49,6 +64,8 @@ This section explains how the different objects were simulated.
 
 Each node has a \texttt{node type} attribute. The two possible types are \texttt{Client}, which is responsible for measuring qubits, and \texttt{EPR}, which is responsible for generating entangled pairs. A node is locked while it is participating in a simulation run, preventing other simulations from being executed concurrently on the same node.
 
+The division of node types reflects real-world implementations, where E91 key distribution protocol is typically performed using a dedicated node that differs from client nodes. This distinction allows different roles to be assigned to nodes within the simulation. Simulations can only be executed if an EPR node is present and if there is a direct connection between each client node and the EPR node.
+
 Each detector has a cooldown rate. Upon reception of a qubit, if the detector is still on cooldown 
 $$
 (\texttt{last\_detection\_time + cooldown > timestamp})
@@ -56,7 +73,7 @@ $$
 
 the qubit is dropped.
 
-\textbf{Dark count rate}: The dark count rate is a constant property of the simulator. As this rate increases, the average interval between dark count events decreases. Since these intervals should not be fixed but instead occur randomly in time, the process is modeled as a Poisson process. In a Poisson process, the time between consecutive events follows an exponential distribution. 
+\textbf{Dark count rate}: The dark count rate is a constant property of the simulator. Dark counts refer to false detection events that occur in the absence of an actual photon and represent detector noise in quantum communication systems. As this rate increases, the average interval between dark count events decreases. Since these intervals should not be fixed but instead occur randomly in time, the process is modeled as a Poisson process. The Poisson distribution describes the probability of observing a given number of events within a fixed time interval, assuming that events occur independently and with a known constant average rate. In a Poisson process, the time between consecutive events follows an exponential distribution. 
 
 \begin{figure}[ht]
     \centering
@@ -64,7 +81,6 @@ the qubit is dropped.
     \caption{Diagram showing the poisson distribution}
     \label{fig:poisson}
 \end{figure}
-
 
 As shown in Figure~\ref{fig:poisson}, when the parameter $\lambda$ becomes smaller (which corresponds to a higher dark count rate), the distribution becomes more concentrated near zero, resulting in shorter intervals between dark count events.
 
@@ -110,16 +126,20 @@ Where:
 
 This function behaves correctly because when the fidelity is zero, the probability becomes $0.5$, meaning the output is completely random.
 
+Entangled pairs were modelled in this way because the second measurement depends on the outcome of the first in order to generate a correlated result. Since measurements on entangled states are inherently correlated, the simulation requires access to the first measurement when performing the second. For this reason, the entangled pair stores the results of both measurements and provides the necessary information to compute a correlated outcome consistent with the model.
+
 \textbf{Mallory}: The most appropriate way to model the presence of Mallory in a connection was to define links as either secure or insecure, and to execute different logic depending on the type of link.
 
 When a link is defined as insecure, a measurement is performed and stored in the pair before the actual measurement. Then, in subsequent measurements, the basis calculation and entanglement probability are computed using Mallory's measurements instead of the actual client node measurements.
 
-This result in a completely random outcome.
+This simulates the intercept-and-resend attack because, regardless of whether the measurement is performed first or second, an insecure link causes the measurement to be performed not on the entangled qubit from the other node, but on the qubit previously measured by Mallory. This is consistent with the intercept-and-resend attack, in which Mallory collapses the original quantum state through measurement and then sends a newly prepared qubit to the corresponding node.
+
+This results in a completely random outcome.
 
 \subsection{Obstacles}\label{s:obstacles}
 This section exposes some of the many obstacles found during the design and development process.
 
-The first obstacle arose during the design phase. During the investigation, it was found that many simulators model fidelity degradation through multiple physical effects, such as fiber optic attenuation, quantum memory efficiency, and other channel imperfections. However, since this project focuses on the E91 protocol simulation and CHSH inequality validation, a highly detailed physical model of fidelity degradation was not required.
+The first obstacle arose during the design phase. During the investigation, it was found that many simulators model fidelity degradation through multiple physical effects, such as fiber optic attenuation, quantum memory efficiency, and other channel imperfections. However, since this project focuses on the E91 key distribution protocol simulation and CHSH inequality validation, a highly detailed physical model of fidelity degradation was not required.
 
 After extensive research, the paper \cite{sena2025entanglement} showed that after 100 km of fiber optic transmission, the entanglement fidelity decreases to approximately 86\%, corresponding to a reduction of about 0.14\% per kilometer. Therefore, a constant fidelity degradation rate of 0.14\% per kilometer was chosen for the simulation.
 
@@ -127,8 +147,8 @@ During the development of the simulator, several obstacles were encountered, mai
 
 In a simulation where events are scheduled based on runtime conditions, the system needs a way to execute functions dynamically. In Python, this can be achieved using reflection, where a dotted string path is resolved at runtime into a callable object .However, Rust is a statically compiled language and does not provide built-in runtime reflection of function names. 
 
-The solution was to create a registry that stored a function HashMap. This HashMap would map a EventName instance to its corresponding function stored in a Box pointer.
+The solution was to create a registry that stored a function HashMap. This HashMap would map an EventName instance to its corresponding function stored in a Box pointer.
 
-The last obstacle was performance. At the beginning, persistent storage was used as the storage for everything. This meant that not only nodes and links were stored, but also measurements and entangled pairs. As a result, a simulation with 10,000 qubits took more than 5 minutes to complete due to database acceses and locks between threds.
+The last obstacle was performance. At the beginning, persistent storage was used as the storage for everything. This meant that not only nodes and links were stored, but also measurements and entangled pairs. As a result, a simulation with 10,000 qubits took more than 5 minutes to complete due to database acceses and locks between threads.
 
 The solution was to move away from a shared database state between threads and instead adopt an in-memory HashMap-based state managed directly by the simulation loop.

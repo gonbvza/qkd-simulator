@@ -34,7 +34,7 @@ For the protocol to be considered successful, the measured CHSH \(S\) parameter 
 
 In order to generate a final secret key of 1024 bits, the protocol must distribute at least 10,000 entangled pairs. Since the CHSH protocol employs three possible measurement bases per participant, only approximately $\frac{1}{9}$ of the distributed pairs are expected to be measured using the same basis combination required for key generation.
 
-As the CHSH S-paremeter is not deterministic, we will perform 10 runs and average the CHSH value accross all of them. 
+As the CHSH S-parameter is not deterministic, we will perform 10 runs and average the CHSH value across all of them. 
 
 The results of the 10 runs are shown in Table~\ref{tab:chsh_runs}
 
@@ -75,7 +75,7 @@ The results confirm that the system operates correctly. All 10 runs produced a C
 
 \subsection{Simulation run over an insecure channel}
 
-This experiment validates the basic functionality of insecure channels. The aim is to verify that CHSH-based security verification and mallory actuation are performed correctly.
+This experiment validates the basic functionality of insecure channels. The aim is to verify that the CHSH-based security checks are correctly implemented, as well as the send and receive attack mechanisms.
 
 The simulation consists of two client nodes, denoted as \texttt{src} and \texttt{dst}, connected to a shared EPR source through a secure and insecure link respectively. Each client is connected to the EPR node via a channel of 100\,000 meters (100 km). Figure~\ref{fig:insecured_topology} illustrates the network topology used in this experiment.
 
@@ -88,7 +88,7 @@ The simulation consists of two client nodes, denoted as \texttt{src} and \texttt
 
 For the protocol to be considered successful, the measured CHSH \(S\) parameter must be below 2, demonstrating the presence of a third person that breaks quantum correlations, and the simulation run must be stopped.
 
-As the CHSH S-paremeter is not deterministic, we will perform 10 runs and average the CHSH value accross all of them. 
+As the CHSH S-parameter is not deterministic, we will perform 10 runs and average the CHSH value across all of them. 
 
 The results of the 10 runs are shown in Table~\ref{tab:chsh_runs_insecure}
 
@@ -140,16 +140,19 @@ Since the CHSH parameter is not deterministic, two independent runs will be perf
 
 \begin{table}[ht]
 \centering
-\caption{CHSH values obtained over 10 simulations at different distances.}
+\caption{CHSH values obtained over 2 simulations at different distances.}
 \label{tab:chsh_distance_runs}
 \begin{tabular}{c c c c c c}
 \toprule
 \textbf{Run} & \textbf{1 km} & \textbf{50 km} & \textbf{100 km} & \textbf{200 km} & \textbf{400 km} \\
 \midrule
-1  & 2.841 & 2.573 & 2.543 & 2.001 & 1.159 \\
-2  & 2.778 & 2.641 & 2.493 & 2.057 & 1.149 \\
+1  & 2.805 & 2.573 & 2.543 & 2.001 & 1.159 \\
+2  & 2.832 & 2.641 & 2.493 & 2.057 & 1.149 \\
+3  & 2.865 & 2.634 & 2.446 & 2.026 & 1.158 \\
+4  & 2.759 & 2.584 & 2.386 & 2.148 & 1.269 \\
+5  & 2.841 & 2.592 & 2.378 & 2.028 & 1.156 \\
 \midrule
-\textbf{AVG} & 2.810 & 2.607 & 2.518 & 2.029 & 1.154 \\
+\textbf{AVG} & 2.820 & 2.605 & 2.445 & 2.052 & 1.178 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -200,7 +203,7 @@ Since the time to perform the run is non-deterministic, three independent runs w
     \centering
     \includegraphics[width=0.45\textwidth]{../figures/exec_time_chart_1.png}
     \caption{Diagram showing the relation of time and dark count rate}
-    \label{fig:chsh_chart}
+    \label{fig:exec_time_chart}
 \end{figure}
 
-The results of table~\ref{tab:execution_times} show that increasing dark count rates lead to longer simulation times. This happens because more events cause additional detector cooldowns. 
+The results of Table~\ref{tab:execution_times} show that increasing dark count rates lead to longer simulation times. This happens because more events cause additional detector cooldowns. 

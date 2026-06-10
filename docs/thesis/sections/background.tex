@@ -1,8 +1,8 @@
 \section{Background}\label{s:background}
 
-Before discussing the design and evaluation of the simulator, this section introduces the fundamental quantum concepts underlying the E91 key distribution protocol.
+Before discussing the design and evaluation of the simulator, this section introduces the fundamental quantum concepts underlying the E91 key distribution protocol key distribution protocol.
 
-In E91, as in any quantum communication system, information is transmitted using \textbf{quantum states}. These states encode probability amplitudes whose squared magnitudes determine the likelihood of measurement outcomes. A quantum state that is expressed as a linear combination of basis states is said to be in a \textbf{superposition}.
+In the E91 key distribution protocol, as in any quantum communication system, information is transmitted using \textbf{quantum states}. These states encode probability amplitudes whose squared magnitudes determine the likelihood of measurement outcomes. A quantum state that is expressed as a linear combination of basis states is said to be in a \textbf{superposition}.
 
 The simplest representation of a quantum system is the \textbf{qubit}, a two-level quantum state defined in the computational basis as:
 \[
@@ -24,20 +24,9 @@ H = \frac{1}{\sqrt{2}}
 \end{pmatrix}.
 \]
 
-For multi-qubit systems, one of the most important gates is the \textbf{CNOT} (controlled-NOT) gate, which acts on a two-qubit system. Its matrix representation is given by:
-\[
-\mathrm{CNOT} =
-\begin{pmatrix}
-1 & 0 & 0 & 0 \\
-0 & 1 & 0 & 0 \\
-0 & 0 & 0 & 1 \\
-0 & 0 & 1 & 0
-\end{pmatrix}.
-\]
-
 Quantum states can also be represented as vectors in a complex Hilbert space. In this representation, the application of a quantum gate corresponds to matrix multiplication between the gate operator and the state vector.
 
-In order to transform a qubit into a superposition state, where both measurement outcomes have equal probability, the Hadamard gate is applied to a qubit initially prepared in a computational basis state, such as $\ket{0}$.
+In order to transform a qubit into a superposition state where both measurement outcomes have equal probability, the Hadamard gate is applied to a qubit initially prepared in a computational basis state, such as $\ket{0}$.
 
 Representing the basis state $\ket{0}$ as a vector:
 \[
@@ -48,7 +37,7 @@ Representing the basis state $\ket{0}$ as a vector:
 \end{pmatrix},
 \]
 
-we apply the Hadamard gate via matrix multiplication:
+\noindent we apply the Hadamard gate via matrix multiplication:
 \[
 H\ket{0}
 =
@@ -71,8 +60,19 @@ H\ket{0}
 \frac{1}{\sqrt{2}}(\ket{0} + \ket{1}).
 \]
 
+For multi-qubit systems, one of the most important gates is the \textbf{CNOT} (controlled-NOT) gate, which acts on a two-qubit system consisting of a control qubit and a target qubit. The target qubit is flipped if the control qubit is $\ket{1}$, otherwise it is left unchanged. Its matrix representation is given by:
 
-\textbf{Entanglement}, a key aspect of the E91 protocol, occurs when two qubits are prepared in a quantum state such that their measurement outcomes show correlations, regardless of distance. These entangled two-qubit states are known as Bell states, named after physicist John Bell, who developed Bell’s theorem to test the non-classical nature of such correlations.
+\[
+\mathrm{CNOT} =
+\begin{pmatrix}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 1 \\
+0 & 0 & 1 & 0
+\end{pmatrix}.
+\]
+
+\textbf{Entanglement}, a key aspect of the E91 key distribution protocol occurs when two qubits are prepared in a quantum state such that their measurement outcomes show correlations, regardless of distance. These entangled two-qubit states are known as Bell states, named after physicist John Bell, who developed Bell’s theorem to test the non-classical nature of such correlations.
 
 One of the four maximally entangled two-qubit Bell states is defined as:
 \[
@@ -81,24 +81,37 @@ One of the four maximally entangled two-qubit Bell states is defined as:
 
 % Explain how entanglement is produced via CNOT gates
   %% Show the matrix equatios
-In order to produce a Bell state, you first apply a Hadamard gate, followed by a CNOT gate.
+To produce a Bell state from the two-qubit state $\ket{00}$, the first qubit is prepared 
+in a superposition by applying the Hadamard gate:
 
-When both qubits of the Bell state are measured in the same basis, the outcomes are perfectly correlated, giving identical results (either 00 or 11) despite each result being individually random. This basis-dependent correlation is the key resource exploited in the E91 protocol, enabling both key generation and eavesdropping detection through later comparison of measurement outcomes.
+\[
+H\ket{0} \otimes \ket{0} = \frac{1}{\sqrt{2}}(\ket{0} + \ket{1})\ket{0} 
+= \frac{1}{\sqrt{2}}(\ket{00}+ \ket{10}).
+\]
 
-Building on these quantum mechanical principles, the E91 protocol enables two nodes in the quantum internet, to establish a shared secret key using entangled qubit pairs distributed by a quantum source.
+Subsequently, a CNOT gate is applied, flipping the second (target) qubit only when the 
+first (control) qubit is $\ket{1}$, yielding the Bell state:
 
-E91 relies on the distribution of entangled states, typically Bell states, such that correlations between measurement outcomes can be used both for key generation and for detecting the presence of an eavesdropper.
+\[
+\frac{1}{\sqrt{2}}(\ket{00}+ \ket{11}).
+\]
 
-In the standard setting, a trusted, usually refered as epr node, distributes entangled qubit pairs to both of the client nodes over a quantum channel. Each party independently measures their qubits using randomly chosen measurement bases. The choice of measurement basis plays a central role in both the generation of the key and the security analysis of the protocol.
+When both qubits of the Bell state are measured in the same basis, the outcomes are perfectly correlated, giving identical results (either 00 or 11) despite each result being individually random. This basis-dependent correlation is the key resource exploited in the E91 key distribution protocol, enabling both key generation and eavesdropping detection through later comparison of measurement outcomes.
+
+Building on these quantum mechanical principles, the E91 key distribution protocol enables two nodes in the quantum internet to establish a shared secret key using entangled qubit pairs distributed by a quantum source.
+
+E91 key distribution protocol relies on the distribution of entangled states, typically Bell states, such that correlations between measurement outcomes can be used both for key generation and for detecting the presence of an eavesdropper.
+
+In the standard setting, a trusted source, commonly referred to as an EPR node, generates a set of maximally entangled qubit pairs and distributes one qubit from each pair to each of the two client nodes, over a quantum channel. Each party then independently measures their qubit using a randomly chosen measurement basis. The choice of measurement basis plays a central role in both the generation of the key and the security analysis of the protocol.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.5\textwidth]{../figures/E91.png}
-    \caption{Diagram describing E91 process}
+    \caption{Diagram describing E91 key distribution protocol process}
     \label{fig:E91}
 \end{figure}
 
-Once all entangled pairs have been distributed and measured, both nodes share their chosen measurement bases over a classical channel, which reveals little to no useful information to an eavesdropper.
+Once all entangled pairs have been distributed and measured, both nodes share their chosen measurement bases over a classical channel. This step, known as \textbf{sifting}, reveals little to no useful information to an eavesdropper, as only the basis choices (not the actual measurement outcomes) are sent.
 
 Using this basis information, the measured qubits can be divided into two groups:
 
@@ -108,7 +121,7 @@ Using this basis information, the measured qubits can be divided into two groups
   \item \textbf{Test qubits}: These correspond to measurements performed in different bases. These outcomes are used to evaluate quantum correlations and to detect the presence of an eavesdropper in the communication channel.
 \end{itemize}
 
-In the E91 protocol, the measurement bases correspond to rotations on the Bloch sphere that define the detector settings used to measure incoming qubits. Following \cite{guimaraes2024bells}, the choice of measurement angles that maximizes quantum correlations and leads to a strong violation of the Bell inequality must be chosen in steps of $\frac{\pi}{8}$. The ones chosen for this simulator were: 
+In the E91 key distribution protocol, the measurement bases correspond to rotations on the Bloch sphere that define the detector settings used to measure incoming qubits. Following \cite{guimaraes2024bells}, the choice of measurement angles that maximizes quantum correlations and leads to a strong violation of the Bell inequality must be chosen in steps of $\frac{\pi}{8}$. The ones chosen for this simulator were: 
 \begin{align*}
 \alpha &= 0 \quad (0^\circ), \qquad \alpha' = \frac{\pi}{4} \quad (45^\circ), \\
 \beta &= -\frac{\pi}{8} \quad (-22.5^\circ), \qquad \beta' = \frac{\pi}{8} \quad (22.5^\circ),
@@ -122,7 +135,7 @@ This result is expressed using the CHSH $S$-parameter \cite{shafi2021}, defined 
 S = \left|E(A_0, B_0) + E(A_0, B_1)\right| + \left|E(A_1, B_0) - E(A_1, B_1)\right|.
 \]
 
-Here, $E(A_i, B_j)$ denotes the expectation value of the correlation between measurement settings $A_i$ and $B_j$.
+\noindent Here, $E(A_i, B_j)$ denotes the expectation value of the correlation between measurement settings $A_i$ and $B_j$.
 
 In any local hidden variable theory, the CHSH inequality imposes the bound
 \[
@@ -133,14 +146,14 @@ whereas quantum mechanics predicts a stronger limit,
 S \le 2\sqrt{2}.
 \]
 
-Based on \cite{vanHee2026} when the basis are used as polarizer angles (moving the detector by such an angle) the expectation value can be calculated as: 
+Based on \cite{vanHee2026}, when the bases are used as polarizer angles (moving the detector by such an angle), the expectation value can be calculated as:
 
-$$
+\[
 E(a,b) = \cos\big(2(a-b)\big)
-$$
+\]
 
 %% TODO: Give the functions numbers
-Therefore, the CHSH value for our choice of basis is given by
+\noindent Therefore, the CHSH value for our choice of basis is given by
 \[
 E(\alpha,\beta)=\cos\left(\frac{\pi}{4}\right)=\frac{\sqrt{2}}{2}, \quad
 E(\alpha,\beta')=\cos\left(-\frac{\pi}{4}\right)=\frac{\sqrt{2}}{2},
@@ -150,7 +163,7 @@ E(\alpha',\beta)=\cos\left(\frac{3\pi}{4}\right)=-\frac{\sqrt{2}}{2}, \quad
 E(\alpha',\beta')=\cos\left(\frac{\pi}{4}\right)=\frac{\sqrt{2}}{2}.
 \]
 
-Substituting into the CHSH expression,
+\noindent Substituting into the CHSH expression,
 \[
 S = \left|E(\alpha,\beta)+E(\alpha,\beta')\right|
 + \left|E(\alpha',\beta)-E(\alpha',\beta')\right|,
@@ -160,9 +173,13 @@ gives
 S = \left|\sqrt{2}\right| + \left|-\sqrt{2}\right| = 2\sqrt{2}.
 \]
 
-If after calculating the S parameter, we get $\left|S\right| < 2$, we can assume that the correlation is not maximal and there is a third person in the communication
+If after calculating the $S$ parameter we get $\left|S\right| < 2$, we can assume that the correlation is not maximal and there is a third person in the communication.
 
 % Explain Cascade error correction
-The Cascade protocol functions as a multi-pass block-parity check designed to reconcile bit errors between Alice and Bob caused by fidelity loss. In the first pass, the sifted bit strings are divided into equal-sized blocks ($k_1$), and Alice transmits the parity of each block to Bob. For any block where parities disagree—signaling an odd number of errors—the parties execute the BINARY subprotocol. This subprotocol bisects the block and compares the parities of the halves until the exact position of a single erroneous bit is isolated and corrected by Bob, leaving all remaining blocks with an even number of errors.
+The Cascade protocol functions as a multi-pass block-parity check designed to reconcile bit errors caused by fidelity loss.
 
-In subsequent passes ($i > 1$), the block size increases ($k_i$). Alice and Bob exchange parities for these new blocks to identify remaining errors. Correcting an error in a later pass alters the parity of the bits in earlier passes, triggering a recursive loop.
+In the first pass, the sifted key—the subset of measurement outcomes for which both nodes used the same measurement basis—is divided into equal-sized blocks, and the first node transmits the parity of each block to second node. For any block where parities disagree—indicating the presence of an odd number of errors—the parties execute the BINARY subprotocol. This subprotocol recursively bisects the block and compares the parities of the halves until the exact position of a single erroneous bit is isolated and corrected by the first node, leaving all remaining blocks with even parity.
+
+In subsequent passes, the block size is increased. 
+
+Finally, the security of the E91 key distribution protocol relies on the assumption that any eavesdropper interacting with the quantum channel will introduce detectable disturbances. In a typical attack scenario, an adversary intercepts the transmitted qubits, measures them, and then prepares and forwards new qubits based on the obtained results. This so-called intercept-and-resend strategy destroys the original entanglement between the particles and alters the expected quantum correlations. As a consequence, the presence of such an eavesdropper can be detected through deviations in the statistical correlations, for example using the CHSH test.
