@@ -1,6 +1,6 @@
 \section{Background}\label{s:background}
 
-Before discussing the design and evaluation of the simulator, this section introduces the fundamental quantum concepts underlying the E91 key distribution protocol key distribution protocol.
+Before discussing the design and evaluation of the simulator, this section introduces the fundamental quantum concepts underlying the E91 key distribution protocol.
 
 In the E91 key distribution protocol, as in any quantum communication system, information is transmitted using \textbf{quantum states}. These states encode probability amplitudes whose squared magnitudes determine the likelihood of measurement outcomes. A quantum state that is expressed as a linear combination of basis states is said to be in a \textbf{superposition}.
 
@@ -118,62 +118,65 @@ Using this basis information, the measured qubits can be divided into two groups
 \begin{itemize}
   \item \textbf{Key qubits}: These correspond to measurements where both parties used the same basis. Assuming ideal entanglement and no fidelity loss, the resulting measurement outcomes should be perfectly correlated.
 
-  \item \textbf{Test qubits}: These correspond to measurements performed in different bases. These outcomes are used to evaluate quantum correlations and to detect the presence of an eavesdropper in the communication channel.
+  \item \textbf{Test qubits}: These correspond to measurements performed in different bases. These outcomes are used to evaluate quantum correlations and to detect the presence of an eavesdropper in the communication channel by the use of CHSH inequality test.
 \end{itemize}
 
-In the E91 key distribution protocol, the measurement bases correspond to rotations on the Bloch sphere that define the detector settings used to measure incoming qubits. Following \cite{guimaraes2024bells}, the choice of measurement angles that maximizes quantum correlations and leads to a strong violation of the Bell inequality must be chosen in steps of $\frac{\pi}{8}$. The ones chosen for this simulator were: 
-\begin{align*}
-\alpha &= 0 \quad (0^\circ), \qquad \alpha' = \frac{\pi}{4} \quad (45^\circ), \\
-\beta &= -\frac{\pi}{8} \quad (-22.5^\circ), \qquad \beta' = \frac{\pi}{8} \quad (22.5^\circ),
-\end{align*}
-where $\alpha, \alpha'$ correspond to one party's polarizer settings and $\beta, \beta'$ correspond to the other party's polarizer settings. 
+The CHSH inequality provides a test for non-classical correlations between measurement outcomes and shows that no physical theory based on local hidden variables can reproduce quantum mechanical behaviour.
 
-The CHSH test is an experimental test of Bell's theorem, which shows that no physical theory based on local hidden variables can reproduce all predictions of quantum mechanics.
+In the CHSH test, two parties each choose between two detector settings, denoted $a$, $a'$ for one party and $b$, $b'$ for the other. Using these settings, we define the correlation functions $E(a,b)$, $E(a,b')$, $E(a',b)$, and $E(a',b')$, which represent the average value of the product of many measurement outcomes obtained under the corresponding setting combinations.
 
-This result is expressed using the CHSH $S$-parameter \cite{shafi2021}, defined as 
+If we assume the existence of local hidden variables $\lambda$ that determine the measurement outcomes, we can derive the CHSH $S$-parameter \cite{Clauser1969CHSH} as
 \[
-S = \left|E(A_0, B_0) + E(A_0, B_1)\right| + \left|E(A_1, B_0) - E(A_1, B_1)\right|.
+S = \left|E(a, b) + E(a, b') + E(a', b) - E(a', b')\right|.
 \]
 
-\noindent Here, $E(A_i, B_j)$ denotes the expectation value of the correlation between measurement settings $A_i$ and $B_j$.
+Based on the derivation in \cite{Clauser1969CHSH}, any local hidden variable theory imposes the bound
+\[
+S \le 2.
+\]
 
-In any local hidden variable theory, the CHSH inequality imposes the bound
-\[
-S \le 2,
-\]
-whereas quantum mechanics predicts a stronger limit,
-\[
-S \le 2\sqrt{2}.
-\]
+This bound implies that whenever the experimentally obtained value falls below $S \le 2$ the measured correlations can be explained by a local hidden variable model instead of quantum correlation.
+
+Quantum mechanics, however, show that quantum correlation is present by violating this bound. 
 
 Based on \cite{vanHee2026}, when the bases are used as polarizer angles (moving the detector by such an angle), the expectation value can be calculated as:
-
 \[
 E(a,b) = \cos\big(2(a-b)\big)
 \]
 
+For a maximal quantum mechanical CHSH violation, the standard optimal detector settings angle choices are:
+
+\begin{align*}
+a &= 0 \quad (0^\circ), \qquad a' = \frac{\pi}{4} \quad (45^\circ), \\
+b &= \frac{\pi}{8} \quad (22.5^\circ), \qquad b' = -\frac{\pi}{8} \quad (-22.5^\circ),
+\end{align*}
+where $a, a'$ correspond to one party's polarizer settings and $b, b'$ correspond to the other party's polarizer settings. 
+
+
 %% TODO: Give the functions numbers
-\noindent Therefore, the CHSH value for our choice of basis is given by
+\noindent Therefore, the CHSH value for our choice of settings angle is given by
 \[
-E(\alpha,\beta)=\cos\left(\frac{\pi}{4}\right)=\frac{\sqrt{2}}{2}, \quad
-E(\alpha,\beta')=\cos\left(-\frac{\pi}{4}\right)=\frac{\sqrt{2}}{2},
+E(a,b)=\cos\left(\frac{\pi}{4}\right)=\frac{\sqrt{2}}{2}, \quad
+E(a,b')=\cos\left(-\frac{\pi}{4}\right)=\frac{\sqrt{2}}{2},
 \]
 \[
-E(\alpha',\beta)=\cos\left(\frac{3\pi}{4}\right)=-\frac{\sqrt{2}}{2}, \quad
-E(\alpha',\beta')=\cos\left(\frac{\pi}{4}\right)=\frac{\sqrt{2}}{2}.
+E(a',b)=\cos\left(\frac{\pi}{4}\right)=\frac{\sqrt{2}}{2}, \quad
+E(a',b')=\cos\left(\frac{3\pi}{4}\right)=-\frac{\sqrt{2}}{2}.   
 \]
 
 \noindent Substituting into the CHSH expression,
 \[
-S = \left|E(\alpha,\beta)+E(\alpha,\beta')\right|
-+ \left|E(\alpha',\beta)-E(\alpha',\beta')\right|,
-\]
-gives
-\[
-S = \left|\sqrt{2}\right| + \left|-\sqrt{2}\right| = 2\sqrt{2}.
+S = \left|E(a, b) + E(a, b') + E(a', b) - E(a', b')\right|.
 \]
 
-If after calculating the $S$ parameter we get $\left|S\right| < 2$, we can assume that the correlation is not maximal and there is a third person in the communication.
+gives
+\[
+S =  2\sqrt{2}.
+\]
+
+This upper bound, $2\sqrt{2}$, is known as the Tsirelson bound and expresses the maximum possible violation of the Bell inequality under the assumption that measurement outcomes can not be described by local hidden variable models.
+
+If, after evaluating the CHSH parameter $S$, we obtain $|S| \leq 2$, the observed correlations are consistent with the assumptions of a local hidden variable model, and no Bell inequality violation is observed. This may indicate reduced entanglement due to noise or the presence of an eavesdropper, and in either case the QKD protocol should be aborted.
 
 % Explain Cascade error correction
 The Cascade protocol functions as a multi-pass block-parity check designed to reconcile bit errors caused by fidelity loss.

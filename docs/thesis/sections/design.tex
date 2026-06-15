@@ -1,11 +1,11 @@
 \section{Design}\label{s:design}
 
-To evaluate the E91 key distribution protocol under different network topologies , a discrete-event simulator was developed in Rust. This was done because a simulator allows the protocol to be tested under controlled and repeatable conditions, where network parameters such as topologies can be altered without the constraints of a physical quantum communication setup.
+To evaluate the E91 key distribution protocol under different network topologies , a discrete-event simulator was developed in Rust \footnote{Source code available at https://github.com/gonbvza/qkd-simulator}. This was done because a simulator allows the protocol to be tested under controlled and repeatable conditions, where network parameters such as topologies can be altered without the constraints of a physical quantum communication setup.
 
-The simulator models the main components of a quantum network, including nodes, communication links, entangled-pair generation, and measurement processes. It also incorporates relevant sources of noise, such as detector dark counts, allowing the behavior of the protocol to be studied under more realistic conditions.
+The simulator models the main components of a quantum network, including nodes, communication links, entangled-pair generation, and measurement processes. It also incorporates relevant sources of noise, such as detector dark counts, allowing the behaviour of the protocol to be studied under more realistic conditions.
 
 \subsection{Modularized Design}
-To support future adaptations and scalability, the code was structured into layers, each with  defined responsibilities and behavior.
+To support future adaptations and scalability, the code was structured into layers, each with  defined responsibilities and behaviour.
 
 \begin{figure}[h]
     \centering
@@ -27,9 +27,9 @@ The CLI operates in a loop that receives commands from the terminal and parses t
 
 The Web interface runs on a server and serves static content upon request. Once initialized, a JavaScript library is used that enables the visualization and creation of nodes and links within the graph. The motivation behind this design is that it allows for an interactive and more intuitive way to visualize the simulation as it runs.
 
-\textbf{2. API}: This layers serves as a bridge between both the CLI/WEB and the channel. It exposes a unified set of functions that translate user requests into events executed in the simulation. 
+\textbf{2. API}: This layer serves as a bridge between both the CLI/WEB and the channel. It exposes a unified set of functions that translate user requests into events executed in the simulation. 
 
-Both interfaces comply with the same function signatures and data models, ensuring consistent behavior without direct coupling between them. A shared entry point for both input layers allows code reuse and reduces coupling between components.
+Both interfaces comply with the same function signatures and data models, ensuring consistent behaviour without direct coupling between them. A shared entry point for both input layers allows code reuse and reduces coupling between components.
 
 \textbf{3. Channel}: As the simulation engine and the entry points run on different threads, a communication channel must exist between them in order for user requests to be executed by the simulation.
 
@@ -41,7 +41,7 @@ The main idea behind using a channel was to ensure a single owner of the simulat
 
 The loop first checks whether there are any pending events in the channel. If so, the channel is drained until no more events remain. It then checks whether there are any events in the EventLoop; if an event is present, it executes it.
 
-After processing the event, the loop restarts. If no events are present either in the channel or in the event loop, it blocks the thread while waiting for new events to arrive on the channel. This is intended behavior, as new events can only be triggered by user requests and therefore appear in the channel.
+After processing the event, the loop restarts. If no events are present either in the channel or in the event loop, it blocks the thread while waiting for new events to arrive on the channel. This is intended behaviour, as new events can only be triggered by user requests and therefore appear in the channel.
 
 As previously mentioned, this thread owns the simulation state. Therefore, this layer, which has access to the channel, must listen to incoming messages from the channel rather than solely executing events.
 
