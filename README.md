@@ -118,20 +118,22 @@ type: 0
 name: epr_center
 type: 1
 > create_link
-nodes: alice <-> epr_center
-distance: 10
+src_id: 1
+dst_id: 3
+distance: 100000
 secure: true
 > create_link
-nodes: bob <-> epr_center
-distance: 15
+src_id: 2
+dst_id: 3
+distance: 100000
 secure: true
 > get_nodes
-[0] alice (client)
-[1] bob (client)
-[2] epr_center (epr)
+[1] alice (client)
+[2] bob (client)
+[3] epr_center (epr)
 > start
-client node 1 id: 0
-client node 2 id: 1
+client node 1 id: 1
+client node 2 id: 2
 ```
 
 ## Contributing
