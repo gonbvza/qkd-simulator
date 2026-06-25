@@ -59,7 +59,7 @@ diesel migration run
 - [src/database/](src/database/) — database layer and migrations integration
 - [migrations/](migrations/) — Diesel migrations for persistent state
 - [scripts/](scripts/) — helper scripts (e.g., distribution tests)
-- [tests/](tests/) — integration and unit tests
+- [tests/](src/tests/) — integration and unit tests
 
 ## Testing the simulation
 
