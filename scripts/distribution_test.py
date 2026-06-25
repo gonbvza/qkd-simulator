@@ -17,17 +17,16 @@ import sys
 import time
 from typing import Tuple
 
-
 PROMPT_MAIN = "What do you want to do?"
 PROMPT_NODE_NAME = "Enter node name:"
 PROMPT_NODE_TYPE = "Enter node type:"
 PROMPT_SRC_ID = "Enter source node id:"
 PROMPT_DST_ID = "Enter destination node id:"
 PROMPT_DISTANCE = "Enter distance in meters:"
-PROMPT_SECURE = "Is secure:"
+PROMPT_SECURE = "Is secure (true or false):"
 PROMPT_START_SRC = "Enter source id:"
 PROMPT_START_DST = "Enter destination id:"
-DISTANCE="100000"
+DISTANCE = "100000"
 
 LOG_FILE = "log_file.txt"
 
@@ -65,6 +64,7 @@ def read_until(fd: int, needle: str, timeout: float = 60.0) -> str:
         buffer += text
     return buffer
 
+
 def show_buffer(fd: int):
     while True:
         ready, _, _ = select.select([fd], [], [], 0.1)
@@ -81,19 +81,22 @@ def show_buffer(fd: int):
         write_to_file(text)
         sys.stdout.flush()
 
+
 def send_line(fd: int, line: str) -> None:
     os.write(fd, f"{line}\n".encode())
+
 
 def extract_id(line: str):
     id_box = line.split()[0]
     id = int(id_box[1:-1])
     return id
 
+
 def get_nodes_id(fd: int, run_id: str) -> Tuple[int, int, int]:
     src_id = dst_id = epr_id = 0
 
     send_line(fd, "get_nodes")
-    deadline = time.time() + 60 
+    deadline = time.time() + 60
     while True:
         if time.time() > deadline:
             raise TimeoutError(f"Timed out waiting for prompt")
@@ -107,7 +110,7 @@ def get_nodes_id(fd: int, run_id: str) -> Tuple[int, int, int]:
         if not data:
             break
         text = data.decode(errors="ignore")
-        for line in text.split('\n'):
+        for line in text.split("\n"):
             if f"src_{run_id}" in line:
                 src_id = extract_id(line)
                 print(f"Found src {src_id}")
@@ -117,10 +120,11 @@ def get_nodes_id(fd: int, run_id: str) -> Tuple[int, int, int]:
             if f"epr_{run_id}" in line:
                 epr_id = extract_id(line)
                 print(f"Found epr {epr_id}")
-        if src_id != 0 and dst_id != 0 and epr_id !=0:
+        if src_id != 0 and dst_id != 0 and epr_id != 0:
             break
 
     return (src_id, dst_id, epr_id)
+
 
 def main() -> int:
     run_id = sys.argv[1] if len(sys.argv) > 1 else str(int(time.time()))
@@ -164,7 +168,7 @@ def main() -> int:
         read_until(master_fd, PROMPT_NODE_TYPE)
         send_line(master_fd, "1")
         time.sleep(0.5)
-        src_id, dst_id, epr_id = get_nodes_id(master_fd, run_id)        
+        src_id, dst_id, epr_id = get_nodes_id(master_fd, run_id)
 
         read_until(master_fd, "")
         send_line(master_fd, "create_link")
