@@ -59,7 +59,13 @@ pub fn post_process_key(
     let process: &mut Process = state
         .get_process_mut(args.process_id)
         .ok_or(ProcessError::NotFound(args.process_id))?;
-    process.key = Some(hex::encode(bits_to_bytes(&corrected_key)));
+    let parsed_key = hex::encode(bits_to_bytes(&corrected_key));
+
+    println!("Generated key is {}", parsed_key);
+
+    process.key = Some(parsed_key);
+
+    // Log generated key
 
     Ok(())
 }
